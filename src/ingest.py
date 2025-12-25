@@ -40,22 +40,31 @@ def ingest_codebase(project_path, collection_name_prefix="spring_project", embed
         splits = splitter.split_documents(documents)
         Chroma.from_documents(documents=splits, embedding=embedding_function, collection_name=f"{collection_name_prefix}_{category}", persist_directory=persist_dir)
 
+def get_official_doc_url(group, artifact, version):
+    """
+    Mapping logic to find official docs beyond just javadoc.io.
+    """
+    mappings = {
+        "org.springframework": f"https://docs.spring.io/spring-boot/docs/{version}/reference/htmlsingle/",
+        "org.apache.kafka": f"https://kafka.apache.org/documentation/",
+        "org.hibernate": "https://hibernate.org/orm/documentation/",
+        "com.fasterxml.jackson": "https://github.com/FasterXML/jackson-docs",
+        "org.mockito": "https://javadoc.io/doc/org.mockito/mockito-core/latest/index.html"
+    }
+    for key, url in mappings.items():
+        if key in group: return url
+    # Fallback to javadoc.io
+    return f"https://www.javadoc.io/doc/{group}/{artifact}/{version}"
+
 def ingest_dependencies_javadocs(project_path, embedding_model="nomic-embed-text"):
-    """
-    Finds all project dependencies and ingests their Javadocs from javadoc.io.
-    """
     from src.dependency import get_full_dependencies
     deps = get_full_dependencies(project_path)
-    print(f"[STATUS] 🚀 Deep Learning: Found {len(deps)} dependencies to study.")
+    print(f"[STATUS] 🚀 Autonomous Learning: Finding best sources for {len(deps)} libraries.")
     
     for dep in deps:
-        # Construct javadoc.io URL (standard format)
-        url = f"https://www.javadoc.io/doc/{dep['group']}/{dep['artifact']}/{dep['version']}"
-        print(f"   -> Learning Javadoc for {dep['artifact']}...")
-        # Index the package-summary as a starting point (to avoid infinite recursion)
-        ingest_url(f"{url}/index.html", project_path, "docs_library", embedding_model)
-    
-    print(f"✅ Library wisdom has been absorbed into the Llama's brain!")
+        url = get_official_doc_url(dep['group'], dep['artifact'], dep['version'])
+        print(f"   -> Intelligent Discovery: Learning {dep['artifact']} from {url}")
+        ingest_url(url, project_path, "docs_library", embedding_model)
 
 def ingest_url(url, project_path, collection_name, embedding_model="nomic-embed-text"):
     import requests
