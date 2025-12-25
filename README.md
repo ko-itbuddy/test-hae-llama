@@ -1,89 +1,65 @@
-# 🦙 테스트해라마 (Test-Hae-Llama)
+# 🦙 테스트해라마 (Test-Hae-Llama) v1.0.8
 
 > **"개발자가 언제까지 테스트 코드 노가다를 해야 하라마?"**
 
-**테스트해라마**는 단위 테스트 작성이 귀찮은 당신을 위해 탄생했습니다. 당신은 로직만 짜세요. 테스트는 우리 집 라마가 대신 구워드립니다. 그것도 **100% 로컬(Local)**로, 보안 걱정 없이 말이죠!
+**테스트해라마**는 로컬 LLM(Ollama) 기반의 **초정밀 11인 에이전트 연합**이 당신의 자바 프로젝트를 분석하여, 스프링 표준에 딱 맞는 테스트 코드를 자동으로 생성하고 저장해 주는 인공지능 동료입니다. 🏁🏆
 
 ---
 
-## 🌟 왜 '테스트해라마'를 써야 하라마?
+## 🌟 우리 라마의 독보적 필살기 (v1.0.0+ New)
 
-1. **내 코드는 소중하라마 (100% Private)**
-   - GPT나 Gemini한테 회사 코드 보냈다가 보안팀에 끌려갈까 봐 무섭나요? 
-   - 걱정 마세요. 우리 라마는 당신의 컴퓨터 밖으로 한 발자국도 나가지 않습니다. 오직 Ollama와 함께 로컬에서만 놉니다.
+### 1. 🛡️ 보안은 철저하게! (Privacy Guardian)
+- **보안 방어 에이전트:** 코드가 외부(MCP 등)로 전달되기 전, API Key나 패스워드를 실시간 마스킹 처리하여 유출을 원천 차단합니다. 100% 로컬 환경의 안전함을 보장합니다.
 
-2. **공부하는 라마 (Context7 MCP 내장)**
-   - "이거 이번에 나온 신상 라이브러리인데 라마가 알까?"
-   - 네, 압니다. 모르면 지가 직접 [Upstash Context7](https://github.com/upstash/context7)로 웹 서핑해서 커닝해옵니다. 세상에서 제일 똑똑한 '커닝 전문가' 라마입니다.
+### 2. 🏛️ 지식의 도서관 (Multi-Index Isolation)
+- **서고지기 라마:** 모든 라이브러리를 한데 섞지 않습니다. Spring, Kafka, JPA 등 각 라이브러리마다 전용 벡터 DB 서고를 만들어 할루시네이션(Hallucination)을 혁신적으로 줄였습니다.
+- **다중 레이어:** API 명세(`_api`)와 활용 가이드(`_guide`)를 구분하여 학습하므로, 문법과 로직 모두 완벽합니다.
 
-3. **깐깐한 시니어 라마 (AssertJ Mastery)**
-   - 라마는 `get(0)` 같은 초보적인 코드를 싫어합니다. 
-   - `extracting()`, `tuple()`, `containsExactly()` 등 AssertJ의 간지 나는 메서드 체이닝만 골라 씁니다. 당신보다 테스트 코드를 더 잘 짤지도 모릅니다.
+### 3. 🧩 작지만 강한 7b 모델 최적화 (Micro-Pipeline)
+- **분할 정복:** 7b 모델의 한계를 극복하기 위해 하나의 함수를 짤 때도 `설계 -> 모킹 -> 구현 -> 검증`의 4단계 마이크로 파이프라인을 거칩니다.
+- **클린 텍스트:** Java 15+ 텍스트 블록(`"""`)을 사용하여 JSON이나 긴 문자열의 이스케이프 실수를 완벽히 방지합니다.
 
-4. **멀티 페르소나 협업 (Llama Orchestra)**
-   - 한 마리의 라마가 아닙니다. 아키텍트 라마, 리서처 라마, 구현 라마, 그리고 깐깐한 QA 리더 라마가 협업해서 완벽한 결과물을 조립합니다.
+### 4. 🏗️ 스프링 아키텍처의 달인 (Spring Path Intelligence)
+- **표준 경로 자동 저장:** `src/main/java` 소스를 분석하면 자동으로 `src/test/java`의 정확한 패키지 위치에 파일을 생성하고 저장합니다.
+- **멀티 모듈 지원:** 프로젝트 루트가 아닌 개별 모듈의 루트를 정확히 찾아 인프라 파일(`AbstractTestBase`, `application-test.yml`)을 구축합니다.
+
+### 5. 💬 라마와 실시간 대화 (Interactive Chat)
+- **트러블슈터:** 테스트가 안 돌아가나요? 에러 로그를 채팅창에 던지면 라마가 프로젝트 문맥을 짚어 해결책을 제시합니다.
+- **즉시 학습:** `학습해라마: URL` 한마디면 새로운 기술 블로그나 공식 문서도 그 자리에서 뇌에 저장합니다.
+
+### 6. ⛓️ 동시성 & 비동기 마스터
+- 복잡한 `synchronized`, `Atomic` 코드를 만나면 자동으로 `CountDownLatch` 멀티스레드 테스트를 제안합니다. Kafka와 같은 비동기 흐름은 `Awaitility`로 꼼꼼하게 검증합니다.
 
 ---
 
-## 🛠️ 주요 기능
+## 🛠️ 주요 에이전트 연합 (The 11 Llama Alliance)
 
-*   **🦙 공부하라 라마야 (Ingest):** 프로젝트 전체 코드를 순식간에 훑어서 머릿속에 집어넣습니다.
-*   **📖 커닝하라 라마야 (Learn Docs):** 모르는 라이브러리 URL만 주면 1초 만에 마스터합니다.
-*   **🚀 테스트 짜라 라마야 (Generate):** 우클릭 한 번이면 JUnit 5, Mockito, BDD 스타일이 버무려진 예술적인 코드가 쏟아집니다.
+1.  **Privacy:** 민감 정보 마스킹 🛡️
+2.  **Style Librarian:** 코딩 규칙 자동 선별 ⚖️
+3.  **Librarian:** 지능형 지식 서고 탐색 📚
+4.  **Architect:** 테스트 시나리오 전략 설계 📐
+5.  **Infra Expert:** 인프라(Kafka/Redis) 도구 추천 📡
+6.  **Mocking Specialist:** 정교한 의존성 모킹 전략 🧪
+7.  **Purifier:** 문맥 노이즈 제거 🧹
+8.  **Implementer:** 원자적 코드 구현 ✍️
+9.  **QA Lead:** 논리 및 스타일 교정 🔍
+10. **Refiner:** 자기 반성 및 오류 수정 🔄
+11. **Integrator:** 최종 클래스 조립 및 저장 💾
 
 ---
 
 ## 🚀 시작하기
 
-### 1. 라마 길들이기 (Prerequisites)
+### 1. 환경 준비 (Prerequisites)
 
-**[필수] uv 엔진 설치 (v0.7.0부터 필수라마!)**
-라마는 초고속 환경 구축을 위해 `uv`를 사용하라마. 설치가 안 되어 있다면 아래 명령어를 터미널에 복붙해라마!
-*   **macOS / Linux:**
-    ```bash
-    curl -LsSf https://astral.sh/uv/install.sh | sh
-    ```
-*   **Windows (PowerShell):**
-    ```powershell
-    powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-    ```
+- **uv:** 초고속 파이썬 환경 구축용.
+- **Ollama:** 로컬 모델 엔진. (`pull qwen2.5-coder:7b`, `pull nomic-embed-text` 필수)
+- **Upstash Context7 API Key (권장):** 더 깊은 웹 리서치를 위해 필요합니다.
 
-**[필수] Ollama 설치 및 모델 입양**
-*   **Ollama 설치:** [ollama.com](https://ollama.com)에서 다운로드.
-*   **모델 입양:** 
-    ```bash
-    ollama pull glm4          # 똑똑한 두뇌
-    ollama pull nomic-embed-text # 기억력 담당
-    ```
-*   **Node.js:** Context7 커닝을 위해 필요하라마.
-
-### 2. 도구 장착 (Installation)
-*   **VS Code:** [Release](https://github.com/ko-itbuddy/test-hae-llama/releases)에서 `.vsix` 파일 다운로드 후 설치.
-*   **IntelliJ:** [Release](https://github.com/ko-itbuddy/test-hae-llama/releases)에서 `.zip` 파일 다운로드 후 `Install Plugin from Disk`로 설치.
+### 2. 설치 및 실행
+- **VS Code:** 사이드바의 **라마 컨트롤 센터**에서 모든 것을 관리하세요.
+- **첫 단계:** `🦙 프로젝트 공부시키기` 버튼을 눌러 라마에게 당신의 코드를 가르치세요.
 
 ---
 
-## 🎮 사용법
-
-1.  프로젝트 루트에서 **"🦙 공부해라 라마야"**를 실행합니다.
-2.  테스트하고 싶은 자바 파일에서 우클릭하고 **"🦙 테스트 짜라 라마야!"**를 외칩니다.
-3.  라마가 생각하는 동안 커피 한 잔 마시고 오면, 오른쪽에 테스트 코드가 짠!
-
----
-
-## 🛠️ 개발 및 기여 (For Developers)
-
-이 프로젝트는 **Python(Core Engine)**, **TypeScript(VS Code)**, **Kotlin(IntelliJ)**이 조화롭게 섞인 고난도 프로젝트라마! 🦙💪
-
-라마를 더 똑똑하게 만들고 싶거나, 새로운 언어(Python, TS 등)를 가르치고 싶다면 [CONTRIBUTING.md](CONTRIBUTING.md) 파일을 확인해라마.
-
----
-
-## 📄 라이선스 (License)
-
-이 프로젝트는 **MIT License**를 따릅니다. 
-라마를 데려가서 키우셔도 되고, 더 똑똑하게 개량해서 분양하셔도 됩니다. 
-
----
-
-**"더 이상의 테스트 노가다는 그만하라마!"** 🚀🦙✨
+**"테스트해라마와 함께라면, 테스트 코드는 더 이상 숙제가 아닌 예술이 됩니다라마!"** 🦙✨🚀🏁🏆
