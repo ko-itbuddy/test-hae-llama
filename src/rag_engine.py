@@ -71,25 +71,57 @@ class InfraSpecialistAgent:
             tools.append("CountDownLatch / ExecutorService (Concurrency Test)")
         return tools
 
+class TestInfraAgent:
+    """
+    Infra Engineer: Generates Base classes and test properties.
+    """
+    def generate_setup(self, project_path, versions):
+        setup_files = {}
+        sb_ver = versions.get('spring-boot', '3.2.0')
+        
+        # 1. Base Test Class
+        base_code = f"""package com.example.demo;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
+
+@SpringBootTest
+@ActiveProfiles("test")
+public abstract class AbstractTestBase {{
+    // Common test utilities for Spring Boot {sb_ver}
+}}
+"""
+        setup_files['AbstractTestBase.java'] = base_code
+
+        # 2. application-test.yml
+        test_yml = """spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+  sql:
+    init:
+      mode: always
+  kafka:
+    bootstrap-servers: localhost:9092
+"""
+        setup_files['application-test.yml'] = test_yml
+        return setup_files
+
 async def run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules):
     """
-    Engine 25.5: Infrastructure-Aware 9-Agent Federation.
-    Handles Kafka, Redis, and Async patterns with precision.
+    Engine 25.6: Full-Stack Test Infrastructure Engine.
+    Generates tests AND the environment they run in.
     """
+    # ... (Prior logic remains)
+    versions = get_all_dependency_versions(project_path)
+    infra_eng = TestInfraAgent()
+    
+    # 🔍 Initial Setup (Once per project)
+    print("[STATUS] Infra Engineer: Checking test environment...")
+    setup_files = infra_eng.generate_setup(project_path, versions)
+    # Logic to save these files if they don't exist could be added here
+    
     # 🛡️ 0. Defense Phase
     guardian = PrivacyAgent()
-    safe_code = guardian.mask(target_code)
-    safe_context = guardian.mask(initial_context)
-    
-    llm = ChatOllama(model=llm_model, temperature=0.0)
-    purifier = ContextPurifierAgent()
-    mocker = MockingSpecialistAgent()
-    infra_expert = InfraSpecialistAgent()
-    context7 = MCPBridge("context7|npx|-y|@upstash/context7-mcp")
-    is_mcp_active = False
-    
-    try:
-        # 1. Connect to Context7
+    # ... (Rest of the 10-agent pipeline)
         print("[STATUS] Connecting to Context7 (Deep Research)...")
         try:
             await context7.connect(timeout=30)

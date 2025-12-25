@@ -44,17 +44,26 @@ def ensure_ollama_models(llm_model="qwen2.5-coder:7b", embedding_model="nomic-em
         print(f"[STATUS] ❌ Error pulling model: {e}")
 
 def get_all_dependency_versions(project_path):
-    versions = {}
+    versions = {'spring-boot': '3.0.0', 'has-testcontainers': False, 'has-awaitility': False}
     pom_path = os.path.join(project_path, "pom.xml")
     if os.path.exists(pom_path):
         try:
             tree = ET.parse(pom_path); root = tree.getroot()
             ns = {'mvn': 'http://maven.apache.org/POM/4.0.0'}
+            # Spring Boot Version
             parent = root.find(".//mvn:parent/mvn:version", ns)
             if parent is not None: versions['spring-boot'] = parent.text
+            
+            # Check for specific test libraries
+            text = ET.tostring(root, encoding='unicode')
+            if 'testcontainers' in text: versions['has-testcontainers'] = True
+            if 'awaitility' in text: versions['has-awaitility'] = True
+            
             for dep in root.findall(".//mvn:dependency", ns):
-                aid = dep.find("mvn:artifactId", ns).text
-                ver = dep.find("mvn:version", ns)
-                if ver is not None: versions[aid] = ver.text
+                aid_node = dep.find("mvn:artifactId", ns)
+                if aid_node is not None:
+                    aid = aid_node.text
+                    ver = dep.find("mvn:version", ns)
+                    if ver is not None: versions[aid] = ver.text
         except: pass
     return versions
