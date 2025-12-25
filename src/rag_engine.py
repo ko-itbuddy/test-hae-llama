@@ -46,7 +46,8 @@ class MockingSpecialistAgent:
 
 async def run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules):
     """
-    Engine 25.2: Professional Multi-Agent with Iterative Refinement.
+    Engine 25.3: Chunked-Generation Scheduler for 7b Models.
+    Splits tasks into small pieces to maintain high quality.
     """
     # 🛡️ 0. Defense Phase
     guardian = PrivacyAgent()
@@ -66,31 +67,37 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
             is_mcp_active = True
         except: pass
 
-        # 2. Architect Phase
-        print("[STATUS] Architect Agent: Planning test scenarios...")
+        # 2. Architect Phase: Determine Chunks
+        print("[STATUS] Architect Agent: Breaking down tasks into chunks...")
         arch_prompt = strategy.get_architect_prompt(safe_code, safe_context)
         arch_response = _call_chain(arch_prompt, llm, {"target_code": safe_code, "dependency_context": safe_context})
+        
+        # Split by SCENARIO markers and limit each run to prevent 7b overload
         scenarios = re.findall(r'SCENARIO: (.*)', arch_response)
         if not scenarios: scenarios = [arch_response]
+        
+        # Limit to top 5 scenarios to ensure 7b doesn't lose context in long loops
+        work_queue = scenarios[:5] 
+        print(f"[STATUS] Task Scheduler: {len(work_queue)} chunks identified.")
 
-        # 3. Implementer & Professional QA Loop
+        # 3. Distributed Implementation Phase
         final_methods = []
-        for i, scenario in enumerate(scenarios[:3]):
-            print(f"[STATUS] Implementer Agent: Writing test for scenario {i+1}...")
+        for i, scenario in enumerate(work_queue):
+            print(f"[STATUS] Implementer ({i+1}/{len(work_queue)}): Focus on single chunk...")
+            # Use only necessary context for this chunk to keep 7b focused
             impl_prompt = strategy.get_implementer_prompt(safe_code, scenario, safe_context, custom_rules)
             method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": scenario, "research_context": safe_context})
             
-            # 🔄 Refinement Loop (Max 2 attempts)
+            # 🔄 Refinement Loop per Chunk
             for attempt in range(2):
-                print(f"[STATUS] QA Lead & Mock Specialist: Verifying (Attempt {attempt+1})...")
+                print(f"[STATUS] QA & Refiner ({i+1}/{len(work_queue)}): Polishing chunk (Attempt {attempt+1})...")
+                # ... (Refinement logic remains same but applied to chunk)
                 missing_mocks = mocker.check_mocking_strategy(method_code, safe_context)
-                
                 qa_prompt = strategy.get_quality_engineer_prompt(method_code, safe_context)
                 reviewed_code = _call_chain(qa_prompt, llm, {"generated_code": method_code, "target_context": safe_context})
                 
                 if "FIX_NEEDED" in reviewed_code or missing_mocks:
-                    print(f"[STATUS] Refiner Agent: Fixing based on feedback...")
-                    fix_prompt = f"Previous code had issues: {reviewed_code}. Missing mocks: {missing_mocks}. Fix it."
+                    fix_prompt = f"Fix this chunk: {reviewed_code}. Missing: {missing_mocks}"
                     method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": fix_prompt, "research_context": safe_context})
                 else:
                     method_code = reviewed_code
@@ -99,6 +106,11 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
             code_match = re.search(r'<CODE>(.*?)</CODE>', method_code, re.DOTALL)
             snippet = code_match.group(1).strip() if code_match else method_code.strip()
             final_methods.append(re.sub(r'```java|```', '', snippet).strip())
+
+        # 4. Final Assembly
+        print("[STATUS] Integrator: Composing final test class...")
+        class_name = os.path.basename(target_file_path).replace(".java", "")
+        return strategy.assemble_final_class(class_name, final_methods, target_code=target_code)
 
         # 4. Assembly
         print("[STATUS] Integrator Agent: Assembling final class...")
