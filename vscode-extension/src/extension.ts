@@ -9,20 +9,25 @@ let statusProvider: LlamaProvider;
 
 export async function activate(context: vscode.ExtensionContext) {
     outputChannel = vscode.window.createOutputChannel("Test-Hae-Llama 🦙");
-    outputChannel.show(true);
     outputChannel.appendLine("🦙 테스트해라마 기상 중...");
 
-    const llamaProvider = new LlamaProvider();
-    statusProvider = llamaProvider; // For backward compatibility in initializeLlama
-    vscode.window.registerTreeDataProvider('llama-main', llamaProvider);
+    // ✅ 1. 데이터 공급자 즉시 등록 (에러 방지 핵심!)
+    statusProvider = new LlamaProvider();
+    const treeView = vscode.window.createTreeView('llama-main', {
+        treeDataProvider: statusProvider,
+        showCollapseAll: true
+    });
+    context.subscriptions.push(treeView);
 
     const venvPath = path.join(context.globalStorageUri.fsPath, 'venv');
     const pythonPath = process.platform === 'win32' 
         ? path.join(venvPath, 'Scripts', 'python.exe') 
         : path.join(venvPath, 'bin', 'python');
 
+    // 2. 초기화 (비동기)
     initializeLlama(context, venvPath, pythonPath);
 
+    // 3. 커맨드 등록
     context.subscriptions.push(
         vscode.commands.registerCommand('test-hae-llama.ingest', async (uri: vscode.Uri) => {
             if (!checkReady()) return;
