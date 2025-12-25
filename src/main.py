@@ -52,13 +52,16 @@ def ingest_deps(project_path, model):
 @click.option('--prefix', default='spring_project', help='Prefix for vector collections')
 @click.option('--model', default='qwen2.5-coder:7b', help='Ollama model to use')
 @click.option('--custom-rules', default='', help='Custom rules from IDE settings')
-@click.option('--context7-api-key', default='', help='API Key for Context7 MCP')
+@click.option('--context7-api-key', default='', help='API Key from VS Code settings')
 def generate(target_file, project_path, prefix, model, custom_rules, context7_api_key):
     """Generate Unit Test and AUTO-SAVE to the correct location"""
     ensure_ollama_models(llm_model=model)
     
-    if context7_api_key:
+    # 💡 VS Code 설정값이 있으면 환경 변수를 강제로 덮어씀라마!
+    if context7_api_key and context7_api_key.strip():
+        os.environ['UPSTASH_CONTEXT7_API_KEY'] = context7_api_key
         os.environ['CONTEXT7_API_KEY'] = context7_api_key
+        click.echo("🔑 Using API Key from VS Code Settings.")
         
     click.echo(f"[STATUS] Starting generation for {os.path.basename(target_file)}...")
     
