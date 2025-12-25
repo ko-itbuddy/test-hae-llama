@@ -5,7 +5,7 @@ import * as fs from 'fs';
 
 let outputChannel: vscode.OutputChannel;
 let isLlamaReady = false;
-let statusProvider: LlamaStatusProvider;
+let statusProvider: LlamaProvider;
 
 export async function activate(context: vscode.ExtensionContext) {
     outputChannel = vscode.window.createOutputChannel("Test-Hae-Llama 🦙");
