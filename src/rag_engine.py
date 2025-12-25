@@ -56,16 +56,19 @@ class ContextPurifierAgent:
 
 class InfraSpecialistAgent:
     """
-    Infra Agent: Detects Kafka, Redis, etc., and suggests testing libraries.
+    Infra & Concurrency Agent: Detects Kafka, Redis, and Concurrency patterns.
     """
     def suggest_tools(self, code):
         tools = []
         if "KafkaTemplate" in code or "@KafkaListener" in code:
-            tools.append("EmbeddedKafka / KafkaTestUtils")
+            tools.append("EmbeddedKafka")
         if "RedisTemplate" in code:
             tools.append("EmbeddedRedis")
         if "@Async" in code or "CompletableFuture" in code:
             tools.append("Awaitility")
+        # 🧵 Concurrency Detection
+        if any(x in code for x in ["synchronized", "Atomic", "Concurrent", "ExecutorService", "Semaphore"]):
+            tools.append("CountDownLatch / ExecutorService (Concurrency Test)")
         return tools
 
 async def run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules):
