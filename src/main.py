@@ -82,14 +82,30 @@ def generate(target_file, project_path, prefix, model, custom_rules, context7_ap
     click.echo("[RESULT_END]")
 
 def _get_test_save_path(target_file, project_path):
+    """
+    Spring Standard Path Resolver:
+    1. Finds the module root by looking for pom.xml or build.gradle.
+    2. Swaps src/main/{lang} to src/test/{lang}.
+    3. Ensures the file ends with 'Test.java'.
+    """
     abs_target = os.path.abspath(target_file)
-    if "src/main/java" in abs_target:
-        test_path = abs_target.replace("src/main/java", "src/test/java")
-    elif "src/" in abs_target:
-        test_path = abs_target.replace("src/", "src/test/")
-    else:
-        test_path = abs_target
-        
+    
+    # 🔍 1. Find Module Root (nearest parent with pom.xml or build.gradle)
+    module_root = os.path.dirname(abs_target)
+    while module_root != os.path.dirname(module_root):
+        if any(os.path.exists(os.path.join(module_root, f)) for f in ["pom.xml", "build.gradle", "build.gradle.kts"]):
+            break
+        module_root = os.path.dirname(module_root)
+    
+    # 🔍 2. Language-agnostic Path Swapping (java, kotlin, etc.)
+    # pattern: src/main/(any_lang)/... -> src/test/(any_lang)/...
+    test_path = re.sub(r'src([/\\+])main([/\\+])(\w+)', r'src\1test\3', abs_target)
+    
+    # Fallback if no src/main structure found
+    if test_path == abs_target:
+        test_path = os.path.join(module_root, "src/test/java", os.path.relpath(abs_target, os.path.join(module_root, "src/main/java") if "src/main/java" in abs_target else module_root))
+
+    # 🔍 3. Suffix Integrity
     base, ext = os.path.splitext(test_path)
     if not base.endswith("Test"):
         return f"{base}Test{ext}"
