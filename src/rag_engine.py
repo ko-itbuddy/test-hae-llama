@@ -187,9 +187,18 @@ def generate_test(target_file_path, project_path, project_collection, docs_colle
         strategy = get_strategy(target_file_path, project_path)
         target_code = open(target_file_path, 'r', encoding='utf-8').read()
         initial_context = _retrieve_full_context(target_code, project_path, project_collection, strategy, embedding_model)
-        result_code = asyncio.run(run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules))
-        return f"[RESULT_START]\n{{result_code}}\n[RESULT_END]"
-    except Exception as e: return f"Error: {str(e)}"
+        
+        # 💡 asyncio.run() 사용 시 내부에서 발생하는 예외를 더 정교하게 캐치라마!
+        try:
+            result_code = asyncio.run(run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules))
+            return f"[RESULT_START]\n{result_code}\n[RESULT_END]"
+        except Exception as async_e:
+            print(f"[ERROR] Async Engine Failure: {async_e}")
+            return f"/* 🦙 테스트 생성 실패라마! 원인: {str(async_e)} */"
+
+    except Exception as e:
+        print(f"[ERROR] General Engine Failure: {e}")
+        return f"/* 🦙 테스트 엔진 오류라마! 원인: {str(e)} */"
 
 class TroubleshooterAgent:
     def troubleshoot(self, error_log, project_context):

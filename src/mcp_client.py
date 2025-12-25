@@ -28,41 +28,30 @@ class MCPBridge:
         print(f"🔌 [MCP] Starting server: {self.command} {' '.join(self.args)}")
         
         try:
-            # Create stdio client and enter its context
+            # Create stdio client
             self._client = stdio_client(server_params)
-            self.read, self.write = await asyncio.wait_for(
-                self._exit_stack.enter_async_context(self._client), 
-                timeout=timeout
-            )
+            # 💡 anyio 호환성을 위해 enter_async_context 사용 시 태스크 관리 주의라마!
+            self.read, self.write = await self._exit_stack.enter_async_context(self._client)
             
-            # Create session and enter its context
+            # Create session
             self.session = ClientSession(self.read, self.write)
-            await asyncio.wait_for(
-                self._exit_stack.enter_async_context(self.session),
-                timeout=timeout
-            )
+            await self._exit_stack.enter_async_context(self.session)
             
-            await asyncio.wait_for(self.session.initialize(), timeout=timeout)
+            await self.session.initialize()
             print(f"✅ [MCP] Connected to {self.name}")
         except Exception as e:
             await self.disconnect()
             raise e
 
-    async def get_tools(self):
-        if not self.session: return []
-        tools = await self.session.list_tools()
-        return tools.tools
-
-    async def call_tool(self, tool_name, arguments):
-        if not self.session: return None
-        result = await asyncio.wait_for(self.session.call_tool(tool_name, arguments), timeout=60)
-        return result.content
-
     async def disconnect(self):
         """Ensure all resources are released correctly."""
         if self._exit_stack:
-            await self._exit_stack.aclose()
-            self._exit_stack = None
-            self.session = None
-            self._client = None
-            print(f"🔌 [MCP] Disconnected from {self.name}")
+            # 💡 aclose()는 한 번만 호출되도록 보장라마!
+            try:
+                await self._exit_stack.aclose()
+            except: pass
+            finally:
+                self._exit_stack = None
+                self.session = None
+                self._client = None
+                print(f"🔌 [MCP] Disconnected from {self.name}")
