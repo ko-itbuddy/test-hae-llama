@@ -146,7 +146,8 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
 
     llm = ChatOllama(model=llm_model, temperature=0.0)
     purifier = ContextPurifierAgent(); mocker = MockingSpecialistAgent()
-    context7 = MCPBridge("context7|npx|-y|@upstash/context7-mcp")
+    # 💡 Optimization: Added experimental flags and @latest to resolve connection issues
+    context7 = MCPBridge("context7|npx|-y|--node-options=--experimental-vm-modules --experimental-fetch|@upstash/context7-mcp@latest")
     
     try:
         if "UPSTASH_CONTEXT7_API_KEY" not in os.environ and "CONTEXT7_API_KEY" not in os.environ:
