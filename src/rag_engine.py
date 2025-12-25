@@ -33,23 +33,33 @@ class PrivacyAgent:
             masked_text = re.sub(pattern, lambda m: m.group(0).replace(m.group(2) if len(m.groups()) >= 2 else m.group(0), "[SECURE_MASKED]"), masked_text)
         return masked_text
 
+class MockingSpecialistAgent:
+    """
+    Mocking Agent: Ensures Mockito/Spring tests have correct @MockBean or @InjectMocks.
+    """
+    def check_mocking_strategy(self, code, context):
+        # Simply looks for missing mocks of injected services
+        injected_services = re.findall(r'@Autowired\s+(?:private\s+)?(\w+)', context)
+        mocked_services = re.findall(r'@Mock(?:Bean)?\s+(?:private\s+)?(\w+)', code)
+        missing = [s for s in injected_services if s not in mocked_services]
+        return missing
+
 async def run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules):
     """
-    Engine 25.1: Privacy-First Multi-Agent with Defense Shield.
+    Engine 25.2: Professional Multi-Agent with Iterative Refinement.
     """
-    # 🛡️ 0. Defense Phase: Privacy Filtering
-    print("[STATUS] Defense Agent: Scanning for sensitive data...")
+    # 🛡️ 0. Defense Phase
     guardian = PrivacyAgent()
     safe_code = guardian.mask(target_code)
     safe_context = guardian.mask(initial_context)
     
     llm = ChatOllama(model=llm_model, temperature=0.0)
-    research_context = safe_context
+    mocker = MockingSpecialistAgent()
     context7 = MCPBridge("context7|npx|-y|@upstash/context7-mcp")
     is_mcp_active = False
     
     try:
-        # 1. Connect to Context7 (Using masked context for safety)
+        # 1. Connect to Context7
         print("[STATUS] Connecting to Context7 (Deep Research)...")
         try:
             await context7.connect(timeout=30)
@@ -63,18 +73,30 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
         scenarios = re.findall(r'SCENARIO: (.*)', arch_response)
         if not scenarios: scenarios = [arch_response]
 
-        # 3. Implementer & QA Phase
+        # 3. Implementer & Professional QA Loop
         final_methods = []
         for i, scenario in enumerate(scenarios[:3]):
             print(f"[STATUS] Implementer Agent: Writing test for scenario {i+1}...")
-            impl_prompt = strategy.get_implementer_prompt(safe_code, scenario, research_context, custom_rules)
-            method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": scenario, "research_context": research_context})
+            impl_prompt = strategy.get_implementer_prompt(safe_code, scenario, safe_context, custom_rules)
+            method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": scenario, "research_context": safe_context})
             
-            print(f"[STATUS] QA Lead Agent: Verifying logic and style...")
-            qa_prompt = strategy.get_quality_engineer_prompt(method_code, safe_context)
-            reviewed_code = _call_chain(qa_prompt, llm, {"generated_code": method_code, "target_context": safe_context})
-            
-            code_match = re.search(r'<CODE>(.*?)</CODE>', reviewed_code, re.DOTALL)
+            # 🔄 Refinement Loop (Max 2 attempts)
+            for attempt in range(2):
+                print(f"[STATUS] QA Lead & Mock Specialist: Verifying (Attempt {attempt+1})...")
+                missing_mocks = mocker.check_mocking_strategy(method_code, safe_context)
+                
+                qa_prompt = strategy.get_quality_engineer_prompt(method_code, safe_context)
+                reviewed_code = _call_chain(qa_prompt, llm, {"generated_code": method_code, "target_context": safe_context})
+                
+                if "FIX_NEEDED" in reviewed_code or missing_mocks:
+                    print(f"[STATUS] Refiner Agent: Fixing based on feedback...")
+                    fix_prompt = f"Previous code had issues: {reviewed_code}. Missing mocks: {missing_mocks}. Fix it."
+                    method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": fix_prompt, "research_context": safe_context})
+                else:
+                    method_code = reviewed_code
+                    break
+
+            code_match = re.search(r'<CODE>(.*?)</CODE>', method_code, re.DOTALL)
             snippet = code_match.group(1).strip() if code_match else method_code.strip()
             final_methods.append(re.sub(r'```java|```', '', snippet).strip())
 
