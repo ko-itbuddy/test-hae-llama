@@ -12,10 +12,9 @@ export async function activate(context: vscode.ExtensionContext) {
     outputChannel.show(true);
     outputChannel.appendLine("🦙 테스트해라마 기상 중...");
 
-    statusProvider = new LlamaStatusProvider();
-    const actionProvider = new LlamaActionProvider();
-    vscode.window.registerTreeDataProvider('llama-status', statusProvider);
-    vscode.window.registerTreeDataProvider('llama-actions', actionProvider);
+    const llamaProvider = new LlamaProvider();
+    statusProvider = llamaProvider; // For backward compatibility in initializeLlama
+    vscode.window.registerTreeDataProvider('llama-main', llamaProvider);
 
     const venvPath = path.join(context.globalStorageUri.fsPath, 'venv');
     const pythonPath = process.platform === 'win32' 
@@ -117,33 +116,37 @@ function execCmd(cmd: string): Promise<void> {
     });
 }
 
-class LlamaActionProvider implements vscode.TreeDataProvider<LlamaItem> {
-    getTreeItem(el: LlamaItem): vscode.TreeItem { return el; }
-    getChildren(): LlamaItem[] {
-        return [
-            new LlamaItem("🦙 프로젝트 공부시키기", "test-hae-llama.ingest", new vscode.ThemeIcon("book")),
-            new LlamaItem("🚀 테스트 코드 짜기", "test-hae-llama.generate", new vscode.ThemeIcon("beaker")),
-            new LlamaItem("📋 로그 확인하기", "test-hae-llama.showLogs", new vscode.ThemeIcon("output"))
-        ];
-    }
-}
-
-class LlamaStatusProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
+class LlamaProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
     private _status: string = "Initializing... ⏳";
     private _onDidChangeTreeData = new vscode.EventEmitter<void>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
-    updateStatus(s: string) { this._status = s; this._onDidChangeTreeData.fire(); }
+
+    updateStatus(s: string) { 
+        this._status = s; 
+        this._onDidChangeTreeData.fire(); 
+    }
+
     getTreeItem(el: vscode.TreeItem): vscode.TreeItem { return el; }
+
     getChildren(): vscode.TreeItem[] {
-        const statusItem = new vscode.TreeItem(`Llama: ${this._status}`);
-        const reinstallItem = new LlamaItem("환경 재구축하기 (Reinstall)", "test-hae-llama.reinstall", new vscode.ThemeIcon("refresh"));
-        return [statusItem, reinstallItem];
+        const statusItem = new vscode.TreeItem(`상태: ${this._status}`);
+        statusItem.iconPath = this._status.includes("Ready") ? new vscode.ThemeIcon("check") : new vscode.ThemeIcon("sync~spin");
+        
+        return [
+            statusItem,
+            new LlamaItem("🦙 프로젝트 공부시키기", "test-hae-llama.ingest", new vscode.ThemeIcon("book")),
+            new LlamaItem("🚀 테스트 코드 짜기", "test-hae-llama.generate", new vscode.ThemeIcon("beaker")),
+            new LlamaItem("📋 로그 확인하기", "test-hae-llama.showLogs", new vscode.ThemeIcon("output")),
+            new LlamaItem("♻️ 환경 재구축하기", "test-hae-llama.reinstall", new vscode.ThemeIcon("refresh"))
+        ];
     }
 }
 
 class LlamaItem extends vscode.TreeItem {
     constructor(label: string, commandId: string, icon: vscode.ThemeIcon) {
-        super(label); this.iconPath = icon; this.command = { command: commandId, title: label };
+        super(label); 
+        this.iconPath = icon; 
+        this.command = { command: commandId, title: label };
     }
 }
 

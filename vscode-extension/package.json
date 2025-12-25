@@ -2,28 +2,28 @@
   "name": "test-hae-llama",
   "displayName": "Test-Hae-Llama (테스트해라마)",
   "publisher": "itbuddy",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "야, 라마야! 테스트 코드 좀 짜라! (Local LLM Test Generator)",
   "license": "MIT",
   "icon": "icon.png",
   "repository": { "type": "git", "url": "https://github.com/ko-itbuddy/test-hae-llama" },
   "engines": { "vscode": "^1.85.0" },
   "main": "./out/extension.js",
-  "activationEvents": [ "onLanguage:java", "onView:llama-actions" ],
+  "activationEvents": [ "onLanguage:java", "onView:llama-main" ],
   "contributes": {
     "viewsContainers": {
       "activitybar": [ { "id": "test-hae-llama-sidebar", "title": "테스트해라마", "icon": "icon.svg" } ]
     },
     "views": {
       "test-hae-llama-sidebar": [
-        { "id": "llama-status", "name": "🦙 라마 상태" },
-        { "id": "llama-actions", "name": "🚀 빠른 작업" }
+        { "id": "llama-main", "name": "🦙 라마 컨트롤 센터" }
       ]
     },
     "commands": [
       { "command": "test-hae-llama.ingest", "title": "🦙 프로젝트 공부시키기" },
       { "command": "test-hae-llama.generate", "title": "🚀 테스트 코드 짜줘라마!" },
-      { "command": "test-hae-llama.showLogs", "title": "📋 로그 확인하기" }
+      { "command": "test-hae-llama.showLogs", "title": "📋 로그 확인하기" },
+      { "command": "test-hae-llama.reinstall", "title": "♻️ 환경 재구축하기" }
     ],
     "configuration": {
       "title": "Test-Hae-Llama",
