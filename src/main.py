@@ -23,17 +23,14 @@ def cli(proxy):
         os.environ['HTTPS_PROXY'] = proxy
         click.echo(f"🔒 Proxy configured: {proxy}")
 
-@cli.command()
-@click.option('--project-path', prompt='Project Path', default='.', help='Workspace root')
-@click.option('--prefix', default='spring_project', help='Prefix for vector collections')
-@click.option('--model', default='qwen2.5-coder:7b', help='Ollama model to use')
-def ingest(project_path, prefix, model):
-    """Scan and learn local source/test files"""
-    ensure_ollama_models(llm_model=model)
-    data_dir = get_project_data_dir(project_path)
-    click.echo(f"[STATUS] Indexing project in {data_dir}...")
-    ingest_codebase(project_path, collection_name_prefix=prefix)
-    click.echo("✅ Ingestion complete!")
+@main.command()
+@click.option('--path', required=True, help='Path to documents folder')
+@click.option('--model', default='nomic-embed-text', help='Embedding model')
+def ingest_docs(path, model):
+    """Bulk ingest all documents (.md, .txt, .pdf) in a directory."""
+    from src.ingest import ingest_documentation
+    ingest_documentation(path, embedding_model=model)
+    click.echo(f"✅ Bulk ingestion for {path} complete.")
 
 @cli.command()
 @click.option('--target-file', prompt='Target Java File', help='Path to the file to test')
