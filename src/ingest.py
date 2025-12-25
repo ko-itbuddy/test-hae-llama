@@ -59,12 +59,16 @@ def get_official_doc_url(group, artifact, version):
 def ingest_dependencies_javadocs(project_path, embedding_model="nomic-embed-text"):
     from src.dependency import get_full_dependencies
     deps = get_full_dependencies(project_path)
-    print(f"[STATUS] 🚀 Autonomous Learning: Finding best sources for {len(deps)} libraries.")
+    print(f"[STATUS] 🚀 Isolated Learning: Building separate sanctuaries for {len(deps)} libraries.")
     
     for dep in deps:
         url = get_official_doc_url(dep['group'], dep['artifact'], dep['version'])
-        print(f"   -> Intelligent Discovery: Learning {dep['artifact']} from {url}")
-        ingest_url(url, project_path, "docs_library", embedding_model)
+        # Create a unique collection name per library
+        collection_name = f"lib_{dep['group'].replace('.', '_')}_{dep['artifact'].replace('-', '_')}"
+        print(f"   -> Isolating Knowledge: Learning {dep['artifact']} into '{collection_name}'")
+        ingest_url(url, project_path, collection_name, embedding_model)
+    
+    print(f"✅ Every library now has its own isolated knowledge space!")
 
 def ingest_url(url, project_path, collection_name, embedding_model="nomic-embed-text"):
     import requests

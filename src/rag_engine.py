@@ -198,21 +198,71 @@ def generate_test(target_file_path, project_path, project_collection, docs_colle
     return asyncio.run(run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules))
 
 def _retrieve_full_context(query, project_path, prefix, strategy, emb_model):
+
     from langchain_chroma import Chroma
+
     persist_dir = get_chroma_dir(project_path)
+
     emb = OllamaEmbeddings(model=emb_model)
+
     context = ""
-    exact_deps = strategy.parse_dependencies(query, project_path)
-    for f in exact_deps:
-        try:
-            with open(f, 'r') as file: context += f"\n--- {os.path.basename(f)} ---\n{file.read()}\n"
-        except: pass
+
+    
+
+    # 🔍 1. Identify relevant library collections from imports
+
+    imports = re.findall(r'import\s+([\w\.]+);', query)
+
+    relevant_libs = []
+
+    for imp in imports:
+
+        # Match imports to collection naming pattern
+
+        potential_lib = f"lib_{imp.split('.')[0]}_{imp.split('.')[1]}"
+
+        relevant_libs.append(potential_lib)
+
+
+
+    # 🔍 2. Precise Retrieval from Isolated Collections
+
     if os.path.exists(persist_dir):
+
+        # Always search project codebase
+
         for layer in strategy.get_relevant_collections(query):
+
             try:
-                col_name = f"{prefix}_{layer}" if not layer.startswith("docs_") else layer
+
+                col_name = f"{prefix}_{layer}"
+
                 db = Chroma(persist_directory=persist_dir, collection_name=col_name, embedding_function=emb)
+
                 results = db.similarity_search(query, k=2)
-                context += f"\n--- CONTEXT ({layer}) ---" + "\n".join([d.page_content for d in results])
+
+                context += f"\n--- PROJECT CONTEXT ({layer}) ---\n" + "\n".join([d.page_content for d in results])
+
             except: pass
+
+        
+
+        # Search only relevant library collections
+
+        for lib_col in list(set(relevant_libs)):
+
+            try:
+
+                db = Chroma(persist_directory=persist_dir, collection_name=lib_col, embedding_function=emb)
+
+                results = db.similarity_search(query, k=3) # Higher K for library docs
+
+                if results:
+
+                    context += f"\n--- LIBRARY DOCS ({lib_col}) ---\n" + "\n".join([d.page_content for d in results])
+
+            except: pass
+
+            
+
     return context
