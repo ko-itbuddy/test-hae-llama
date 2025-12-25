@@ -158,13 +158,19 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
                 await context7.connect(timeout=30)
             except Exception as e:
                 print(f"[STATUS] ❌ Context7 connection failed: {e}")
+        # 2. Architect Phase: Deep Planning
+        print("[STATUS] Architect Agent: Planning scenarios (including Edge Cases & Parameterized)...")
         arch_prompt = strategy.get_architect_prompt(safe_code, safe_context)
-        arch_response = _call_chain(arch_prompt, llm, {"target_code": safe_code, "dependency_context": safe_context})
-        scenarios = re.findall(r'SCENARIO: (.*)', arch_response) or [arch_response]
+        arch_response = _call_chain(arch_prompt, llm, {"target_code": safe_code})
         
+        # 💡 Parse scenarios and explicitly separate them to keep 7b focused
+        scenarios = re.findall(r'SCENARIO: (.*)', arch_response) or [arch_response]
+        print(f"[STATUS] Task Scheduler: {len(scenarios)} independent tasks mapped.")
+
+        # 3. Micro-Task Execution Phase
         final_methods = []
-        for i, scenario in enumerate(scenarios[:5]):
-            pure_ctx = purifier.purify(scenario, safe_context)
+        for i, scenario in enumerate(scenarios[:6]): # Increased limit to allow more edge cases
+            print(f"[STATUS] 🦙 Chunk {i+1}/{len(scenarios)}: {scenario[:40]}...")
             
             # 🚀 Fix: Ensure focused_rules is passed as 'custom_rules' to the prompt
             impl_prompt = strategy.get_implementer_prompt(safe_code, scenario, pure_ctx, focused_rules)

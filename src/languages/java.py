@@ -35,29 +35,41 @@ class JavaStrategy(LanguageStrategy):
         for child in node.children: self._traverse(child, code, dependencies)
 
     def get_architect_prompt(self, target_code, dependency_context):
-        template = """You are a robotic Java Test Architect.
-        [TASK] Identify 3 test scenarios for the provided code.
-        [OUTPUT FORMAT] Return ONLY lines starting with "SCENARIO: ". NO EXPLANATION.
+        template = """You are a Senior Java Test Architect.
+        [TASK] Design 3-5 comprehensive test scenarios.
+        [STRICT RULES]
+        1. Include SUCCESS cases.
+        2. Include EDGE cases (Null, Empty string, Boundary values, Overflow).
+        3. If multiple inputs test the same logic, group them into a "PARAMETERIZED" scenario.
+        [OUTPUT] Return ONLY lines starting with "SCENARIO: ".
         
         [CODE] {target_code}
-        [CONTEXT] {dependency_context}
         """
         return ChatPromptTemplate.from_template(template)
 
     def get_implementer_prompt(self, target_code, plan_item, research_context, custom_rules=""):
-        template = """You are a Code-Only Generator. You DO NOT talk. You only output valid Java methods.
+        template = """Java Expert. Implement ONE test method.
         [SCENARIO] {plan_item}
-        [RULES] {custom_rules}
-        [STRICT INSTRUCTIONS]
-        1. Write ONLY ONE @Test method.
-        2. DO NOT include class declaration, imports, or package.
-        3. DO NOT EXPLAIN ANYTHING. NO CONVERSATION.
-        4. Wrap the method body strictly inside <CODE> and </CODE> tags.
+        [RULES]
+        - Use AssertJ and Mockito.
+        - For multiple data points, use @ParameterizedTest with @CsvSource or @ValueSource.
+        - Include @NullAndEmptySource if applicable.
+        - Output ONLY code inside <CODE> tags.
+        
+        [EXAMPLE PARAMETERIZED]
+        @ParameterizedTest
+        @CsvSource({
+            "input1, expected1",
+            "input2, expected2"
+        })
+        void testName(String input, String expected) { ... }
         
         [TARGET CODE] {target_code}
-        [DOCS] {research_context}
         """
-        return ChatPromptTemplate.from_template(template)
+        return ChatPromptTemplate.from_template(template.format(
+            plan_item="{plan_item}", target_code="{target_code}", 
+            research_context="{research_context}", custom_rules=custom_rules
+        ))
 
     def get_researcher_prompt(self, unknown_libraries):
         return ChatPromptTemplate.from_template("List key classes for: {unknown_libraries}")

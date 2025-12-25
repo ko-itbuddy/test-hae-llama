@@ -1,21 +1,12 @@
 package com.example.demo.service;
-
-import org.springframework.ai.chat.client.ChatClient;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class AiService {
-
-    private final ChatClient chatClient;
-
-    public AiService(ChatClient.Builder builder) {
-        this.chatClient = builder.build();
-    }
-
-    public String askAi(String message) {
-        return chatClient.prompt()
-                .user(message)
-                .call()
-                .content();
+    @Async
+    public CompletableFuture<String> analyzeProductTrend(String productName) {
+        return CompletableFuture.completedFuture("TRENDY");
     }
 }
