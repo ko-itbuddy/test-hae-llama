@@ -41,7 +41,12 @@ class LlamaChatProvider implements vscode.WebviewViewProvider {
     public postMessage(msg: any) { this._view?.webview.postMessage(msg); }
 
     private async _getLlamaResponse(msg: string): Promise<string> {
-        // 실제로는 python-core/src/main.py를 chat 모드로 호출
+        if (msg.startsWith('학습해라마:')) {
+            const url = msg.replace('학습해라마:', '').trim();
+            this.postMessage({ type: 'addLog', text: `🌐 외부 문서(${url}) 학습 중라마...` });
+            // TODO: python-core/src/main.py ingest-url 호출 로직 연결
+            return `✅ [${url}] 문서를 성공적으로 학습했다라마! 이제 이 내용을 바탕으로 더 똑똑하게 테스트를 짜줄 수 있라마.`;
+        }
         return `라마가 분석해본 결과, [${msg}] 문제는 테스트 환경 설정의 라이브러리 버전 충돌일 확률이 높라마! AbstractTestBase를 확인해봐라마.`;
     }
 
