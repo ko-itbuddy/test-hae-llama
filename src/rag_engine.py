@@ -65,7 +65,8 @@ class InfraSpecialistAgent:
 class TestInfraAgent:
     def generate_setup(self, project_path, versions):
         sb_ver = versions.get('spring-boot', '3.2.0')
-        base_code = f"package com.example.demo;\n@org.springframework.boot.test.context.SpringBootTest\npublic abstract class AbstractTestBase {{ }}"
+        base_code = f"package com.example.demo;\n@org.springframework.boot.test.context.SpringBootTest
+public abstract class AbstractTestBase {{ }}"
         return {'AbstractTestBase.java': base_code, 'application-test.yml': "spring:\n  datasource:\n    url: jdbc:h2:mem:testdb"}
 
 # --- 3. RAG Librarian ---
