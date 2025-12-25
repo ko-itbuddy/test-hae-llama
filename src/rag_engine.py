@@ -197,6 +197,48 @@ def generate_test(target_file_path, project_path, project_collection, docs_colle
     initial_context = _retrieve_full_context(target_code, project_path, project_collection, strategy, embedding_model)
     return asyncio.run(run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules))
 
+class LibrarianAgent:
+
+    """
+
+    Expert Librarian: Decides which specific collections to open based on code analysis.
+
+    """
+
+    def select_collections(self, code, project_prefix):
+
+        targets = []
+
+        # 1. Project-level layers
+
+        targets.append(f"{project_prefix}_common")
+
+        if "@Service" in code: targets.append(f"{project_prefix}_service")
+
+        if "Repository" in code: targets.append(f"{project_prefix}_repository")
+
+        
+
+        # 2. Library-level isolation
+
+        imports = re.findall(r'import\s+([\w\.]+);', code)
+
+        for imp in imports:
+
+            base_lib = f"lib_{imp.split('.')[0]}_{imp.split('.')[1]}"
+
+            # Decide API vs Guide based on query context (if mentions 'how to' or 'example')
+
+            targets.append(f"{base_lib}_api")
+
+            targets.append(f"{base_lib}_guide")
+
+        
+
+        return list(set(targets))
+
+
+
 def _retrieve_full_context(query, project_path, prefix, strategy, emb_model):
 
     from langchain_chroma import Chroma
@@ -209,90 +251,40 @@ def _retrieve_full_context(query, project_path, prefix, strategy, emb_model):
 
     
 
-    # 🔍 1. Identify relevant library collections from imports
+    librarian = LibrarianAgent()
 
-    imports = re.findall(r'import\s+([\w\.]+);', query)
+    selected_cols = librarian.select_collections(query, prefix)
 
-    relevant_libs = []
-
-    for imp in imports:
-
-        # Match imports to collection naming pattern
-
-        potential_lib = f"lib_{imp.split('.')[0]}_{imp.split('.')[1]}"
-
-        relevant_libs.append(potential_lib)
+    print(f"[STATUS] Librarian: Selected {len(selected_cols)} specialized collections for research.")
 
 
-
-    # 🔍 2. Precise Retrieval from Isolated Collections
 
     if os.path.exists(persist_dir):
 
-        # Always search project codebase
-
-        for layer in strategy.get_relevant_collections(query):
+        for col_name in selected_cols:
 
             try:
 
-                col_name = f"{prefix}_{layer}"
-
                 db = Chroma(persist_directory=persist_dir, collection_name=col_name, embedding_function=emb)
 
-                results = db.similarity_search(query, k=2)
+                # Dynamic K: more chunks for guides, fewer for API
 
-                context += f"\n--- PROJECT CONTEXT ({layer}) ---\n" + "\n".join([d.page_content for d in results])
+                k = 3 if "_guide" in col_name else 2
+
+                results = db.similarity_search(query, k=k)
+
+                
+
+                if results:
+
+                    header = "📚 LIBRARY " + ("GUIDE" if "_guide" in col_name else "API") if "lib_" in col_name else "🏠 PROJECT"
+
+                    context += f"\n--- {header} ({col_name}) ---\n" + "\n".join([d.page_content for d in results])
 
             except: pass
-
-        
-
-                # Search relevant library collections (both API and Guide)
-
-        
-
-                for lib_col_base in list(set(relevant_libs)):
-
-        
-
-                    for suffix in ["_api", "_guide"]:
-
-        
-
-                        lib_col = f"{lib_col_base}{suffix}"
-
-        
-
-                        try:
-
-        
-
-                            db = Chroma(persist_directory=persist_dir, collection_name=lib_col, embedding_function=emb)
-
-        
-
-                            results = db.similarity_search(query, k=2)
-
-        
-
-                            if results:
-
-        
-
-                                source_type = "API SPEC" if suffix == "_api" else "USAGE GUIDE"
-
-        
-
-                                context += f"\n--- LIBRARY {source_type} ({lib_col}) ---\n" + "\n".join([d.page_content for d in results])
-
-        
-
-                        except: pass
-
-        
-
-        
 
             
 
     return context
+
+
