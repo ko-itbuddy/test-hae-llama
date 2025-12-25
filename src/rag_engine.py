@@ -92,7 +92,7 @@ class TestInfraAgent:
             os.makedirs(os.path.dirname(base_path), exist_ok=True)
             code = f"package {package_name};\nimport org.springframework.boot.test.context.SpringBootTest;\nimport org.springframework.test.context.ActiveProfiles;\n@SpringBootTest\n@ActiveProfiles(\"test\")\npublic abstract class AbstractTestBase {{ }}"
             with open(base_path, "w", encoding='utf-8') as f: f.write(code)
-            setup_log.append(f"Created AbstractTestBase.java")
+            setup_log.append("Created AbstractTestBase.java")
 
         yml_path = os.path.join(module_root, "src/test/resources/application-test.yml")
         if not os.path.exists(yml_path):
@@ -142,14 +142,13 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
     suggested_tools = infra_expert.suggest_tools(safe_code)
     focused_rules = style_lib.filter_rules(safe_code, custom_rules)
     if suggested_tools:
-        focused_rules += f"\n[INFRA_MANDATE] Use {{', '.join(suggested_tools)}}"
+        focused_rules += f"\n[INFRA_MANDATE] Use {{{', '.join(suggested_tools)}}}"
 
     llm = ChatOllama(model=llm_model, temperature=0.0)
     purifier = ContextPurifierAgent(); mocker = MockingSpecialistAgent()
     context7 = MCPBridge("context7|npx|-y|@upstash/context7-mcp")
     
     try:
-        # 1. Connect to Context7
         if "UPSTASH_CONTEXT7_API_KEY" not in os.environ and "CONTEXT7_API_KEY" not in os.environ:
             print("[STATUS] ⚠️ No Context7 API Key found. Deep Research will be limited.")
         else:
@@ -191,3 +190,8 @@ def generate_test(target_file_path, project_path, project_collection, docs_colle
         result_code = asyncio.run(run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules))
         return f"[RESULT_START]\n{{result_code}}\n[RESULT_END]"
     except Exception as e: return f"Error: {str(e)}"
+
+class TroubleshooterAgent:
+    def troubleshoot(self, error_log, project_context):
+        if "BeanCreationException" in error_log: return "Bean 생성 에러! @MockBean을 확인해봐라마."
+        return "에러 로그를 더 자세히 분석하려면 관련 설정 파일을 보여줘라마!"
