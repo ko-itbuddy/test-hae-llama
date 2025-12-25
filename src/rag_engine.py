@@ -71,11 +71,27 @@ class InfraSpecialistAgent:
             tools.append("CountDownLatch / ExecutorService (Concurrency Test)")
         return tools
 
-class TestInfraAgent:
+class TroubleshooterAgent:
     """
-    Infra Engineer: Generates Base classes and test properties.
+    Diagnostic Agent: Analyzes error logs and provides solutions for environment issues.
     """
-    def generate_setup(self, project_path, versions):
+    def troubleshoot(self, error_log, project_context):
+        # 🕵️‍♂️ Logic to detect common Spring Boot / Infra errors
+        if "BeanCreationException" in error_log:
+            return "Bean 생성 에러 발견! @MockBean 설정이 누락되었거나 @Autowired 대상이 테스트 컨텍스트에 없는 것 같라마."
+        if "Kafka" in error_log.lower() and "Connection refused" in error_log:
+            return "카프카 연결 실패라마! EmbeddedKafka 설정을 확인하거나 도커 브로커를 띄워야 한다라마."
+        return "정확한 원인을 파악하기 위해 관련 설정 파일(pom.xml 혹은 yml)을 보여줘라마!"
+
+async def run_chat_session(user_msg, project_path):
+    """
+    Interactive Chat Engine for Troubleshooting.
+    """
+    llm = ChatOllama(model="qwen2.5-coder:7b", temperature=0.7)
+    troubleshooter = TroubleshooterAgent()
+    # 🔍 RAG to get project context for better diagnosis
+    # (Context retrieval logic here)
+    return troubleshooter.troubleshoot(user_msg, "Project Context")
         setup_files = {}
         sb_ver = versions.get('spring-boot', '3.2.0')
         
