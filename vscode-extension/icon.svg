@@ -1,0 +1,7 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Llama Silhouette -->
+  <path d="M64 10C40 10 30 25 30 50C30 75 40 90 64 90C88 90 98 75 98 50C98 25 88 10 64 10Z" fill="#8B4513"/>
+  <circle cx="50" cy="45" r="5" fill="white"/>
+  <circle cx="78" cy="45" r="5" fill="white"/>
+  <path d="M55 70C55 70 60 75 64 70C68 75 73 70 73 70" stroke="white" stroke-width="3" stroke-linecap="round"/>
+</svg>

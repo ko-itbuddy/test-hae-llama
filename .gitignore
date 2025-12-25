@@ -1,0 +1,38 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+
+# Vector DB (Local Data)
+chroma_db/
+*.sqlite3
+
+# Logs
+*.log
+
+# Java / Build Tools
+target/
+build/
+.gradle/
+out/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project Specific
+ollama_*.log
+.gemini/
+.env
+.env.*

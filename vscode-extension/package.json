@@ -1,0 +1,41 @@
+{
+  "name": "test-hae-llama",
+  "displayName": "Test-Hae-Llama (테스트해라마)",
+  "publisher": "itbuddy",
+  "version": "0.1.0",
+  "description": "야, 라마야! 테스트 코드 좀 짜라! (Local LLM Test Generator)",
+  "license": "MIT",
+  "icon": "icon.png",
+  "repository": { "type": "git", "url": "https://github.com/ko-itbuddy/test-hae-llama" },
+  "engines": { "vscode": "^1.85.0" },
+  "main": "./out/extension.js",
+  "activationEvents": [ "onLanguage:java", "onView:llama-actions" ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [ { "id": "test-hae-llama-sidebar", "title": "테스트해라마", "icon": "icon.svg" } ]
+    },
+    "views": {
+      "test-hae-llama-sidebar": [
+        { "id": "llama-status", "name": "🦙 라마 상태" },
+        { "id": "llama-actions", "name": "🚀 빠른 작업" }
+      ]
+    },
+    "commands": [
+      { "command": "test-hae-llama.ingest", "title": "🦙 프로젝트 공부시키기" },
+      { "command": "test-hae-llama.generate", "title": "🚀 테스트 코드 짜줘라마!" },
+      { "command": "test-hae-llama.showLogs", "title": "📋 로그 확인하기" }
+    ],
+    "configuration": {
+      "title": "Test-Hae-Llama",
+      "properties": {
+        "test-hae-llama.pythonPath": { "type": "string", "default": "python3" },
+        "test-hae-llama.model": { "type": "string", "default": "qwen2.5-coder:7b" },
+        "test-hae-llama.customRules": { "type": "string", "default": "", "editPresentation": "multilineText" },
+        "test-hae-llama.context7ApiKey": { "type": "string", "default": "" }
+      }
+    }
+  },
+  "scripts": { "compile": "node build.js && tsc -p ./" },
+  "files": [ "out", "python-core", "icon.png", "icon.svg", "package.json", "LICENSE", "README.md" ],
+  "devDependencies": { "@types/vscode": "^1.85.0", "@types/node": "^18.19.0", "typescript": "^5.3.3" }
+}
