@@ -2,28 +2,30 @@
   "name": "test-hae-llama",
   "displayName": "Test-Hae-Llama (테스트해라마)",
   "publisher": "itbuddy",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "야, 라마야! 테스트 코드 좀 짜라! (Local LLM Test Generator)",
   "license": "MIT",
   "icon": "icon.png",
   "repository": { "type": "git", "url": "https://github.com/ko-itbuddy/test-hae-llama" },
   "engines": { "vscode": "^1.85.0" },
   "main": "./out/extension.js",
-  "activationEvents": [ "*" ],
+  "activationEvents": [
+    "onView:llama-unified-view"
+  ],
   "contributes": {
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "llama-v3-container",
+          "id": "test-hae-llama-sidebar",
           "title": "테스트해라마",
           "icon": "icon.svg"
         }
       ]
     },
     "views": {
-      "llama-v3-container": [
+      "test-hae-llama-sidebar": [
         {
-          "id": "llama-main-v3",
+          "id": "llama-unified-view",
           "name": "🦙 라마 컨트롤 센터"
         }
       ]
