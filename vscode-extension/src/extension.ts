@@ -3,15 +3,11 @@ import * as path from 'path';
 import * as cp from 'child_process';
 import * as fs from 'fs';
 
-// --- 전역 변수 ---
-let outputChannel: vscode.OutputChannel;
-let isLlamaReady = false;
-
-// --- 데이터 모델 및 공급자 (호이스팅 방지를 위해 상단 배치) ---
+// --- 1. 클래스 정의를 최상단에 배치 (호이스팅 방지) ---
 class LlamaItem extends vscode.TreeItem {
     constructor(label: string, commandId: string, icon: vscode.ThemeIcon) {
-        super(label); 
-        this.iconPath = icon; 
+        super(label);
+        this.iconPath = icon;
         this.command = { command: commandId, title: label };
     }
 }
@@ -21,9 +17,9 @@ class LlamaProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
     private _onDidChangeTreeData = new vscode.EventEmitter<void>();
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
 
-    updateStatus(s: string) { 
-        this._status = s; 
-        this._onDidChangeTreeData.fire(); 
+    updateStatus(s: string) {
+        this._status = s;
+        this._onDidChangeTreeData.fire();
     }
 
     getTreeItem(el: vscode.TreeItem): vscode.TreeItem { return el; }
@@ -42,52 +38,62 @@ class LlamaProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
     }
 }
 
+// --- 2. 전역 변수 ---
+let outputChannel: vscode.OutputChannel;
+let isLlamaReady = false;
 let statusProvider: LlamaProvider;
 
-// --- 확장 기능 활성화 ---
+// --- 3. 확장 기능 활성화 ---
 export async function activate(context: vscode.ExtensionContext) {
-    outputChannel = vscode.window.createOutputChannel("Test-Hae-Llama 🦙");
-    outputChannel.appendLine("🦙 테스트해라마 기상 중...");
+    try {
+        outputChannel = vscode.window.createOutputChannel("Test-Hae-Llama 🦙");
+        outputChannel.appendLine("🦙 테스트해라마 기상 중...");
 
-    // 1. 데이터 공급자 생성 및 등록 (ID: llama-main)
-    statusProvider = new LlamaProvider();
-    context.subscriptions.push(
-        vscode.window.registerTreeDataProvider('llama-main', statusProvider)
-    );
-    outputChannel.appendLine("✅ 사이드바 뷰(llama-main) 등록 완료");
+        // 데이터 공급자 즉시 생성
+        statusProvider = new LlamaProvider();
+        
+        // 뷰 등록 (package.json의 id와 반드시 일치해야 함)
+        const view = vscode.window.createTreeView('llama-main-v3', {
+            treeDataProvider: statusProvider,
+            showCollapseAll: true
+        });
+        context.subscriptions.push(view);
+        outputChannel.appendLine("✅ 사이드바 뷰(llama-main-v3) 등록 완료");
 
-    const venvPath = path.join(context.globalStorageUri.fsPath, 'venv');
-    const pythonPath = process.platform === 'win32' 
-        ? path.join(venvPath, 'Scripts', 'python.exe') 
-        : path.join(venvPath, 'bin', 'python');
+        const venvPath = path.join(context.globalStorageUri.fsPath, 'venv');
+        const pythonPath = process.platform === 'win32' 
+            ? path.join(venvPath, 'Scripts', 'python.exe') 
+            : path.join(venvPath, 'bin', 'python');
 
-    // 2. 비동기 엔진 초기화
-    initializeLlama(context, venvPath, pythonPath);
+        // 엔진 초기화
+        initializeLlama(context, venvPath, pythonPath);
 
-    // 3. 커맨드 등록
-    context.subscriptions.push(
-        vscode.commands.registerCommand('test-hae-llama.ingest', async (uri: vscode.Uri) => {
-            if (!checkReady()) return;
-            const projectPath = uri ? uri.fsPath : vscode.workspace.workspaceFolders?.[0].uri.fsPath;
-            if (projectPath) runTask("ingest", "🦙 공부 중라마", ['--project-path', projectPath], projectPath, pythonPath, context);
-        }),
-        vscode.commands.registerCommand('test-hae-llama.generate', async (uri: vscode.Uri) => {
-            if (!checkReady()) return;
-            let targetFile = uri ? uri.fsPath : vscode.window.activeTextEditor?.document.uri.fsPath;
-            if (targetFile?.endsWith('.java')) {
-                const projectPath = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(targetFile))?.uri.fsPath || path.dirname(targetFile);
-                runTask("generate", "🚀 테스트 제작 중라마", ['--target-file', targetFile, '--project-path', projectPath], projectPath, pythonPath, context);
-            }
-        }),
-        vscode.commands.registerCommand('test-hae-llama.reinstall', () => {
-            if (fs.existsSync(context.globalStorageUri.fsPath)) fs.rmSync(context.globalStorageUri.fsPath, { recursive: true });
-            vscode.commands.executeCommand('workbench.action.reloadWindow');
-        }),
-        vscode.commands.registerCommand('test-hae-llama.showLogs', () => outputChannel.show(true))
-    );
+        // 커맨드 등록
+        context.subscriptions.push(
+            vscode.commands.registerCommand('test-hae-llama.ingest', async (uri: vscode.Uri) => {
+                const projectPath = uri ? uri.fsPath : vscode.workspace.workspaceFolders?.[0].uri.fsPath;
+                if (projectPath) runTask("ingest", "🦙 공부 중라마", ['--project-path', projectPath], projectPath, pythonPath, context);
+            }),
+            vscode.commands.registerCommand('test-hae-llama.generate', async (uri: vscode.Uri) => {
+                let targetFile = uri ? uri.fsPath : vscode.window.activeTextEditor?.document.uri.fsPath;
+                if (targetFile?.endsWith('.java')) {
+                    const projectPath = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(targetFile))?.uri.fsPath || path.dirname(targetFile);
+                    runTask("generate", "🚀 테스트 제작 중라마", ['--target-file', targetFile, '--project-path', projectPath], projectPath, pythonPath, context);
+                }
+            }),
+            vscode.commands.registerCommand('test-hae-llama.reinstall', () => {
+                if (fs.existsSync(context.globalStorageUri.fsPath)) fs.rmSync(context.globalStorageUri.fsPath, { recursive: true });
+                vscode.commands.executeCommand('workbench.action.reloadWindow');
+            }),
+            vscode.commands.registerCommand('test-hae-llama.showLogs', () => outputChannel.show(true))
+        );
+
+    } catch (err: any) {
+        if (outputChannel) outputChannel.appendLine(`❌ 활성화 에러: ${err.message}`);
+        vscode.window.showErrorMessage(`🦙 라마 활성화 실패: ${err.message}`);
+    }
 }
 
-// --- 엔진 로직 ---
 async function initializeLlama(context: vscode.ExtensionContext, venvPath: string, pythonPath: string) {
     try {
         let needsInstall = !fs.existsSync(pythonPath);
@@ -146,11 +152,6 @@ async function runTask(type: string, label: string, args: string[], cwd: string,
             }
         } catch (err: any) { outputChannel.appendLine(`❌ 에러: ${err.message}`); }
     });
-}
-
-function checkReady() {
-    if (!isLlamaReady) { vscode.window.showWarningMessage("🦙 아직 준비 중라마!"); return false; }
-    return true;
 }
 
 function execCmd(cmd: string): Promise<void> {
