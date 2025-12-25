@@ -44,10 +44,20 @@ class MockingSpecialistAgent:
         missing = [s for s in injected_services if s not in mocked_services]
         return missing
 
+class ContextPurifierAgent:
+    """
+    Cleaner: Extracts only necessary method signatures to minimize 7b noise.
+    """
+    def purify(self, scenario, full_context):
+        # Very simple version: just keep lines that look like method definitions
+        # In a real version, this could be another LLM call or regex
+        relevant_lines = [line for line in full_context.split('\n') if '(' in line and ')' in line]
+        return "\n".join(relevant_lines[:20]) # Limit to top 20 relevant signatures
+
 async def run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules):
     """
-    Engine 25.3: Chunked-Generation Scheduler for 7b Models.
-    Splits tasks into small pieces to maintain high quality.
+    Engine 25.4: Micro-Task Pipeline (Precision Engine).
+    Breaks down single-method generation into 3 micro-steps.
     """
     # 🛡️ 0. Defense Phase
     guardian = PrivacyAgent()
@@ -55,6 +65,7 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
     safe_context = guardian.mask(initial_context)
     
     llm = ChatOllama(model=llm_model, temperature=0.0)
+    purifier = ContextPurifierAgent()
     mocker = MockingSpecialistAgent()
     context7 = MCPBridge("context7|npx|-y|@upstash/context7-mcp")
     is_mcp_active = False
@@ -67,38 +78,34 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
             is_mcp_active = True
         except: pass
 
-        # 2. Architect Phase: Determine Chunks
-        print("[STATUS] Architect Agent: Breaking down tasks into chunks...")
+        # 2. Architect Phase
+        print("[STATUS] Architect Agent: Micro-planning scenarios...")
         arch_prompt = strategy.get_architect_prompt(safe_code, safe_context)
         arch_response = _call_chain(arch_prompt, llm, {"target_code": safe_code, "dependency_context": safe_context})
-        
-        # Split by SCENARIO markers and limit each run to prevent 7b overload
         scenarios = re.findall(r'SCENARIO: (.*)', arch_response)
         if not scenarios: scenarios = [arch_response]
-        
-        # Limit to top 5 scenarios to ensure 7b doesn't lose context in long loops
-        work_queue = scenarios[:5] 
-        print(f"[STATUS] Task Scheduler: {len(work_queue)} chunks identified.")
+        work_queue = scenarios[:5]
 
-        # 3. Distributed Implementation Phase
+        # 3. Micro-Task Pipeline Phase
         final_methods = []
         for i, scenario in enumerate(work_queue):
-            print(f"[STATUS] Implementer ({i+1}/{len(work_queue)}): Focus on single chunk...")
-            # Use only necessary context for this chunk to keep 7b focused
-            impl_prompt = strategy.get_implementer_prompt(safe_code, scenario, safe_context, custom_rules)
-            method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": scenario, "research_context": safe_context})
+            print(f"[STATUS] 🦙 Micro-Pipeline ({i+1}/{len(work_queue)}): {scenario[:30]}...")
             
-            # 🔄 Refinement Loop per Chunk
+            # Step A: Purify Context (Reduce noise for 7b)
+            pure_context = purifier.purify(scenario, safe_context)
+            
+            # Step B: Drafting (Implementer)
+            impl_prompt = strategy.get_implementer_prompt(safe_code, scenario, pure_context, custom_rules)
+            method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": scenario, "research_context": pure_context})
+            
+            # Step C: Refinement & Mock Check
             for attempt in range(2):
-                print(f"[STATUS] QA & Refiner ({i+1}/{len(work_queue)}): Polishing chunk (Attempt {attempt+1})...")
-                # ... (Refinement logic remains same but applied to chunk)
-                missing_mocks = mocker.check_mocking_strategy(method_code, safe_context)
-                qa_prompt = strategy.get_quality_engineer_prompt(method_code, safe_context)
-                reviewed_code = _call_chain(qa_prompt, llm, {"generated_code": method_code, "target_context": safe_context})
+                missing_mocks = mocker.check_mocking_strategy(method_code, pure_context)
+                qa_prompt = strategy.get_quality_engineer_prompt(method_code, pure_context)
+                reviewed_code = _call_chain(qa_prompt, llm, {"generated_code": method_code, "target_context": pure_context})
                 
                 if "FIX_NEEDED" in reviewed_code or missing_mocks:
-                    fix_prompt = f"Fix this chunk: {reviewed_code}. Missing: {missing_mocks}"
-                    method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": fix_prompt, "research_context": safe_context})
+                    method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": f"Fix syntax/mock: {reviewed_code}", "research_context": pure_context})
                 else:
                     method_code = reviewed_code
                     break
@@ -108,17 +115,10 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
             final_methods.append(re.sub(r'```java|```', '', snippet).strip())
 
         # 4. Final Assembly
-        print("[STATUS] Integrator: Composing final test class...")
         class_name = os.path.basename(target_file_path).replace(".java", "")
         return strategy.assemble_final_class(class_name, final_methods, target_code=target_code)
 
-        # 4. Assembly
-        print("[STATUS] Integrator Agent: Assembling final class...")
-        class_name = os.path.basename(target_file_path).replace(".java", "")
-        return strategy.assemble_final_class(class_name, final_methods, target_code=target_code)
 
-    finally:
-        if is_mcp_active: await context7.disconnect()
 
 def generate_test(target_file_path, project_path, project_collection, docs_collection, llm_model="qwen2.5-coder:7b", embedding_model="nomic-embed-text", custom_rules="", mcp_configs=None):
     try:
