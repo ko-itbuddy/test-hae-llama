@@ -2,7 +2,7 @@
   "name": "test-hae-llama",
   "displayName": "Test-Hae-Llama (테스트해라마)",
   "publisher": "itbuddy",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "야, 라마야! 테스트 코드 좀 짜라! (Local LLM Test Generator)",
   "license": "MIT",
   "icon": "icon.png",

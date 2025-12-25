@@ -134,8 +134,23 @@ async function runTask(type: string, label: string, args: string[], cwd: string,
             });
             if (type === 'generate') {
                 const cleanCode = res.split("[RESULT_START]")[1]?.split("[RESULT_END]")[0]?.trim() || res;
-                const doc = await vscode.workspace.openTextDocument({ content: cleanCode, language: 'java' });
+                
+                // 📂 1. 테스트 파일 경로 추론 (src/main/java -> src/test/java)
+                let testFilePath = args[1].replace(/src[/\\]main[/\\]java/, 'src/test/java').replace(/\.java$/, 'Test.java');
+                
+                // 📂 2. 폴더가 없으면 생성
+                const testDir = path.dirname(testFilePath);
+                if (!fs.existsSync(testDir)) fs.mkdirSync(testDir, { recursive: true });
+
+                // 💾 3. 파일 쓰기
+                fs.writeFileSync(testFilePath, cleanCode, 'utf8');
+                outputChannel.appendLine(`✨ 테스트 파일 생성 완료: ${testFilePath}`);
+
+                // 📖 4. 생성된 파일 열기
+                const doc = await vscode.workspace.openTextDocument(testFilePath);
                 await vscode.window.showTextDocument(doc, { preview: false, viewColumn: vscode.ViewColumn.Beside });
+                
+                vscode.window.showInformationMessage(`🦙 테스트 파일이 생성되었다라마! (${path.basename(testFilePath)})`);
             }
         } catch (err: any) { outputChannel.appendLine(`❌ 에러: ${err.message}`); }
     });
