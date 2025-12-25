@@ -14,13 +14,13 @@ def _call_chain(prompt, llm, input_data):
     chain = prompt | llm | StrOutputParser()
     return chain.invoke(input_data)
 
-# --- 1. Defense & Utility Agents ---
+# --- 1. Defense & Style Agents ---
 class PrivacyAgent:
     def __init__(self):
         self.patterns = {
             "API_KEY": r'(?i)(api[-_]?key|secret|token|password|auth|access[-_]?key)["\\]?s*[:=]s*["\\]([a-zA-Z0-0\-_]{16,})["\\]',
-            "EMAIL": r'[\w\.-]+@[\w\.-]+\\.\w+',
-            "URL_AUTH": r'https?://[\w\.-]+:[\w\.-]+@[\w\.-]+',
+            "EMAIL": r'[\\w\\.-]+@[\\w\\.-]+\\.\\w+',
+            "URL_AUTH": r'https?://[\\w\\.-]+:[\\w\\.-]+@[\\w\\.-]+',
             "GENERIC_SECRET": r'(?i)(db_password|client_secret|private_key|aws_secret|stripe_key)["\\]?s*[:=]s*["\\]([^"\\]+)["\\]'
         }
     def mask(self, text: str) -> str:
@@ -30,7 +30,6 @@ class PrivacyAgent:
         return masked_text
 
 class StyleLibrarianAgent:
-    """Filters long customRules to keep only relevant ones for the 7b model."""
     def filter_rules(self, code, all_rules):
         if not all_rules: return ""
         relevant = []
@@ -67,7 +66,7 @@ class TestInfraAgent:
         sb_ver = versions.get('spring-boot', '3.2.0')
         base_code = f"package com.example.demo;\n@org.springframework.boot.test.context.SpringBootTest
 public abstract class AbstractTestBase {{ }}"
-        return {'AbstractTestBase.java': base_code, 'application-test.yml': "spring:\n  datasource:\n    url: jdbc:h2:mem:testdb"}
+        return {{'AbstractTestBase.java': base_code, 'application-test.yml': "spring:\n  datasource:\n    url: jdbc:h2:mem:testdb"}}
 
 # --- 3. RAG Librarian ---
 class LibrarianAgent:
@@ -75,7 +74,7 @@ class LibrarianAgent:
         targets = [f"{project_prefix}_common"]
         if "@Service" in code: targets.append(f"{project_prefix}_service")
         if "Repository" in code: targets.append(f"{project_prefix}_repository")
-        for imp in re.findall(r'import\s+([\w\.]+);', code):
+        for imp in re.findall(r'import\s+([\\w\\.]+);', code):
             base_lib = f"lib_{imp.split('.')[0]}_{imp.split('.')[1]}"
             targets.extend([f"{base_lib}_api", f"{base_lib}_guide"])
         return list(set(targets))
