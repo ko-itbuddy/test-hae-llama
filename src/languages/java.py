@@ -35,12 +35,12 @@ class JavaStrategy(LanguageStrategy):
         for child in node.children: self._traverse(child, code, dependencies)
 
     def get_architect_prompt(self, target_code, dependency_context):
-        template = """You are a Senior Java Test Architect.
-        [TASK] Design 3-5 comprehensive test scenarios.
+        template = """You are an Aggressive QA Penetration Tester.
+        [GOAL] Find as many ways to BREAK the provided code as possible.
         [STRICT RULES]
-        1. Include SUCCESS cases.
-        2. Include EDGE cases (Null, Empty string, Boundary values, Overflow).
-        3. If multiple inputs test the same logic, group them into a "PARAMETERIZED" scenario.
+        1. List exactly ONE "Happy Path" success scenario.
+        2. List 4-6 "Failure/Negative" scenarios (e.g., Null, Empty, Boundary, Exception, Timeout, Security).
+        3. Be creative in identifying potential bugs or unhandled edge cases.
         [OUTPUT] Return ONLY lines starting with "SCENARIO: ".
         
         [CODE] {target_code}
