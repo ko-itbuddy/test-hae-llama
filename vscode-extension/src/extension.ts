@@ -10,7 +10,7 @@ let statusProvider: LlamaStatusProvider;
 export async function activate(context: vscode.ExtensionContext) {
     outputChannel = vscode.window.createOutputChannel("Test-Hae-Llama 🦙");
     outputChannel.show(true);
-    outputChannel.appendLine("🦙 테스트해라마 25.1 가동!");
+    outputChannel.appendLine("🦙 테스트해라마 기상 중...");
 
     statusProvider = new LlamaStatusProvider();
     const actionProvider = new LlamaActionProvider();
@@ -25,16 +25,22 @@ export async function activate(context: vscode.ExtensionContext) {
     initializeLlama(context, venvPath, pythonPath);
 
     context.subscriptions.push(
-        vscode.commands.registerCommand('test-hae-llama.ingest', (uri: vscode.Uri) => {
+        vscode.commands.registerCommand('test-hae-llama.ingest', async (uri: vscode.Uri) => {
+            if (!checkReady()) return;
             const projectPath = uri ? uri.fsPath : vscode.workspace.workspaceFolders?.[0].uri.fsPath;
-            if (projectPath) runTask("ingest", "🦙 프로젝트 공부 중라마", ['--project-path', projectPath], projectPath, pythonPath, context);
+            if (projectPath) runTask("ingest", "🦙 공부 중라마", ['--project-path', projectPath], projectPath, pythonPath, context);
         }),
-        vscode.commands.registerCommand('test-hae-llama.generate', (uri: vscode.Uri) => {
+        vscode.commands.registerCommand('test-hae-llama.generate', async (uri: vscode.Uri) => {
+            if (!checkReady()) return;
             let targetFile = uri ? uri.fsPath : vscode.window.activeTextEditor?.document.uri.fsPath;
             if (targetFile?.endsWith('.java')) {
                 const projectPath = vscode.workspace.getWorkspaceFolder(vscode.Uri.file(targetFile))?.uri.fsPath || path.dirname(targetFile);
                 runTask("generate", "🚀 테스트 제작 중라마", ['--target-file', targetFile, '--project-path', projectPath], projectPath, pythonPath, context);
             }
+        }),
+        vscode.commands.registerCommand('test-hae-llama.reinstall', () => {
+            if (fs.existsSync(context.globalStorageUri.fsPath)) fs.rmSync(context.globalStorageUri.fsPath, { recursive: true });
+            vscode.commands.executeCommand('workbench.action.reloadWindow');
         }),
         vscode.commands.registerCommand('test-hae-llama.showLogs', () => outputChannel.show(true))
     );
@@ -42,67 +48,52 @@ export async function activate(context: vscode.ExtensionContext) {
 
 async function initializeLlama(context: vscode.ExtensionContext, venvPath: string, pythonPath: string) {
     try {
-        if (!fs.existsSync(pythonPath)) {
-            statusProvider.updateStatus("Setting up uv... 🚀");
+        let needsInstall = !fs.existsSync(pythonPath);
+        if (!needsInstall) {
+            try {
+                await execCmd(`"${pythonPath}" -c "import click; import langchain"`);
+            } catch { needsInstall = true; }
+        }
+
+        if (needsInstall) {
+            statusProvider.updateStatus("Installing... 📦");
+            if (!fs.existsSync(context.globalStorageUri.fsPath)) fs.mkdirSync(context.globalStorageUri.fsPath, { recursive: true });
+            outputChannel.appendLine("📦 가상환경 구축 중라마 (uv 사용)...");
             await execCmd(`uv venv "${venvPath}" --python 3.13`);
             const reqPath = path.join(context.extensionPath, 'python-core', 'requirements.txt');
+            outputChannel.appendLine("📥 라이브러리 설치 중라마...");
             await execCmd(`uv pip install --python "${pythonPath}" -r "${reqPath}"`);
         }
         isLlamaReady = true;
         statusProvider.updateStatus("Ready ✅");
+        outputChannel.appendLine("✅ 라마 엔진 가동 준비 완료!");
     } catch (err: any) {
-        statusProvider.updateStatus("Error ❌");
-        outputChannel.appendLine(`❌ Setup Error: ${err.message}`);
+        isLlamaReady = false;
+        statusProvider.updateStatus("Setup Error ❌");
+        outputChannel.appendLine(`❌ 초기화 에러: ${err.message}`);
     }
 }
 
 async function runTask(type: string, label: string, args: string[], cwd: string, pythonPath: string, context: vscode.ExtensionContext) {
-    if (!isLlamaReady) { vscode.window.showWarningMessage("🦙 라마가 준비 중라마!"); return; }
-
-    await vscode.window.withProgress({
-        location: vscode.ProgressLocation.Notification,
-        title: label,
-        cancellable: false
-    }, async (progress) => {
+    await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: label }, async () => {
         try {
             const config = vscode.workspace.getConfiguration('test-hae-llama');
-            const model = config.get<string>('model') || 'qwen2.5-coder:7b';
-            const rules = config.get<string>('customRules') || '';
-            const apiKey = config.get<string>('context7ApiKey') || '';
-            
-            const finalArgs = [...args, '--model', model];
+            const finalArgs = [...args, '--model', config.get<string>('model') || 'qwen2.5-coder:7b'];
             if (type === 'generate') {
+                const rules = config.get<string>('customRules') || '';
+                const apiKey = config.get<string>('context7ApiKey') || '';
                 if (rules) finalArgs.push('--custom-rules', rules);
                 if (apiKey) finalArgs.push('--context7-api-key', apiKey);
             }
-
+            
             const scriptPath = path.join(context.extensionPath, 'python-core', 'src', 'main.py');
             const pythonCoreDir = path.join(context.extensionPath, 'python-core');
-            const env = { ...process.env, PYTHONPATH: pythonCoreDir };
-
+            
             const res = await new Promise<string>((resolve, reject) => {
-                const proc = cp.spawn(pythonPath, [scriptPath, type, ...finalArgs], { cwd, env });
+                const proc = cp.spawn(pythonPath, [scriptPath, type, ...finalArgs], { cwd, env: { ...process.env, PYTHONPATH: pythonCoreDir } });
                 let out = '', err = '';
-                
-                proc.stdout?.on('data', (d: Buffer) => {
-                    const line = d.toString();
-                    // 💡 실시간 상태 업데이트 (모델 다운로드 진행률 포함) 파싱라마!
-                    if (line.includes("[STATUS]")) {
-                        const statusMsg = line.split("[STATUS]")[1].trim();
-                        progress.report({ message: statusMsg });
-                    }
-                    if (line.includes("💾 [SAVED]")) {
-                        vscode.window.showInformationMessage(line.trim());
-                    }
-                    out += line;
-                    outputChannel.append(line);
-                });
-                
-                proc.stderr?.on('data', (d: Buffer) => {
-                    outputChannel.append(d.toString());
-                    err += d.toString();
-                });
-                
+                proc.stdout?.on('data', (d) => { out += d.toString(); outputChannel.append(d.toString()); });
+                proc.stderr?.on('data', (d) => { err += d.toString(); outputChannel.append(d.toString()); });
                 proc.on('close', (code) => code === 0 ? resolve(out) : reject(new Error(err || out)));
             });
 
@@ -111,10 +102,13 @@ async function runTask(type: string, label: string, args: string[], cwd: string,
                 const doc = await vscode.workspace.openTextDocument({ content: cleanCode, language: 'java' });
                 await vscode.window.showTextDocument(doc, { preview: false, viewColumn: vscode.ViewColumn.Beside });
             }
-        } catch (err: any) {
-            outputChannel.appendLine(`❌ Error: ${err.message}`);
-        }
+        } catch (err: any) { outputChannel.appendLine(`❌ 에러: ${err.message}`); }
     });
+}
+
+function checkReady() {
+    if (!isLlamaReady) { vscode.window.showWarningMessage("🦙 아직 준비 중라마!"); return false; }
+    return true;
 }
 
 function execCmd(cmd: string): Promise<void> {
@@ -140,7 +134,11 @@ class LlamaStatusProvider implements vscode.TreeDataProvider<vscode.TreeItem> {
     readonly onDidChangeTreeData = this._onDidChangeTreeData.event;
     updateStatus(s: string) { this._status = s; this._onDidChangeTreeData.fire(); }
     getTreeItem(el: vscode.TreeItem): vscode.TreeItem { return el; }
-    getChildren(): vscode.TreeItem[] { return [new vscode.TreeItem(`Status: ${this._status}`)]; }
+    getChildren(): vscode.TreeItem[] {
+        const statusItem = new vscode.TreeItem(`Llama: ${this._status}`);
+        const reinstallItem = new LlamaItem("환경 재구축하기 (Reinstall)", "test-hae-llama.reinstall", new vscode.ThemeIcon("refresh"));
+        return [statusItem, reinstallItem];
+    }
 }
 
 class LlamaItem extends vscode.TreeItem {
