@@ -1,7 +1,12 @@
 import click
 import os
 import sys
+import re
 from pathlib import Path
+from dotenv import load_dotenv
+
+# 💡 최상단에서 .env 로드라마!
+load_dotenv()
 
 # Ensure the parent directory is in sys.path so 'src.xxx' imports work
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -99,7 +104,7 @@ def _get_test_save_path(target_file, project_path):
     
     # 🔍 2. Language-agnostic Path Swapping (java, kotlin, etc.)
     # pattern: src/main/(any_lang)/... -> src/test/(any_lang)/...
-    test_path = re.sub(r'src([/\\+])main([/\\+])(\w+)', r'src\1test\3', abs_target)
+    test_path = re.sub(r'src([/\\+])main([/\\+])(\w+)', r'src\1test\2\3', abs_target)
     
     # Fallback if no src/main structure found
     if test_path == abs_target:

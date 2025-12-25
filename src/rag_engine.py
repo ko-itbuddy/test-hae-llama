@@ -149,7 +149,15 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
     context7 = MCPBridge("context7|npx|-y|@upstash/context7-mcp")
     
     try:
-        await context7.connect(timeout=30)
+        # 1. Connect to Context7
+        if "UPSTASH_CONTEXT7_API_KEY" not in os.environ and "CONTEXT7_API_KEY" not in os.environ:
+            print("[STATUS] ⚠️ No Context7 API Key found. Deep Research will be limited.")
+        else:
+            print("[STATUS] Connecting to Context7 (Deep Research)...")
+            try:
+                await context7.connect(timeout=30)
+            except Exception as e:
+                print(f"[STATUS] ❌ Context7 connection failed: {e}")
         arch_prompt = strategy.get_architect_prompt(safe_code, safe_context)
         arch_response = _call_chain(arch_prompt, llm, {"target_code": safe_code, "dependency_context": safe_context})
         scenarios = re.findall(r'SCENARIO: (.*)', arch_response) or [arch_response]
@@ -182,4 +190,4 @@ def generate_test(target_file_path, project_path, project_collection, docs_colle
         initial_context = _retrieve_full_context(target_code, project_path, project_collection, strategy, embedding_model)
         result_code = asyncio.run(run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules))
         return f"[RESULT_START]\n{{result_code}}\n[RESULT_END]"
-    except Exception as e: return f"Error: {{str(e)}}"
+    except Exception as e: return f"Error: {str(e)}"
