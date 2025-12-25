@@ -247,21 +247,51 @@ def _retrieve_full_context(query, project_path, prefix, strategy, emb_model):
 
         
 
-        # Search only relevant library collections
+                # Search relevant library collections (both API and Guide)
 
-        for lib_col in list(set(relevant_libs)):
+        
 
-            try:
+                for lib_col_base in list(set(relevant_libs)):
 
-                db = Chroma(persist_directory=persist_dir, collection_name=lib_col, embedding_function=emb)
+        
 
-                results = db.similarity_search(query, k=3) # Higher K for library docs
+                    for suffix in ["_api", "_guide"]:
 
-                if results:
+        
 
-                    context += f"\n--- LIBRARY DOCS ({lib_col}) ---\n" + "\n".join([d.page_content for d in results])
+                        lib_col = f"{lib_col_base}{suffix}"
 
-            except: pass
+        
+
+                        try:
+
+        
+
+                            db = Chroma(persist_directory=persist_dir, collection_name=lib_col, embedding_function=emb)
+
+        
+
+                            results = db.similarity_search(query, k=2)
+
+        
+
+                            if results:
+
+        
+
+                                source_type = "API SPEC" if suffix == "_api" else "USAGE GUIDE"
+
+        
+
+                                context += f"\n--- LIBRARY {source_type} ({lib_col}) ---\n" + "\n".join([d.page_content for d in results])
+
+        
+
+                        except: pass
+
+        
+
+        
 
             
 

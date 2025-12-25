@@ -40,35 +40,34 @@ def ingest_codebase(project_path, collection_name_prefix="spring_project", embed
         splits = splitter.split_documents(documents)
         Chroma.from_documents(documents=splits, embedding=embedding_function, collection_name=f"{collection_name_prefix}_{category}", persist_directory=persist_dir)
 
-def get_official_doc_url(group, artifact, version):
+def get_official_sources(group, artifact, version):
     """
-    Mapping logic to find official docs beyond just javadoc.io.
+    Returns a dictionary of {category: url} for a dependency.
     """
-    mappings = {
-        "org.springframework": f"https://docs.spring.io/spring-boot/docs/{version}/reference/htmlsingle/",
-        "org.apache.kafka": f"https://kafka.apache.org/documentation/",
-        "org.hibernate": "https://hibernate.org/orm/documentation/",
-        "com.fasterxml.jackson": "https://github.com/FasterXML/jackson-docs",
-        "org.mockito": "https://javadoc.io/doc/org.mockito/mockito-core/latest/index.html"
+    sources = {
+        "api": f"https://www.javadoc.io/doc/{group}/{artifact}/{version}"
     }
-    for key, url in mappings.items():
-        if key in group: return url
-    # Fallback to javadoc.io
-    return f"https://www.javadoc.io/doc/{group}/{artifact}/{version}"
+    # Add specific guides for major frameworks
+    if "org.springframework" in group:
+        sources["guide"] = f"https://docs.spring.io/spring-boot/docs/{version}/reference/htmlsingle/"
+    elif "org.apache.kafka" in group:
+        sources["guide"] = "https://kafka.apache.org/documentation/"
+        
+    return sources
 
 def ingest_dependencies_javadocs(project_path, embedding_model="nomic-embed-text"):
     from src.dependency import get_full_dependencies
     deps = get_full_dependencies(project_path)
-    print(f"[STATUS] 🚀 Isolated Learning: Building separate sanctuaries for {len(deps)} libraries.")
+    print(f"[STATUS] 🚀 Layered Learning: Ingesting API and Guides for {len(deps)} libraries.")
     
     for dep in deps:
-        url = get_official_doc_url(dep['group'], dep['artifact'], dep['version'])
-        # Create a unique collection name per library
-        collection_name = f"lib_{dep['group'].replace('.', '_')}_{dep['artifact'].replace('-', '_')}"
-        print(f"   -> Isolating Knowledge: Learning {dep['artifact']} into '{collection_name}'")
-        ingest_url(url, project_path, collection_name, embedding_model)
-    
-    print(f"✅ Every library now has its own isolated knowledge space!")
+        sources = get_official_sources(dep['group'], dep['artifact'], dep['version'])
+        base_name = f"lib_{dep['group'].replace('.', '_')}_{dep['artifact'].replace('-', '_')}"
+        
+        for category, url in sources.items():
+            collection_name = f"{base_name}_{category}"
+            print(f"   -> Learning {category.upper()}: {dep['artifact']} from {url}")
+            ingest_url(url, project_path, collection_name, embedding_model)
 
 def ingest_url(url, project_path, collection_name, embedding_model="nomic-embed-text"):
     import requests
