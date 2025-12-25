@@ -96,7 +96,7 @@ class JavaStrategy(LanguageStrategy):
 
         methods_content = "\n\n".join(valid_methods)
         
-        return "{pkg}\nimport org.junit.jupiter.api.*;\nimport org.junit.jupiter.api.extension.ExtendWith;\nimport org.mockito.*;\nimport org.mockito.junit.jupiter.MockitoExtension;\nimport static org.mockito.Mockito.*;\nimport static org.assertj.core.api.Assertions.*;\nimport java.util.*;\n\n@ExtendWith(MockitoExtension.class)\npublic class {name}Test {{\n    {body}\n}}".format(pkg=pkg_stmt, name=class_name, body=methods_content)
+        return "{pkg}\nimport org.junit.jupiter.api.*;\nimport org.junit.jupiter.api.extension.ExtendWith;\nimport org.mockito.*;\nimport org.mockito.junit.jupiter.MockitoExtension;\nimport static org.mockito.Mockito.*;\nimport static org.assertj.core.api.Assertions.*;\nimport java.util.*;@ExtendWith(MockitoExtension.class)\n/* 🚨 이 테스트 코드는 반드시 통과되어야 합니다라마! */\npublic class {name}Test {{\n    {body}\n}}".format(pkg=pkg_stmt, name=class_name, body=methods_content)
 
     def extract_methods(self, code): return []
     def get_compilation_command(self, file_path): return ["javac", file_path]

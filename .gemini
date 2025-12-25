@@ -7,11 +7,11 @@
 1. **Aggressive Failure Discovery (핵심):**
    - 성공 케이스는 1~2개로 최소화한다.
    - 실패/예외 케이스(Negative Testing)를 최대한 많이 발굴하여 경계값 및 비정상 상태에서의 견고함을 검증한다.
-2. **Parameterized Testing:**
-   - 다양한 실패 데이터를 효율적으로 테스트하기 위해 `@ParameterizedTest`와 `@NullAndEmptySource`, `@MethodSource` 등을 극한으로 활용한다.
-3. **Divide & Conquer:**
-   - 7b 모델의 자원을 성공 케이스보다 복잡한 실패 시나리오 구현에 우선 배정한다.
-4. **Spring Standard Compliance:**
+3. **Parameterized Testing:**
+   - 중복 코드를 줄이기 위해 `@ParameterizedTest`와 `@CsvSource`, `@NullAndEmptySource` 등을 극한으로 활용한다.
+4. **Mandatory Disclaimer:**
+   - 생성된 모든 테스트 클래스 상단에는 "🚨 이 테스트 코드는 반드시 통과되어야 합니다라마!"라는 주석을 명시한다.
+5. **Spring Standard Compliance:**
    - Maven/Gradle 표준 경로를 엄격히 준수하고 멀티 모듈을 지원한다.
 3. **Multi-Agent Architecture:**
    - 보안, 사서, 인프라 전문가 등 11인의 에이전트 협력을 유지하고 강화한다.
