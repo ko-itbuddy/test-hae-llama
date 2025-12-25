@@ -34,75 +34,44 @@ class JavaStrategy(LanguageStrategy):
             dependencies.update(found)
         for child in node.children: self._traverse(child, code, dependencies)
 
-    # --- Agent Implementation 10.0 ---
-
     def get_architect_prompt(self, target_code, dependency_context):
-        template = """You are a Principal Java Architect. Analyze the target class and design a complete test strategy.
-        [TARGET CODE] {target_code}
-        [WORKSPACE CONTEXT] {dependency_context}
-        [TASK] List exactly 3-5 scenarios to test. Format: SCENARIO: [Description]
-        """
+        template = "Principal Java Architect. Design 3 test scenarios for code: {target_code}. Context: {dependency_context}. Format: SCENARIO: [Desc]"
+        return ChatPromptTemplate.from_template(template)
+
+    def get_implementer_prompt(self, target_code, plan_item, research_context, custom_rules=""):
+        template = "Expert Java Developer. Write ONE JUnit 5 @Test for {plan_item}. Target: {target_code}. Docs: {research_context}. Rules: {custom_rules}. Use triple quotes for JSON. Output inside <CODE> tags."
         return ChatPromptTemplate.from_template(template)
 
     def get_researcher_prompt(self, unknown_libraries):
-        return ChatPromptTemplate.from_template("Analyze these libraries: {unknown_libraries}")
-
-    def get_implementer_prompt(self, target_code, plan_item, research_context, custom_rules=""):
-        rules_section = f"\n[USER CUSTOM RULES]\n{custom_rules}\n" if custom_rules else ""
-        template = """You are an Expert Java Developer. Implement one @Test method.
-        [SCENARIO] {plan_item}
-        [CODE CONTEXT] {target_code}
-        [TECHNICAL DOCS] {research_context}
-        {rules_section}
-        [STRICT RULES]
-        - USE AssertJ and Mockito.
-        - ALWAYS use Java 15+ Text Blocks (triple quotes \"\"\") for JSON or multiline strings to avoid escape character errors.
-        - Output ONLY the method code inside <CODE> ... </CODE> tags.
-        """
-        return ChatPromptTemplate.from_template(template.format(
-            plan_item="{plan_item}", target_code="{target_code}", 
-            research_context="{research_context}", rules_section=rules_section
-        ))
+        return ChatPromptTemplate.from_template("Search documentation for: {unknown_libraries}")
 
     def get_quality_engineer_prompt(self, generated_code, target_context):
-        template = """You are a QA Lead. Review this Java test method.
-        [CODE TO REVIEW] {generated_code}
-        [STRICT RULES]
-        - Remove any markdown or class headers.
-        - Ensure ONLY the method is inside <CODE> tags.
-        """
+        template = "QA Lead. Fix syntax in: {generated_code}. Use <CODE> tags."
         return ChatPromptTemplate.from_template(template)
 
     def assemble_final_class(self, class_name, test_methods, target_code=""):
-        # Extract package from target_code
         package_match = re.search(r'package\s+([\w\.]+);', target_code)
-        package_stmt = package_match.group(0) if package_match else "package com.example.demo;"
-
-        cleaned = []
-        for m in test_methods:
-            m_clean = re.sub(r'^(package|import) .*;', '', m, flags=re.MULTILINE)
-            cleaned.append(m_clean.strip())
-
-        return f"""
-{package_stmt}
+        pkg_stmt = package_match.group(0) if package_match else "package com.example.demo;"
+        body_content = "\n\n".join([m.strip() for m in test_methods if len(m) > 50])
+        
+        # 💡 Perfect template variable alignment
+        template = """
+{pkg}
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.mockito.Mockito.*;
 import static org.assertj.core.api.Assertions.*;
-import static org.assertj.core.groups.Tuple.tuple;
 import java.util.*;
-import java.math.BigDecimal;
 
 @ExtendWith(MockitoExtension.class)
-@DisplayName(\"{class_name} Unit Tests\")
-public class {class_name}Test {{
-    {chr(10).join(cleaned)}
-}}
-"""
+public class {name}Test {{
+    {body}
+}} """
+        return template.format(pkg=pkg_stmt, name=class_name, body=body_content)
 
     def extract_methods(self, code): return []
     def get_compilation_command(self, file_path): return ["javac", file_path]
     def get_relevant_collections(self, target_code):
-        return ["c_service", "c_repository", "c_entity", "c_component", "docs_spring", "docs_mockito"]
+        return ["c_service", "c_repository", "docs_spring", "docs_mockito"]

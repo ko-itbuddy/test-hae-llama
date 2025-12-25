@@ -1,6 +1,6 @@
 import os
 import glob
-from langchain_community.document_loaders import TextLoader, DirectoryLoader, UnstructuredMarkdownLoader
+from langchain_community.document_loaders import TextLoader, DirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter, Language
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
@@ -38,49 +38,35 @@ def ingest_codebase(project_path, collection_name_prefix="spring_project", embed
     persist_dir = get_chroma_dir(project_path)
     for category, documents in buckets.items():
         splits = splitter.split_documents(documents)
-        Chroma.from_documents(documents=splits, embedding=embedding_function, collection_name=f"{collection_name_prefix}_{category}", persist_directory=persist_dir)
-
-def get_official_sources(group, artifact, version):
-    """
-    Returns a dictionary of {category: url} for a dependency.
-    """
-    sources = {
-        "api": f"https://www.javadoc.io/doc/{group}/{artifact}/{version}"
-    }
-    # Add specific guides for major frameworks
-    if "org.springframework" in group:
-        sources["guide"] = f"https://docs.spring.io/spring-boot/docs/{version}/reference/htmlsingle/"
-    elif "org.apache.kafka" in group:
-        sources["guide"] = "https://kafka.apache.org/documentation/"
-        
-    return sources
+        if splits:
+            Chroma.from_documents(documents=splits, embedding=embedding_function, collection_name=f"{collection_name_prefix}_{category}", persist_directory=persist_dir)
 
 def ingest_dependencies_javadocs(project_path, embedding_model="nomic-embed-text"):
     from src.dependency import get_full_dependencies
     deps = get_full_dependencies(project_path)
     print(f"[STATUS] 🚀 Layered Learning: Ingesting API and Guides for {len(deps)} libraries.")
-    
     for dep in deps:
-        sources = get_official_sources(dep['group'], dep['artifact'], dep['version'])
-        base_name = f"lib_{dep['group'].replace('.', '_')}_{dep['artifact'].replace('-', '_')}"
-        
-        for category, url in sources.items():
-            collection_name = f"{base_name}_{category}"
-            print(f"   -> Learning {category.upper()}: {dep['artifact']} from {url}")
-            ingest_url(url, project_path, collection_name, embedding_model)
+        url = f"https://www.javadoc.io/doc/{dep['group']}/{dep['artifact']}/{dep['version']}"
+        ingest_url(url, project_path, f"lib_{dep['artifact']}", embedding_model)
 
 def ingest_url(url, project_path, collection_name, embedding_model="nomic-embed-text"):
     import requests
     from bs4 import BeautifulSoup
     from langchain_core.documents import Document
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
     try:
         response = requests.get(url, timeout=15)
         soup = BeautifulSoup(response.text, 'html.parser')
         main_body = soup.find('main') or soup.find('article') or soup.find('body')
-        content_parts = [e.get_text().strip() for e in main_body.find_all(['h1', 'h2', 'h3', 'p', 'pre', 'code'])]
-        doc = Document(page_content="\n".join(content_parts), metadata={"source": url})
+        if not main_body: return
+        text = "\n".join([e.get_text().strip() for e in main_body.find_all(['h1', 'h2', 'h3', 'p', 'pre', 'code'])])
+        if not text.strip(): return
+        
+        doc = Document(page_content=text, metadata={"source": url})
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
         splits = splitter.split_documents([doc])
+        if not splits: return
+        
         embedding_function = OllamaEmbeddings(model=embedding_model)
         persist_dir = get_chroma_dir(project_path)
         Chroma.from_documents(documents=splits, embedding=embedding_function, collection_name=collection_name, persist_directory=persist_dir)

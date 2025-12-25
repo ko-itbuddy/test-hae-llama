@@ -164,8 +164,15 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
         final_methods = []
         for i, scenario in enumerate(scenarios[:5]):
             pure_ctx = purifier.purify(scenario, safe_context)
+            
+            # 🚀 Fix: Ensure focused_rules is passed as 'custom_rules' to the prompt
             impl_prompt = strategy.get_implementer_prompt(safe_code, scenario, pure_ctx, focused_rules)
-            method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": scenario, "research_context": pure_ctx})
+            method_code = _call_chain(impl_prompt, llm, {
+                "target_code": safe_code, 
+                "plan_item": scenario, 
+                "research_context": pure_ctx,
+                "custom_rules": focused_rules
+            })
             
             for attempt in range(2):
                 missing = mocker.check_mocking_strategy(method_code, pure_ctx)
