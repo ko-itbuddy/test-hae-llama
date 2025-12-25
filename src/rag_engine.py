@@ -18,10 +18,10 @@ def _call_chain(prompt, llm, input_data):
 class PrivacyAgent:
     def __init__(self):
         self.patterns = {
-            "API_KEY": r'(?i)(api[-_]?key|secret|token|password|auth|access[-_]?key)["\\]?s*[:=]s*["\\]([a-zA-Z0-0\-_]{16,})["\\]',
-            "EMAIL": r'[\\w\\.-]+@[\\w\\.-]+\\.\\w+',
-            "URL_AUTH": r'https?://[\\w\\.-]+:[\\w\\.-]+@[\\w\\.-]+',
-            "GENERIC_SECRET": r'(?i)(db_password|client_secret|private_key|aws_secret|stripe_key)["\\]?s*[:=]s*["\\]([^"\\]+)["\\]'
+            "API_KEY": r'(?i)(api[-_]?key|secret|token|password|auth|access[-_]?key)["\']?\s*[:=]\s*["\']([a-zA-Z0-0\-_]{16,})["\']',
+            "EMAIL": r'[\w\.-]+@[\w\.-]+\.\w+',
+            "URL_AUTH": r'https?://[\w\.-]+:[\w\.-]+@[\w\.-]+',
+            "GENERIC_SECRET": r'(?i)(db_password|client_secret|private_key|aws_secret|stripe_key)["\']?\s*[:=]\s*["\']([^"\\]+)["\']'
         }
     def mask(self, text: str) -> str:
         masked_text = text
@@ -62,11 +62,7 @@ class InfraSpecialistAgent:
         return tools
 
 class TestInfraAgent:
-    """
-    Infra Engineer: Generates Base classes and test properties with dynamic package detection.
-    """
     def _detect_package(self, project_path):
-        # Scan src/main/java to find the root package
         java_root = os.path.join(project_path, "src/main/java")
         if not os.path.exists(java_root): return "com.example.demo"
         for root, dirs, files in os.walk(java_root):
@@ -82,25 +78,25 @@ class TestInfraAgent:
         package_path = package_name.replace('.', '/')
         sb_ver = versions.get('spring-boot', '3.2.0')
         setup_log = []
-        
-        # 1. Base Class (Now with correct package!)
         base_path = os.path.join(project_path, "src/test/java", package_path, "AbstractTestBase.java")
         if not os.path.exists(base_path):
             os.makedirs(os.path.dirname(base_path), exist_ok=True)
-            code = f"package {package_name};\n\nimport org.springframework.boot.test.context.SpringBootTest;\nimport org.springframework.test.context.ActiveProfiles;\n\n@SpringBootTest\n@ActiveProfiles(\"test\")\npublic abstract class AbstractTestBase {{\n    // Environment: Spring Boot {sb_ver}\n}}"
+            code = f"package {package_name};\nimport org.springframework.boot.test.context.SpringBootTest;\nimport org.springframework.test.context.ActiveProfiles;\n@SpringBootTest\n@ActiveProfiles(\"test\")\npublic abstract class AbstractTestBase {{ }}"
             with open(base_path, "w") as f: f.write(code)
-            setup_log.append(f"Created AbstractTestBase.java in {package_name}")
-
+            setup_log.append(f"Created AbstractTestBase.java")
+        return setup_log
 
 # --- 3. RAG Librarian ---
 class LibrarianAgent:
     def select_collections(self, code, project_prefix):
-        targets = [f"{project_prefix}_common"]
+        targets = [f"{project_prefix}_common", "docs_library"]
         if "@Service" in code: targets.append(f"{project_prefix}_service")
         if "Repository" in code: targets.append(f"{project_prefix}_repository")
-        for imp in re.findall(r'import\s+([\\w\\.]+);', code):
-            base_lib = f"lib_{imp.split('.')[0]}_{imp.split('.')[1]}"
-            targets.extend([f"{base_lib}_api", f"{base_lib}_guide"])
+        for imp in re.findall(r'import\s+([\w\.]+);', code):
+            parts = imp.split('.')
+            if len(parts) >= 2:
+                lib_id = f"lib_{{parts[0]}}_{{parts[1]}}"
+                targets.extend([f"{lib_id}_api", f"{lib_id}_guide"])
         return list(set(targets))
 
 def _retrieve_full_context(query, project_path, prefix, strategy, emb_model):
@@ -122,47 +118,40 @@ def _retrieve_full_context(query, project_path, prefix, strategy, emb_model):
 async def run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules):
     guardian = PrivacyAgent(); style_lib = StyleLibrarianAgent()
     safe_code = guardian.mask(target_code); safe_context = guardian.mask(initial_context)
-    focused_rules = style_lib.filter_rules(safe_code, custom_rules)
     
+    versions = get_all_dependency_versions(project_path)
+    infra_eng = TestInfraAgent(); infra_eng.generate_and_save_setup(project_path, versions)
+    
+    infra_expert = InfraSpecialistAgent()
+    suggested_tools = infra_expert.suggest_tools(safe_code)
+    focused_rules = style_lib.filter_rules(safe_code, custom_rules)
+    if suggested_tools:
+        focused_rules += f"\n[INFRA_MANDATE] Use {', '.join(suggested_tools)}"
+
     llm = ChatOllama(model=llm_model, temperature=0.0)
-    purifier = ContextPurifierAgent(); mocker = MockingSpecialistAgent(); infra_expert = InfraSpecialistAgent()
+    purifier = ContextPurifierAgent(); mocker = MockingSpecialistAgent()
     context7 = MCPBridge("context7|npx|-y|@upstash/context7-mcp")
     
     try:
         await context7.connect(timeout=30)
-        suggested_tools = infra_expert.suggest_tools(safe_code)
-        
         arch_prompt = strategy.get_architect_prompt(safe_code, safe_context)
         arch_response = _call_chain(arch_prompt, llm, {"target_code": safe_code, "dependency_context": safe_context})
         scenarios = re.findall(r'SCENARIO: (.*)', arch_response) or [arch_response]
         
         final_methods = []
-        for i, scenario in enumerate(work_queue):
-            print(f"[STATUS] 🦙 Micro-Pipeline ({i+1}/{len(work_queue)}): {scenario[:30]}...")
-            
+        for i, scenario in enumerate(scenarios[:5]):
             pure_ctx = purifier.purify(scenario, safe_context)
-            
-            # 🚀 Injecting Infra/Async Hints into Implementer Prompt
-            extended_rules = focused_rules
-            if suggested_tools:
-                extended_rules += f"\n[INFRA_MANDATE] You MUST use {', '.join(suggested_tools)} for this test."
-                
-            impl_prompt = strategy.get_implementer_prompt(safe_code, scenario, pure_ctx, extended_rules)
+            impl_prompt = strategy.get_implementer_prompt(safe_code, scenario, pure_ctx, focused_rules)
             method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": scenario, "research_context": pure_ctx})
             
-        for attempt in range(2):
-                print(f"[STATUS] QA & Refiner ({i+1}/{len(work_queue)}): Polishing chunk (Attempt {attempt+1})...")
-                missing_mocks = mocker.check_mocking_strategy(method_code, pure_ctx)
+            for attempt in range(2):
+                missing = mocker.check_mocking_strategy(method_code, pure_ctx)
                 qa_prompt = strategy.get_quality_engineer_prompt(method_code, pure_ctx)
-                reviewed_code = _call_chain(qa_prompt, llm, {"generated_code": method_code, "target_context": pure_ctx})
-                
-                if "FIX_NEEDED" in reviewed_code or missing_mocks:
-                    # 🚀 Re-applying Style & Infra hints during fix
-                    fix_hint = f"Fix these issues: {reviewed_code}. Missing mocks: {missing_mocks}. Tool hint: {suggested_tools}"
+                reviewed = _call_chain(qa_prompt, llm, {"generated_code": method_code, "target_context": pure_ctx})
+                if "FIX_NEEDED" in reviewed or missing:
+                    fix_hint = f"Fix: {reviewed}. Missing: {missing}. Tools: {suggested_tools}"
                     method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": fix_hint, "research_context": pure_ctx})
-                else:
-                    method_code = reviewed_code
-                    break
+                else: method_code = reviewed; break
             
             code_match = re.search(r'<CODE>(.*?)</CODE>', method_code, re.DOTALL)
             final_methods.append(re.sub(r'```java|```', '', code_match.group(1).strip() if code_match else method_code).strip())
@@ -175,10 +164,7 @@ def generate_test(target_file_path, project_path, project_collection, docs_colle
         strategy = get_strategy(target_file_path, project_path)
         target_code = open(target_file_path, 'r').read()
         initial_context = _retrieve_full_context(target_code, project_path, project_collection, strategy, embedding_model)
-        return asyncio.run(run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules))
+        result_code = asyncio.run(run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules))
+        return f"[RESULT_START]\n{result_code}\n[RESULT_END]"
     except Exception as e: return f"Error: {str(e)}"
 
-class TroubleshooterAgent:
-    def troubleshoot(self, error_log, project_context):
-        if "BeanCreationException" in error_log: return "Bean 생성 에러! @MockBean을 확인해봐라마."
-        return "에러 로그를 더 자세히 분석하려면 관련 설정 파일을 보여줘라마!"
