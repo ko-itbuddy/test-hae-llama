@@ -43,27 +43,19 @@ def ensure_ollama_models(llm_model="qwen2.5-coder:7b", embedding_model="nomic-em
     except Exception as e:
         print(f"[STATUS] ❌ Error pulling model: {e}")
 
-def get_all_dependency_versions(project_path):
-    versions = {'spring-boot': '3.0.0', 'has-testcontainers': False, 'has-awaitility': False}
+def get_full_dependencies(project_path):
+    """Returns a list of {group, artifact, version} for all dependencies."""
+    deps = []
     pom_path = os.path.join(project_path, "pom.xml")
     if os.path.exists(pom_path):
         try:
             tree = ET.parse(pom_path); root = tree.getroot()
             ns = {'mvn': 'http://maven.apache.org/POM/4.0.0'}
-            # Spring Boot Version
-            parent = root.find(".//mvn:parent/mvn:version", ns)
-            if parent is not None: versions['spring-boot'] = parent.text
-            
-            # Check for specific test libraries
-            text = ET.tostring(root, encoding='unicode')
-            if 'testcontainers' in text: versions['has-testcontainers'] = True
-            if 'awaitility' in text: versions['has-awaitility'] = True
-            
             for dep in root.findall(".//mvn:dependency", ns):
-                aid_node = dep.find("mvn:artifactId", ns)
-                if aid_node is not None:
-                    aid = aid_node.text
-                    ver = dep.find("mvn:version", ns)
-                    if ver is not None: versions[aid] = ver.text
+                group = dep.find("mvn:groupId", ns).text
+                artifact = dep.find("mvn:artifactId", ns).text
+                version_node = dep.find("mvn:version", ns)
+                version = version_node.text if version_node is not None else "latest"
+                deps.append({"group": group, "artifact": artifact, "version": version})
         except: pass
-    return versions
+    return deps

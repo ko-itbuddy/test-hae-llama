@@ -24,13 +24,13 @@ def cli(proxy):
         click.echo(f"🔒 Proxy configured: {proxy}")
 
 @main.command()
-@click.option('--path', required=True, help='Path to documents folder')
+@click.option('--project-path', required=True, help='Path to the Java project')
 @click.option('--model', default='nomic-embed-text', help='Embedding model')
-def ingest_docs(path, model):
-    """Bulk ingest all documents (.md, .txt, .pdf) in a directory."""
-    from src.ingest import ingest_documentation
-    ingest_documentation(path, embedding_model=model)
-    click.echo(f"✅ Bulk ingestion for {path} complete.")
+def ingest_deps(project_path, model):
+    """Deep study: Ingest Javadocs for all project dependencies."""
+    from src.ingest import ingest_dependencies_javadocs
+    ingest_dependencies_javadocs(project_path, embedding_model=model)
+    click.echo(f"✅ Library wisdom absorption complete.")
 
 @cli.command()
 @click.option('--target-file', prompt='Target Java File', help='Path to the file to test')

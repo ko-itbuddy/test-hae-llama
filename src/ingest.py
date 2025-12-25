@@ -40,27 +40,22 @@ def ingest_codebase(project_path, collection_name_prefix="spring_project", embed
         splits = splitter.split_documents(documents)
         Chroma.from_documents(documents=splits, embedding=embedding_function, collection_name=f"{collection_name_prefix}_{category}", persist_directory=persist_dir)
 
-def ingest_documentation(docs_path, embedding_model="nomic-embed-text"):
+def ingest_dependencies_javadocs(project_path, embedding_model="nomic-embed-text"):
     """
-    Bulk ingest MD, TXT, etc. from a directory into a dedicated 'docs_library' collection.
+    Finds all project dependencies and ingests their Javadocs from javadoc.io.
     """
-    print(f"[STATUS] 📚 Bulk ingesting docs from: {docs_path}")
-    # Support MD and TXT initially
-    loader = DirectoryLoader(docs_path, glob="**/*.{md,txt}", loader_cls=TextLoader, silent_errors=True)
-    docs = loader.load()
-    if not docs:
-        print("No documents found to index.")
-        return
-
-    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
-    splits = splitter.split_documents(docs)
+    from src.dependency import get_full_dependencies
+    deps = get_full_dependencies(project_path)
+    print(f"[STATUS] 🚀 Deep Learning: Found {len(deps)} dependencies to study.")
     
-    emb = OllamaEmbeddings(model=embedding_model)
-    persist_dir = get_chroma_dir(docs_path) # Stores in .ai-test-gen of that docs folder
+    for dep in deps:
+        # Construct javadoc.io URL (standard format)
+        url = f"https://www.javadoc.io/doc/{dep['group']}/{dep['artifact']}/{dep['version']}"
+        print(f"   -> Learning Javadoc for {dep['artifact']}...")
+        # Index the package-summary as a starting point (to avoid infinite recursion)
+        ingest_url(f"{url}/index.html", project_path, "docs_library", embedding_model)
     
-    print(f"   -> Indexing {len(splits)} chunks into 'docs_library'...")
-    Chroma.from_documents(documents=splits, embedding=emb, collection_name="docs_library", persist_directory=persist_dir)
-    print(f"✅ Bulk ingestion complete.")
+    print(f"✅ Library wisdom has been absorbed into the Llama's brain!")
 
 def ingest_url(url, project_path, collection_name, embedding_model="nomic-embed-text"):
     import requests
