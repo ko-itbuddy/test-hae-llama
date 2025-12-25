@@ -54,10 +54,24 @@ class ContextPurifierAgent:
         relevant_lines = [line for line in full_context.split('\n') if '(' in line and ')' in line]
         return "\n".join(relevant_lines[:20]) # Limit to top 20 relevant signatures
 
+class InfraSpecialistAgent:
+    """
+    Infra Agent: Detects Kafka, Redis, etc., and suggests testing libraries.
+    """
+    def suggest_tools(self, code):
+        tools = []
+        if "KafkaTemplate" in code or "@KafkaListener" in code:
+            tools.append("EmbeddedKafka / KafkaTestUtils")
+        if "RedisTemplate" in code:
+            tools.append("EmbeddedRedis")
+        if "@Async" in code or "CompletableFuture" in code:
+            tools.append("Awaitility")
+        return tools
+
 async def run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules):
     """
-    Engine 25.4: Micro-Task Pipeline (Precision Engine).
-    Breaks down single-method generation into 3 micro-steps.
+    Engine 25.5: Infrastructure-Aware 9-Agent Federation.
+    Handles Kafka, Redis, and Async patterns with precision.
     """
     # 🛡️ 0. Defense Phase
     guardian = PrivacyAgent()
@@ -67,6 +81,7 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
     llm = ChatOllama(model=llm_model, temperature=0.0)
     purifier = ContextPurifierAgent()
     mocker = MockingSpecialistAgent()
+    infra_expert = InfraSpecialistAgent()
     context7 = MCPBridge("context7|npx|-y|@upstash/context7-mcp")
     is_mcp_active = False
     
@@ -78,8 +93,13 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
             is_mcp_active = True
         except: pass
 
-        # 2. Architect Phase
-        print("[STATUS] Architect Agent: Micro-planning scenarios...")
+        # 2. Architect Phase: Infrastructure Detection
+        print("[STATUS] Architect Agent: Detecting Infrastructure & Async patterns...")
+        suggested_tools = infra_expert.suggest_tools(safe_code)
+        if suggested_tools:
+            print(f"[STATUS] Infra Expert: Recommended tools -> {suggested_tools}")
+            custom_rules += f"\n[INFRA_HINT] Use these tools if possible: {', '.join(suggested_tools)}"
+
         arch_prompt = strategy.get_architect_prompt(safe_code, safe_context)
         arch_response = _call_chain(arch_prompt, llm, {"target_code": safe_code, "dependency_context": safe_context})
         scenarios = re.findall(r'SCENARIO: (.*)', arch_response)
@@ -91,21 +111,19 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
         for i, scenario in enumerate(work_queue):
             print(f"[STATUS] 🦙 Micro-Pipeline ({i+1}/{len(work_queue)}): {scenario[:30]}...")
             
-            # Step A: Purify Context (Reduce noise for 7b)
             pure_context = purifier.purify(scenario, safe_context)
-            
-            # Step B: Drafting (Implementer)
             impl_prompt = strategy.get_implementer_prompt(safe_code, scenario, pure_context, custom_rules)
             method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": scenario, "research_context": pure_context})
             
-            # Step C: Refinement & Mock Check
+            # Step C: Refinement with Infra & Async awareness
             for attempt in range(2):
                 missing_mocks = mocker.check_mocking_strategy(method_code, pure_context)
                 qa_prompt = strategy.get_quality_engineer_prompt(method_code, pure_context)
                 reviewed_code = _call_chain(qa_prompt, llm, {"generated_code": method_code, "target_context": pure_context})
                 
                 if "FIX_NEEDED" in reviewed_code or missing_mocks:
-                    method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": f"Fix syntax/mock: {reviewed_code}", "research_context": pure_context})
+                    fix_hint = f"Fix issues. Suggested tools: {suggested_tools}. Missing mocks: {missing_mocks}"
+                    method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": fix_hint, "research_context": pure_context})
                 else:
                     method_code = reviewed_code
                     break
