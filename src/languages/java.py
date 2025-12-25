@@ -56,6 +56,7 @@ class JavaStrategy(LanguageStrategy):
         {rules_section}
         [STRICT RULES]
         - USE AssertJ and Mockito.
+        - ALWAYS use Java 15+ Text Blocks (triple quotes \"\"\") for JSON or multiline strings to avoid escape character errors.
         - Output ONLY the method code inside <CODE> ... </CODE> tags.
         """
         return ChatPromptTemplate.from_template(template.format(
