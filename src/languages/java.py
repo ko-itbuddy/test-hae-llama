@@ -35,41 +35,56 @@ class JavaStrategy(LanguageStrategy):
         for child in node.children: self._traverse(child, code, dependencies)
 
     def get_architect_prompt(self, target_code, dependency_context):
-        template = "Principal Java Architect. Design 3 test scenarios for code: {target_code}. Context: {dependency_context}. Format: SCENARIO: [Desc]"
+        template = """You are a robotic Java Test Architect.
+        [TASK] Identify 3 test scenarios for the provided code.
+        [OUTPUT FORMAT] Return ONLY lines starting with "SCENARIO: ". NO EXPLANATION.
+        
+        [CODE] {target_code}
+        [CONTEXT] {dependency_context}
+        """
         return ChatPromptTemplate.from_template(template)
 
     def get_implementer_prompt(self, target_code, plan_item, research_context, custom_rules=""):
-        template = "Expert Java Developer. Write ONE JUnit 5 @Test for {plan_item}. Target: {target_code}. Docs: {research_context}. Rules: {custom_rules}. Use triple quotes for JSON. Output inside <CODE> tags."
+        template = """You are a Code-Only Generator. You DO NOT talk. You only output valid Java methods.
+        [SCENARIO] {plan_item}
+        [RULES] {custom_rules}
+        [STRICT INSTRUCTIONS]
+        1. Write ONLY ONE @Test method.
+        2. DO NOT include class declaration, imports, or package.
+        3. DO NOT EXPLAIN ANYTHING. NO CONVERSATION.
+        4. Wrap the method body strictly inside <CODE> and </CODE> tags.
+        
+        [TARGET CODE] {target_code}
+        [DOCS] {research_context}
+        """
         return ChatPromptTemplate.from_template(template)
 
     def get_researcher_prompt(self, unknown_libraries):
-        return ChatPromptTemplate.from_template("Search documentation for: {unknown_libraries}")
+        return ChatPromptTemplate.from_template("List key classes for: {unknown_libraries}")
 
     def get_quality_engineer_prompt(self, generated_code, target_context):
-        template = "QA Lead. Fix syntax in: {generated_code}. Use <CODE> tags."
+        template = """Review the following Java test method for syntax errors.
+        [CODE] {generated_code}
+        [TASK] Return ONLY the fixed Java code inside <CODE> tags. NO COMMENTS.
+        """
         return ChatPromptTemplate.from_template(template)
 
     def assemble_final_class(self, class_name, test_methods, target_code=""):
         package_match = re.search(r'package\s+([\w\.]+);', target_code)
         pkg_stmt = package_match.group(0) if package_match else "package com.example.demo;"
-        body_content = "\n\n".join([m.strip() for m in test_methods if len(m) > 50])
         
-        # 💡 Perfect template variable alignment
-        template = """
-{pkg}
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
-import static org.mockito.Mockito.*;
-import static org.assertj.core.api.Assertions.*;
-import java.util.*;
+        valid_methods = []
+        for m in test_methods:
+            # 🧹 "진짜 자바 코드"인지 판별하는 엄격한 필터링라마!
+            # 세미콜론(;)과 중괄호({})가 최소한 1개는 있어야 하며, 영어 문장 형태는 거부라마.
+            if ";" in m and "{" in m and "}" in m:
+                # 패키지/임포트 키워드가 메서드 내부에 있다면 제거라마.
+                clean = re.sub(r'^(package|import) .*;', '', m, flags=re.MULTILINE).strip()
+                if len(clean) > 30: valid_methods.append(clean)
 
-@ExtendWith(MockitoExtension.class)
-public class {name}Test {{
-    {body}
-}} """
-        return template.format(pkg=pkg_stmt, name=class_name, body=body_content)
+        methods_content = "\n\n".join(valid_methods)
+        
+        return "{pkg}\nimport org.junit.jupiter.api.*;\nimport org.junit.jupiter.api.extension.ExtendWith;\nimport org.mockito.*;\nimport org.mockito.junit.jupiter.MockitoExtension;\nimport static org.mockito.Mockito.*;\nimport static org.assertj.core.api.Assertions.*;\nimport java.util.*;\n\n@ExtendWith(MockitoExtension.class)\npublic class {name}Test {{\n    {body}\n}}".format(pkg=pkg_stmt, name=class_name, body=methods_content)
 
     def extract_methods(self, code): return []
     def get_compilation_command(self, file_path): return ["javac", file_path]
