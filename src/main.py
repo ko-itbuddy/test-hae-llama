@@ -23,7 +23,16 @@ def cli(proxy):
         os.environ['HTTPS_PROXY'] = proxy
         click.echo(f"🔒 Proxy configured: {proxy}")
 
-@main.command()
+@cli.command()
+@click.option('--project-path', required=True, help='Path to the Java project')
+@click.option('--model', default='nomic-embed-text', help='Ollama model for embeddings')
+def ingest(project_path, model):
+    """Scan and ingest Java codebase."""
+    from src.ingest import ingest_codebase
+    ingest_codebase(project_path, embedding_model=model)
+    click.echo(f"✅ Codebase ingestion complete.")
+
+@cli.command()
 @click.option('--project-path', required=True, help='Path to the Java project')
 @click.option('--model', default='nomic-embed-text', help='Embedding model')
 def ingest_deps(project_path, model):
@@ -51,26 +60,28 @@ def generate(target_file, project_path, prefix, model, custom_rules, context7_ap
     # Generate Code
     result = generate_test(target_file, project_path, prefix, "", llm_model=model, custom_rules=custom_rules)
     
-    # 💡 0.8.0: 자동 저장 경로 계산라마!
+    # Extract the actual code if wrapped in RESULT tags
+    clean_result = result
+    if "[RESULT_START]" in result:
+        clean_result = result.split("[RESULT_START]")[1].split("[RESULT_END]")[0].strip()
+
+    # 💡 자동 저장 경로 계산
     save_path = _get_test_save_path(target_file, project_path)
     
     try:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         with open(save_path, 'w', encoding='utf-8') as f:
-            f.write(result)
+            f.write(clean_result)
         click.echo(f"💾 [SAVED] {save_path}")
     except Exception as e:
         click.echo(f"⚠️ [ERROR] Save failed: {e}")
 
-    # Output the result anyway for the IDE to capture if needed
+    # Output for IDE
     click.echo("\n[RESULT_START]")
-    click.echo(result)
+    click.echo(clean_result)
     click.echo("[RESULT_END]")
 
 def _get_test_save_path(target_file, project_path):
-    """
-    Converts src/main/java/.../File.java to src/test/java/.../FileTest.java
-    """
     abs_target = os.path.abspath(target_file)
     if "src/main/java" in abs_target:
         test_path = abs_target.replace("src/main/java", "src/test/java")
