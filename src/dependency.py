@@ -17,9 +17,31 @@ def ensure_ollama_models(llm_model="qwen2.5-coder:7b", embedding_model="nomic-em
     try:
         result = subprocess.run(['ollama', 'list'], capture_output=True, text=True)
         if llm_model not in result.stdout:
-            print(f"[STATUS] ⚠️ Pulling {llm_model}...")
-            subprocess.run(['ollama', 'pull', llm_model], check=True)
-    except: pass
+            print(f"[STATUS] ⚠️ Pulling {llm_model}... (This may take a while)")
+            # Use Popen to filter out carriage returns that cause messy logs in VS Code
+            process = subprocess.Popen(
+                ['ollama', 'pull', llm_model],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                bufsize=1
+            )
+            last_percent = -1
+            for line in process.stdout:
+                # Extract percentage if exists (e.g., "6%")
+                match = re.search(r'(\d+)%', line)
+                if match:
+                    percent = int(match.group(1))
+                    if percent >= last_percent + 5: # Log every 5% to keep it clean
+                        print(f"[STATUS] 📥 {llm_model} pulling... {percent}%")
+                        last_percent = percent
+                elif "pulling manifest" in line or "verifying sha256" in line:
+                    if not any(x in line for x in ["\r", "▕"]): # Skip progress bars
+                        print(f"[STATUS] 📥 {line.strip()}")
+            process.wait()
+            print(f"[STATUS] ✅ {llm_model} is ready.")
+    except Exception as e:
+        print(f"[STATUS] ❌ Error pulling model: {e}")
 
 def get_all_dependency_versions(project_path):
     versions = {}
