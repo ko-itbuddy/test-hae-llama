@@ -59,11 +59,34 @@ class JavaStrategy(LanguageStrategy):
     def assemble_final_class(self, class_name, test_methods, target_code=""):
         package_match = re.search(r'package\s+([\w\.]+);', target_code)
         pkg = package_match.group(0) if package_match else "package com.example.demo;"
-        methods = "\n\n".join([m.strip() for m in test_methods if ";" in m])
         
-        # 💡 Use a simple non-f-string template to avoid all brace issues
-        template = "%s\nimport org.junit.jupiter.api.*;\nimport org.junit.jupiter.api.extension.ExtendWith;\nimport org.mockito.*;\nimport org.mockito.junit.jupiter.MockitoExtension;\nimport static org.mockito.Mockito.*;\nimport static org.assertj.core.api.Assertions.*;\nimport java.util.*;\n\n@ExtendWith(MockitoExtension.class)\n/* This test must pass. */\npublic class %sTest {\n    %s\n}"
-        return template % (pkg, class_name, methods)
+        # 🧹 Improved filter: keep anything that looks like a Java method or has a semicolon
+        valid_methods = []
+        for m in test_methods:
+            m_clean = m.strip()
+            if any(key in m_clean for key in ["@Test", "void", "public", "private", ";"]):
+                # Remove class wrappers if the AI accidentally included them
+                m_clean = re.sub(r'^(package|import) .*;', '', m_clean, flags=re.MULTILINE).strip()
+                if len(m_clean) > 20:
+                    valid_methods.append(m_clean)
+
+        body = "\n\n".join(valid_methods) if valid_methods else "// ⚠️ No valid test methods were generated."
+        
+        template = """{pkg}
+import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.*;
+import java.util.*;
+
+@ExtendWith(MockitoExtension.class)
+/* This test must pass. */
+public class {name}Test {{
+    {body}
+}}"""
+        return template.format(pkg=pkg, name=class_name, body=body)
 
     def extract_methods(self, code): return []
     def get_compilation_command(self, file_path): return ["javac", file_path]
