@@ -167,15 +167,15 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
         scenarios = re.findall(r'SCENARIO: (.*)', arch_response) or [arch_response]
         print(f"[STATUS] Task Scheduler: Found {len(scenarios)} specific targets. Starting atomic generation...")
 
-        # 3. Micro-Task Execution Phase: Atomic Conquest
+        # 3. Micro-Task Execution Phase: Strict Sequential Conquest
         final_methods = []
         for i, scenario in enumerate(scenarios):
             print(f"[STATUS] 🦙 Conquering Target {i+1}/{len(scenarios)}: {scenario[:50]}...")
             
-            # 💡 Each scenario gets its own fresh micro-context
+            # 💡 Slim Context: Reduce noise to save 7b compute power
             pure_ctx = purifier.purify(scenario, safe_context)
             
-            # 🚀 Fix: Ensure focused_rules is passed as 'custom_rules' to the prompt
+            # 🚀 Strict One-by-One Execution
             impl_prompt = strategy.get_implementer_prompt(safe_code, scenario, pure_ctx, focused_rules)
             method_code = _call_chain(impl_prompt, llm, {
                 "target_code": safe_code, 
@@ -184,17 +184,23 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
                 "custom_rules": focused_rules
             })
             
+            # 🔄 Refinement Loop (Sequential)
             for attempt in range(2):
-                missing = mocker.check_mocking_strategy(method_code, pure_ctx)
+                missing_mocks = mocker.check_mocking_strategy(method_code, pure_ctx)
                 qa_prompt = strategy.get_quality_engineer_prompt(method_code, pure_ctx)
-                reviewed = _call_chain(qa_prompt, llm, {"generated_code": method_code, "target_context": pure_ctx})
-                if "FIX_NEEDED" in reviewed or missing:
-                    fix_hint = f"Fix: {{reviewed}}. Missing: {{missing}}. Tools: {{suggested_tools}}"
-                    method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": fix_hint, "research_context": pure_ctx})
-                else: method_code = reviewed; break
+                reviewed_code = _call_chain(qa_prompt, llm, {"generated_code": method_code, "target_context": pure_ctx})
+                
+                if "FIX_NEEDED" in reviewed_code or missing_mocks:
+                    method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": f"Fix: {reviewed_code}", "research_context": pure_ctx})
+                else: method_code = reviewed_code; break
             
+            # Final touch for this method
             code_match = re.search(r'<CODE>(.*?)</CODE>', method_code, re.DOTALL)
             final_methods.append(re.sub(r'```java|```', '', code_match.group(1).strip() if code_match else method_code).strip())
+            
+            # 💤 0.2.1: Cool down slightly to prevent CPU thermal throttling or RAM overflow
+            if i < len(scenarios) - 1:
+                import time; time.sleep(0.5)
 
         return strategy.assemble_final_class(os.path.basename(target_file_path).replace(".java", ""), final_methods, target_code=target_code)
     finally: await context7.disconnect()
