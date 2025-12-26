@@ -14,7 +14,7 @@ def _call_chain(prompt, llm, input_data):
     chain = prompt | llm | StrOutputParser()
     return chain.invoke(input_data)
 
-# --- 1. Defense & Style Agents ---
+# --- 1. Defense & Utility Agents ---
 class PrivacyAgent:
     def __init__(self):
         self.patterns = {
@@ -41,6 +41,32 @@ class StyleLibrarianAgent:
         return "\n".join(relevant[:10])
 
 # --- 2. Technical Specialists ---
+class SymbolUsageAgent:
+    """
+    Precision Slicer: Extracts ONLY the used symbols (fields, methods, DTO fields)
+    to provide the absolute minimum context for 7b models.
+    """
+    def get_precision_context(self, target_code, full_context):
+        # Identify used words/symbols in target code (camelCase, PascalCase)
+        used_symbols = set(re.findall(r'\b[a-zA-Z_]\w*\b', target_code))
+        
+        lines = full_context.split('\n')
+        filtered = []
+        for line in lines:
+            if "---" in line: # Keep source markers
+                filtered.append(line)
+                continue
+            
+            # 💡 0.3.0: 핀셋 로직 - 사용 중인 필드나 메서드 정의만 골라냄라마!
+            # Example: product.getName() -> matches 'getName' in DTO field or method
+            clean_line = line.strip()
+            if any(sym in clean_line for sym in used_symbols):
+                # Only keep definitions (private String name, public void setX, etc.)
+                if any(kw in clean_line for kw in ["private", "public", "@", "class", "interface"]):
+                    filtered.append(clean_line)
+        
+        return "\n".join(filtered[:40]) # High density context
+
 class MockingSpecialistAgent:
     def check_mocking_strategy(self, code, context):
         injected = re.findall(r'@Autowired\s+(?:private\s+)?(\w+)', context)
@@ -86,20 +112,12 @@ class TestInfraAgent:
         package_name = self._detect_package(module_root)
         package_path = package_name.replace('.', '/')
         setup_log = []
-        
         base_path = os.path.join(module_root, "src/test/java", package_path, "AbstractTestBase.java")
         if not os.path.exists(base_path):
             os.makedirs(os.path.dirname(base_path), exist_ok=True)
             code = f"package {package_name};\nimport org.springframework.boot.test.context.SpringBootTest;\nimport org.springframework.test.context.ActiveProfiles;\n@SpringBootTest\n@ActiveProfiles(\"test\")\npublic abstract class AbstractTestBase {{ }}"
             with open(base_path, "w", encoding='utf-8') as f: f.write(code)
             setup_log.append("Created AbstractTestBase.java")
-
-        yml_path = os.path.join(module_root, "src/test/resources/application-test.yml")
-        if not os.path.exists(yml_path):
-            os.makedirs(os.path.dirname(yml_path), exist_ok=True)
-            yml = "spring:\n  datasource:\n    url: jdbc:h2:mem:testdb\n  sql:\n    init:\n      mode: always"
-            with open(yml_path, "w", encoding='utf-8') as f: f.write(yml)
-            setup_log.append("Created application-test.yml")
         return setup_log
 
 # --- 3. RAG Librarian ---
@@ -111,7 +129,7 @@ class LibrarianAgent:
         for imp in re.findall(r'import\s+([\w\.]+);', code):
             parts = imp.split('.')
             if len(parts) >= 2:
-                lib_id = f"lib_{{parts[0]}}_{{parts[1]}}"
+                lib_id = f"lib_{parts[0]}_{parts[1]}"
                 targets.extend([f"{lib_id}_api", f"{lib_id}_guide"])
         return list(set(targets))
 
@@ -131,21 +149,8 @@ def _retrieve_full_context(query, project_path, prefix, strategy, emb_model):
     return context
 
 # --- 4. Main Engine Workflow ---
-    def _get_slim_code(self, code):
-        """Extracts only fields and method signatures to save tokens."""
-        lines = code.split('\n')
-        slim = []
-        for line in lines:
-            # Keep fields, annotations, and method signatures, but remove bodies
-            if any(x in line for x in ["private", "public", "@", "class", "interface"]):
-                if "{" in line and "(" in line: # Method start
-                    slim.append(line.split("{")[0].strip() + ";")
-                else:
-                    slim.append(line.strip())
-        return "\n".join(slim[:50]) # Maximum 50 lines of meta-info
-
 async def run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules):
-    guardian = PrivacyAgent(); style_lib = StyleLibrarianAgent()
+    guardian = PrivacyAgent(); style_lib = StyleLibrarianAgent(); slicer = SymbolUsageAgent()
     safe_code = guardian.mask(target_code); safe_context = guardian.mask(initial_context)
     
     versions = get_all_dependency_versions(project_path)
@@ -155,95 +160,62 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
     suggested_tools = infra_expert.suggest_tools(safe_code)
     focused_rules = style_lib.filter_rules(safe_code, custom_rules)
     if suggested_tools:
-        focused_rules += f"\n[INFRA_MANDATE] Use {{{', '.join(suggested_tools)}}}"
+        focused_rules += f"\n[INFRA_MANDATE] Use {', '.join(suggested_tools)}"
 
     llm = ChatOllama(model=llm_model, temperature=0.0)
     purifier = ContextPurifierAgent(); mocker = MockingSpecialistAgent()
-    # 💡 Optimization: Added experimental flags and @latest to resolve connection issues
     context7 = MCPBridge("context7|npx|-y|--node-options=--experimental-vm-modules --experimental-fetch|@upstash/context7-mcp@latest")
     
     try:
-        if "UPSTASH_CONTEXT7_API_KEY" not in os.environ and "CONTEXT7_API_KEY" not in os.environ:
-            print("[STATUS] ⚠️ No Context7 API Key found. Deep Research will be limited.")
-        else:
-            print("[STATUS] Connecting to Context7 (Deep Research)...")
-            try:
-                await context7.connect(timeout=30)
-            except Exception as e:
-                print(f"[STATUS] ❌ Context7 connection failed: {e}")
-        # 2. Architect Phase: Deep Planning
-        print("[STATUS] Architect Agent: Planning scenarios (including Edge Cases & Parameterized)...")
+        if "UPSTASH_CONTEXT7_API_KEY" in os.environ or "CONTEXT7_API_KEY" in os.environ:
+            try: await context7.connect(timeout=30)
+            except: pass
+            
         arch_prompt = strategy.get_architect_prompt(safe_code, safe_context)
-        arch_response = _call_chain(arch_prompt, llm, {"target_code": safe_code})
-        
-        # 💡 Parse ALL scenarios discovered by the Architect
+        arch_response = _call_chain(arch_prompt, llm, {"target_code": safe_code, "dependency_context": safe_context})
         scenarios = re.findall(r'SCENARIO: (.*)', arch_response) or [arch_response]
-        print(f"[STATUS] Task Scheduler: Found {len(scenarios)} specific targets. Starting atomic generation...")
-
-        # 3. Micro-Task Execution Phase: Ultra-Light Sequential Conquest
+        
         final_methods = []
-        for i, scenario in enumerate(scenarios):
-            print(f"[STATUS] 🦙 Chunk {i+1}/{len(scenarios)}: Processing '{scenario[:30]}...'")
+        for i, scenario in enumerate(scenarios[:10]):
+            print(f"[STATUS] 🦙 Atomic Target {i+1}/{len(scenarios)}: {scenario[:40]}...")
             
-            # ✂️ 0.2.2: Aggressive Slimming
-            # Only send the core class structure and the specific scenario context
-            slim_code = self._get_slim_code(safe_code)
-            pure_ctx = purifier.purify(scenario, safe_context)
+            # 🎯 0.3.0: Precision Slicing - DTO/Symbol filtering
+            precision_ctx = slicer.get_precision_context(safe_code, safe_context)
+            pure_ctx = purifier.purify(scenario, precision_ctx)
             
-            print(f"   -> [RESOURCE] Memory-safe mode: Context size reduced for 7b stability.")
+            impl_prompt = strategy.get_implementer_prompt(safe_code, scenario, pure_ctx, focused_rules)
+            method_code = _call_chain(impl_prompt, llm, {
+                "target_code": safe_code, 
+                "plan_item": scenario, 
+                "research_context": pure_ctx,
+                "custom_rules": focused_rules
+            })
             
-            # 🚀 Focused Implementation
-            impl_prompt = strategy.get_implementer_prompt(slim_code, scenario, pure_ctx, focused_rules)
-            try:
-                method_code = _call_chain(impl_prompt, llm, {
-                    "target_code": slim_code, 
-                    "plan_item": scenario, 
-                    "research_context": pure_ctx,
-                    "custom_rules": focused_rules
-                })
-            except Exception as e:
-                print(f"   -> [RECOVERY] Task failed due to resource strain. Skipping this chunk.")
-                final_methods.append(f"// ⚠️ Could not generate test for: {scenario}\n// Error: {str(e)}")
-                continue
-            
-            # 🔄 Refinement Loop (Sequential)
             for attempt in range(2):
-                missing_mocks = mocker.check_mocking_strategy(method_code, pure_ctx)
+                missing = mocker.check_mocking_strategy(method_code, pure_ctx)
                 qa_prompt = strategy.get_quality_engineer_prompt(method_code, pure_ctx)
-                reviewed_code = _call_chain(qa_prompt, llm, {"generated_code": method_code, "target_context": pure_ctx})
-                
-                if "FIX_NEEDED" in reviewed_code or missing_mocks:
-                    method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": f"Fix: {reviewed_code}", "research_context": pure_ctx})
-                else: method_code = reviewed_code; break
+                reviewed = _call_chain(qa_prompt, llm, {"generated_code": method_code, "target_context": pure_ctx})
+                if "FIX_NEEDED" in reviewed or missing:
+                    fix_hint = f"Fix: {reviewed}. Missing: {missing}. Tools: {suggested_tools}"
+                    method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": fix_hint, "research_context": pure_ctx})
+                else: method_code = reviewed; break
             
-            # Final touch for this method
             code_match = re.search(r'<CODE>(.*?)</CODE>', method_code, re.DOTALL)
             final_methods.append(re.sub(r'```java|```', '', code_match.group(1).strip() if code_match else method_code).strip())
-            
-            # 💤 0.2.1: Cool down slightly to prevent CPU thermal throttling or RAM overflow
-            if i < len(scenarios) - 1:
-                import time; time.sleep(0.5)
 
         return strategy.assemble_final_class(os.path.basename(target_file_path).replace(".java", ""), final_methods, target_code=target_code)
-    finally: await context7.disconnect()
+    finally:
+        try: await context7.disconnect()
+        except: pass
 
 def generate_test(target_file_path, project_path, project_collection, docs_collection, llm_model="qwen2.5-coder:7b", embedding_model="nomic-embed-text", custom_rules="", mcp_configs=None):
     try:
         strategy = get_strategy(target_file_path, project_path)
         target_code = open(target_file_path, 'r', encoding='utf-8').read()
         initial_context = _retrieve_full_context(target_code, project_path, project_collection, strategy, embedding_model)
-        
-        # 💡 asyncio.run() 사용 시 내부에서 발생하는 예외를 더 정교하게 캐치라마!
-        try:
-            result_code = asyncio.run(run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules))
-            return f"[RESULT_START]\n{result_code}\n[RESULT_END]"
-        except Exception as async_e:
-            print(f"[ERROR] Async Engine Failure: {async_e}")
-            return f"/* 🦙 테스트 생성 실패라마! 원인: {str(async_e)} */"
-
-    except Exception as e:
-        print(f"[ERROR] General Engine Failure: {e}")
-        return f"/* 🦙 테스트 엔진 오류라마! 원인: {str(e)} */"
+        result_code = asyncio.run(run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules))
+        return f"[RESULT_START]\n{result_code}\n[RESULT_END]"
+    except Exception as e: return f"Error: {str(e)}"
 
 class TroubleshooterAgent:
     def troubleshoot(self, error_log, project_context):
