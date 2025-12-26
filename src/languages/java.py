@@ -34,32 +34,63 @@ class JavaStrategy(LanguageStrategy):
             dependencies.update(found)
         for child in node.children: self._traverse(child, code, dependencies)
 
-    def get_architect_prompt(self, target_code, dependency_context):
-        template = """You are a Senior QA Specialist. Analyze the code and find ALL potential failure points.
-        [GOAL] List every possible edge case, null check, boundary violation, and exception flow.
-        [STRICT RULES]
-        1. Identify ONE main success path.
-        2. Identify ALL possible failure scenarios (No limit on count).
-        3. Output each scenario on a new line starting with "SCENARIO: ".
-        
-        [CODE] {target_code}
-        """
-        return ChatPromptTemplate.from_template(template)
+        def get_architect_prompt(self, target_code, dependency_context):
 
-    def get_implementer_prompt(self, target_code, plan_item, research_context, custom_rules=""):
-        template = """Java Developer. Implement exactly ONE JUnit 5 test method for the specific scenario below.
-        [TARGET SCENARIO] {plan_item}
-        [RULES]
-        - Focus ONLY on this scenario.
-        - Use Mockito/AssertJ.
-        - Output ONLY the method code inside <CODE> tags.
-        
-        [TARGET CODE] {target_code}
-        [DOCS] {research_context}"""
-        return ChatPromptTemplate.from_template(template.format(
-            plan_item="{plan_item}", target_code="{target_code}", 
-            research_context="{research_context}"
-        ))
+            template = """[SYSTEM: ROBOTIC TEST ARCHITECT]
+
+            [TASK] Identify failure scenarios for the given Java code.
+
+            [CONSTRAINT] Return ONLY scenario lines. NO chat. NO explanation. NO polite intro.
+
+            [FORMAT] SCENARIO: [Description]
+
+            
+
+            [CODE] {target_code}
+
+            """
+
+            return ChatPromptTemplate.from_template(template)
+
+    
+
+        def get_implementer_prompt(self, target_code, plan_item, research_context, custom_rules=""):
+
+            template = """[SYSTEM: JAVA CODE GENERATOR FUNCTION]
+
+            [TASK] Generate ONE JUnit 5 @Test method.
+
+            [SCENARIO] {plan_item}
+
+            [STRICT RULES]
+
+            - OUTPUT ONLY JAVA CODE.
+
+            - NO CONVERSATION. NO EXPLANATIONS. NO MARKDOWN OUTSIDE TAGS.
+
+            - START WITH <CODE> AND END WITH </CODE>.
+
+            - Use AssertJ/Mockito. Use triple quotes for JSON.
+
+            - If you speak a single word of English outside <CODE>, the process fails.
+
+            
+
+            [TARGET CODE] {target_code}
+
+            [DOCS] {research_context}
+
+            """
+
+            return ChatPromptTemplate.from_template(template.format(
+
+                plan_item="{plan_item}", target_code="{target_code}", 
+
+                research_context="{research_context}"
+
+            ))
+
+    
 
     def get_researcher_prompt(self, unknown_libraries):
         return ChatPromptTemplate.from_template("Info: {unknown_libraries}")
@@ -71,14 +102,17 @@ class JavaStrategy(LanguageStrategy):
         package_match = re.search(r'package\s+([\w\.]+);', target_code)
         pkg = package_match.group(0) if package_match else "package com.example.demo;"
         
-        # 🧹 Improved filter: keep anything that looks like a Java method or has a semicolon
+        # 🧹 Hardcore filter: discard anything with English sentences or repetition
         valid_methods = []
         for m in test_methods:
             m_clean = m.strip()
-            if any(key in m_clean for key in ["@Test", "void", "public", "private", ";"]):
-                # Remove class wrappers if the AI accidentally included them
+            # If it contains typical AI conversation patterns, discard
+            if any(chat in m_clean.lower() for chat in ["it looks like", "i can help", "here is", "address the issue"]):
+                continue
+            
+            if any(key in m_clean for key in ["@Test", "void", "public", ";"]):
                 m_clean = re.sub(r'^(package|import) .*;', '', m_clean, flags=re.MULTILINE).strip()
-                if len(m_clean) > 20:
+                if len(m_clean) > 30:
                     valid_methods.append(m_clean)
 
         body = "\n\n".join(valid_methods) if valid_methods else "// ⚠️ No valid test methods were generated."
