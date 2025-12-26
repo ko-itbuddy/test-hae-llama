@@ -35,20 +35,31 @@ class JavaStrategy(LanguageStrategy):
         for child in node.children: self._traverse(child, code, dependencies)
 
     def get_architect_prompt(self, target_code, dependency_context):
-        template = "QA Penetration Tester. Find ways to BREAK: {target_code}. Output 'SCENARIO: ' only."
+        template = """You are a Senior QA Specialist. Analyze the code and find ALL potential failure points.
+        [GOAL] List every possible edge case, null check, boundary violation, and exception flow.
+        [STRICT RULES]
+        1. Identify ONE main success path.
+        2. Identify ALL possible failure scenarios (No limit on count).
+        3. Output each scenario on a new line starting with "SCENARIO: ".
+        
+        [CODE] {target_code}
+        """
         return ChatPromptTemplate.from_template(template)
 
     def get_implementer_prompt(self, target_code, plan_item, research_context, custom_rules=""):
-        # 💡 Use {{ and }} to escape braces for LangChain format
-        raw = """Expert Java Dev. Write ONE JUnit 5 @Test. 
-        [SCENARIO] {plan_item}
-        [RULES] {custom_rules}
-        - Use AssertJ/Mockito.
-        - Use triple quotes for JSON.
-        - Wrap code in <CODE> tags.
-        [CODE] {target_code}
+        template = """Java Developer. Implement exactly ONE JUnit 5 test method for the specific scenario below.
+        [TARGET SCENARIO] {plan_item}
+        [RULES]
+        - Focus ONLY on this scenario.
+        - Use Mockito/AssertJ.
+        - Output ONLY the method code inside <CODE> tags.
+        
+        [TARGET CODE] {target_code}
         [DOCS] {research_context}"""
-        return ChatPromptTemplate.from_template(raw)
+        return ChatPromptTemplate.from_template(template.format(
+            plan_item="{plan_item}", target_code="{target_code}", 
+            research_context="{research_context}"
+        ))
 
     def get_researcher_prompt(self, unknown_libraries):
         return ChatPromptTemplate.from_template("Info: {unknown_libraries}")

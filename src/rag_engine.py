@@ -163,16 +163,16 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
         arch_prompt = strategy.get_architect_prompt(safe_code, safe_context)
         arch_response = _call_chain(arch_prompt, llm, {"target_code": safe_code})
         
-        # 💡 Parse scenarios and explicitly separate them to keep 7b focused
+        # 💡 Parse ALL scenarios discovered by the Architect
         scenarios = re.findall(r'SCENARIO: (.*)', arch_response) or [arch_response]
-        print(f"[STATUS] Task Scheduler: {len(scenarios)} independent tasks mapped.")
+        print(f"[STATUS] Task Scheduler: Found {len(scenarios)} specific targets. Starting atomic generation...")
 
-        # 3. Micro-Task Execution Phase
+        # 3. Micro-Task Execution Phase: Atomic Conquest
         final_methods = []
-        for i, scenario in enumerate(scenarios[:6]):
-            print(f"[STATUS] 🦙 Chunk {i+1}/{len(scenarios)}: {scenario[:40]}...")
+        for i, scenario in enumerate(scenarios):
+            print(f"[STATUS] 🦙 Conquering Target {i+1}/{len(scenarios)}: {scenario[:50]}...")
             
-            # 💡 0.1.5: Missing pure_ctx restoration!
+            # 💡 Each scenario gets its own fresh micro-context
             pure_ctx = purifier.purify(scenario, safe_context)
             
             # 🚀 Fix: Ensure focused_rules is passed as 'custom_rules' to the prompt
