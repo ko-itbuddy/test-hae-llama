@@ -4,11 +4,12 @@
 로컬 7b 모델을 사용하여 복잡한 엔터프라이즈급 자바 프로젝트의 테스트 코드를 완벽하게 생성하고 자동 저장한다.
 
 ## 🛠️ Key Technical Requirements
-1. **Strict Sequential Processing (핵심):**
-   - 저사양 환경을 고려하여 모든 LLM 호출 및 태스크 실행은 **차례대로(One-by-One)** 수행한다.
-   - 절대 병렬 처리를 하지 않으며, 한 번에 하나의 에이전트만 가동하여 CPU/RAM 부하를 관리한다.
-2. **Atomic Task Decomposition:**
-   - 작업을 원자적 단위로 쪼개어 모델의 연산 부하를 줄인다.
+1. **Strict Sequential Processing:**
+   - 저사양 환경을 고려하여 모든 LLM 호출을 차례대로 수행한다.
+2. **Context Slicing (핵심):**
+   - 7b 모델의 VRAM 부하를 줄이기 위해 전체 소스 코드 대신 **필드와 메서드 시그니처**만 포함된 초경량 문맥(Slim Context)을 제공한다.
+3. **Graceful Error Recovery:**
+   - 리소스 부족으로 개별 생성 태스크가 실패할 경우, 전체 프로세스를 중단하지 않고 실패한 부분만 주석 처리 후 다음 태스크를 진행한다.
 3. **Comprehensive Negative Testing:**
    - 실패 케이스를 발굴하되, 시스템 자원을 고려하여 순차적으로 정복한다.
 3. **Parameterized Test Automation:**

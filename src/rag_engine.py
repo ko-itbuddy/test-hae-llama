@@ -131,6 +131,19 @@ def _retrieve_full_context(query, project_path, prefix, strategy, emb_model):
     return context
 
 # --- 4. Main Engine Workflow ---
+    def _get_slim_code(self, code):
+        """Extracts only fields and method signatures to save tokens."""
+        lines = code.split('\n')
+        slim = []
+        for line in lines:
+            # Keep fields, annotations, and method signatures, but remove bodies
+            if any(x in line for x in ["private", "public", "@", "class", "interface"]):
+                if "{" in line and "(" in line: # Method start
+                    slim.append(line.split("{")[0].strip() + ";")
+                else:
+                    slim.append(line.strip())
+        return "\n".join(slim[:50]) # Maximum 50 lines of meta-info
+
 async def run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules):
     guardian = PrivacyAgent(); style_lib = StyleLibrarianAgent()
     safe_code = guardian.mask(target_code); safe_context = guardian.mask(initial_context)
@@ -167,22 +180,31 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
         scenarios = re.findall(r'SCENARIO: (.*)', arch_response) or [arch_response]
         print(f"[STATUS] Task Scheduler: Found {len(scenarios)} specific targets. Starting atomic generation...")
 
-        # 3. Micro-Task Execution Phase: Strict Sequential Conquest
+        # 3. Micro-Task Execution Phase: Ultra-Light Sequential Conquest
         final_methods = []
         for i, scenario in enumerate(scenarios):
-            print(f"[STATUS] 🦙 Conquering Target {i+1}/{len(scenarios)}: {scenario[:50]}...")
+            print(f"[STATUS] 🦙 Chunk {i+1}/{len(scenarios)}: Processing '{scenario[:30]}...'")
             
-            # 💡 Slim Context: Reduce noise to save 7b compute power
+            # ✂️ 0.2.2: Aggressive Slimming
+            # Only send the core class structure and the specific scenario context
+            slim_code = self._get_slim_code(safe_code)
             pure_ctx = purifier.purify(scenario, safe_context)
             
-            # 🚀 Strict One-by-One Execution
-            impl_prompt = strategy.get_implementer_prompt(safe_code, scenario, pure_ctx, focused_rules)
-            method_code = _call_chain(impl_prompt, llm, {
-                "target_code": safe_code, 
-                "plan_item": scenario, 
-                "research_context": pure_ctx,
-                "custom_rules": focused_rules
-            })
+            print(f"   -> [RESOURCE] Memory-safe mode: Context size reduced for 7b stability.")
+            
+            # 🚀 Focused Implementation
+            impl_prompt = strategy.get_implementer_prompt(slim_code, scenario, pure_ctx, focused_rules)
+            try:
+                method_code = _call_chain(impl_prompt, llm, {
+                    "target_code": slim_code, 
+                    "plan_item": scenario, 
+                    "research_context": pure_ctx,
+                    "custom_rules": focused_rules
+                })
+            except Exception as e:
+                print(f"   -> [RECOVERY] Task failed due to resource strain. Skipping this chunk.")
+                final_methods.append(f"// ⚠️ Could not generate test for: {scenario}\n// Error: {str(e)}")
+                continue
             
             # 🔄 Refinement Loop (Sequential)
             for attempt in range(2):
