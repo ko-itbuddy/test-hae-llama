@@ -183,25 +183,34 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
             precision_ctx = slicer.get_precision_context(safe_code, safe_context)
             pure_ctx = purifier.purify(scenario, precision_ctx)
             
-            impl_prompt = strategy.get_implementer_prompt(safe_code, scenario, pure_ctx, focused_rules)
-            method_code = _call_chain(impl_prompt, llm, {
-                "target_code": safe_code, 
-                "plan_item": scenario, 
-                "research_context": pure_ctx,
-                "custom_rules": focused_rules
-            })
+            for attempt in range(3): # Increased to 3 attempts
+                print(f"   -> [ATTEMPT {attempt+1}] Generating code...")
+                method_code = _call_chain(impl_prompt, llm, {
+                    "target_code": safe_code, 
+                    "plan_item": scenario, 
+                    "research_context": pure_ctx,
+                    "custom_rules": focused_rules
+                })
+                
+                # Check for validity (must have code tags and looks like java)
+                code_match = re.search(r'<CODE>(.*?)</CODE>', method_code, re.DOTALL)
+                candidate = code_match.group(1).strip() if code_match else method_code.strip()
+                
+                # 🧼 Stronger validation: if it's chatty, force a fix
+                if any(chat in candidate.lower() for chat in ["it looks like", "i can help", "address the issue"]) or ";" not in candidate:
+                    print(f"   -> [REFINE] Chat detected or invalid syntax. Forcing code-only retry...")
+                    fix_hint = "Your previous response was too conversational or syntactically invalid. Output ONLY the raw Java method body inside <CODE> tags. NO EXPLANATIONS."
+                    method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": f"{scenario}\n[RETRY HINT] {fix_hint}", "research_context": pure_ctx})
+                else:
+                    # Look like valid code! Let's do a final QA pass
+                    qa_prompt = strategy.get_quality_engineer_prompt(method_code, pure_ctx)
+                    method_code = _call_chain(qa_prompt, llm, {"generated_code": method_code, "target_context": pure_ctx})
+                    break
             
-            for attempt in range(2):
-                missing = mocker.check_mocking_strategy(method_code, pure_ctx)
-                qa_prompt = strategy.get_quality_engineer_prompt(method_code, pure_ctx)
-                reviewed = _call_chain(qa_prompt, llm, {"generated_code": method_code, "target_context": pure_ctx})
-                if "FIX_NEEDED" in reviewed or missing:
-                    fix_hint = f"Fix: {reviewed}. Missing: {missing}. Tools: {suggested_tools}"
-                    method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": fix_hint, "research_context": pure_ctx})
-                else: method_code = reviewed; break
-            
+            # Final assembly: even if imperfect, keep the best effort but mark it
             code_match = re.search(r'<CODE>(.*?)</CODE>', method_code, re.DOTALL)
-            final_methods.append(re.sub(r'```java|```', '', code_match.group(1).strip() if code_match else method_code).strip())
+            final_snippet = code_match.group(1).strip() if code_match else method_code.strip()
+            final_methods.append(re.sub(r'```java|```', '', final_snippet).strip())
 
         return strategy.assemble_final_class(os.path.basename(target_file_path).replace(".java", ""), final_methods, target_code=target_code)
     finally:

@@ -34,23 +34,35 @@ class JavaStrategy(LanguageStrategy):
             dependencies.update(found)
         for child in node.children: self._traverse(child, code, dependencies)
 
-        def get_architect_prompt(self, target_code, dependency_context):
+            def get_architect_prompt(self, target_code, dependency_context):
 
-            template = """[SYSTEM: ROBOTIC TEST ARCHITECT]
+                template = """[SYSTEM: TOTAL COVERAGE ARCHITECT]
 
-            [TASK] Identify failure scenarios for the given Java code.
+                [TASK] 
 
-            [CONSTRAINT] Return ONLY scenario lines. NO chat. NO explanation. NO polite intro.
+                1. List every Constructor and Public Method in the provided code.
 
-            [FORMAT] SCENARIO: [Description]
+                2. For EACH unit, design:
 
-            
+                   - Exactly ONE "Success" scenario.
 
-            [CODE] {target_code}
+                   - ALL possible "Failure" scenarios (Null, Boundary, Exception).
 
-            """
+                [OUTPUT FORMAT] Return ONLY scenario lines.
 
-            return ChatPromptTemplate.from_template(template)
+                Example: SCENARIO: [MethodName] - Success: valid input
+
+                Example: SCENARIO: [MethodName] - Failure: null parameter
+
+                
+
+                [CODE] {target_code}
+
+                """
+
+                return ChatPromptTemplate.from_template(template)
+
+        
 
     
 
