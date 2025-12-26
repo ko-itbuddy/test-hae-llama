@@ -169,8 +169,11 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
 
         # 3. Micro-Task Execution Phase
         final_methods = []
-        for i, scenario in enumerate(scenarios[:6]): # Increased limit to allow more edge cases
+        for i, scenario in enumerate(scenarios[:6]):
             print(f"[STATUS] 🦙 Chunk {i+1}/{len(scenarios)}: {scenario[:40]}...")
+            
+            # 💡 0.1.5: Missing pure_ctx restoration!
+            pure_ctx = purifier.purify(scenario, safe_context)
             
             # 🚀 Fix: Ensure focused_rules is passed as 'custom_rules' to the prompt
             impl_prompt = strategy.get_implementer_prompt(safe_code, scenario, pure_ctx, focused_rules)

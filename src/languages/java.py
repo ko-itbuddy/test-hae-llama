@@ -35,68 +35,35 @@ class JavaStrategy(LanguageStrategy):
         for child in node.children: self._traverse(child, code, dependencies)
 
     def get_architect_prompt(self, target_code, dependency_context):
-        template = """You are an Aggressive QA Penetration Tester.
-        [GOAL] Find as many ways to BREAK the provided code as possible.
-        [STRICT RULES]
-        1. List exactly ONE "Happy Path" success scenario.
-        2. List 4-6 "Failure/Negative" scenarios (e.g., Null, Empty, Boundary, Exception, Timeout, Security).
-        3. Be creative in identifying potential bugs or unhandled edge cases.
-        [OUTPUT] Return ONLY lines starting with "SCENARIO: ".
-        
-        [CODE] {target_code}
-        """
+        template = "QA Penetration Tester. Find ways to BREAK: {target_code}. Output 'SCENARIO: ' only."
         return ChatPromptTemplate.from_template(template)
 
     def get_implementer_prompt(self, target_code, plan_item, research_context, custom_rules=""):
-        template = """Java Expert. Implement ONE test method.
+        # 💡 Use {{ and }} to escape braces for LangChain format
+        raw = """Expert Java Dev. Write ONE JUnit 5 @Test. 
         [SCENARIO] {plan_item}
-        [RULES]
-        - Use AssertJ and Mockito.
-        - For multiple data points, use @ParameterizedTest with @CsvSource or @ValueSource.
-        - Include @NullAndEmptySource if applicable.
-        - Output ONLY code inside <CODE> tags.
-        
-        [EXAMPLE PARAMETERIZED]
-        @ParameterizedTest
-        @CsvSource({
-            "input1, expected1",
-            "input2, expected2"
-        })
-        void testName(String input, String expected) { ... }
-        
-        [TARGET CODE] {target_code}
-        """
-        return ChatPromptTemplate.from_template(template.format(
-            plan_item="{plan_item}", target_code="{target_code}", 
-            research_context="{research_context}", custom_rules=custom_rules
-        ))
+        [RULES] {custom_rules}
+        - Use AssertJ/Mockito.
+        - Use triple quotes for JSON.
+        - Wrap code in <CODE> tags.
+        [CODE] {target_code}
+        [DOCS] {research_context}"""
+        return ChatPromptTemplate.from_template(raw)
 
     def get_researcher_prompt(self, unknown_libraries):
-        return ChatPromptTemplate.from_template("List key classes for: {unknown_libraries}")
+        return ChatPromptTemplate.from_template("Info: {unknown_libraries}")
 
     def get_quality_engineer_prompt(self, generated_code, target_context):
-        template = """Review the following Java test method for syntax errors.
-        [CODE] {generated_code}
-        [TASK] Return ONLY the fixed Java code inside <CODE> tags. NO COMMENTS.
-        """
-        return ChatPromptTemplate.from_template(template)
+        return ChatPromptTemplate.from_template("Fix Java in: {generated_code}. Use <CODE> tags.")
 
     def assemble_final_class(self, class_name, test_methods, target_code=""):
         package_match = re.search(r'package\s+([\w\.]+);', target_code)
-        pkg_stmt = package_match.group(0) if package_match else "package com.example.demo;"
+        pkg = package_match.group(0) if package_match else "package com.example.demo;"
+        methods = "\n\n".join([m.strip() for m in test_methods if ";" in m])
         
-        valid_methods = []
-        for m in test_methods:
-            # 🧹 "진짜 자바 코드"인지 판별하는 엄격한 필터링라마!
-            # 세미콜론(;)과 중괄호({})가 최소한 1개는 있어야 하며, 영어 문장 형태는 거부라마.
-            if ";" in m and "{" in m and "}" in m:
-                # 패키지/임포트 키워드가 메서드 내부에 있다면 제거라마.
-                clean = re.sub(r'^(package|import) .*;', '', m, flags=re.MULTILINE).strip()
-                if len(clean) > 30: valid_methods.append(clean)
-
-        methods_content = "\n\n".join(valid_methods)
-        
-        return "{pkg}\nimport org.junit.jupiter.api.*;\nimport org.junit.jupiter.api.extension.ExtendWith;\nimport org.mockito.*;\nimport org.mockito.junit.jupiter.MockitoExtension;\nimport static org.mockito.Mockito.*;\nimport static org.assertj.core.api.Assertions.*;\nimport java.util.*;@ExtendWith(MockitoExtension.class)\n/* 🚨 이 테스트 코드는 반드시 통과되어야 합니다라마! */\npublic class {name}Test {{\n    {body}\n}}".format(pkg=pkg_stmt, name=class_name, body=methods_content)
+        # 💡 Use a simple non-f-string template to avoid all brace issues
+        template = "%s\nimport org.junit.jupiter.api.*;\nimport org.junit.jupiter.api.extension.ExtendWith;\nimport org.mockito.*;\nimport org.mockito.junit.jupiter.MockitoExtension;\nimport static org.mockito.Mockito.*;\nimport static org.assertj.core.api.Assertions.*;\nimport java.util.*;\n\n@ExtendWith(MockitoExtension.class)\n/* This test must pass. */\npublic class %sTest {\n    %s\n}"
+        return template % (pkg, class_name, methods)
 
     def extract_methods(self, code): return []
     def get_compilation_command(self, file_path): return ["javac", file_path]
