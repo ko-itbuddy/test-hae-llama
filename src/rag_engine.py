@@ -10,9 +10,16 @@ from src.utils.java_builder import JavaClassBuilder
 from src.languages import get_strategy
 
 def _call_raw(llm, content):
-    """Invokes LLM with raw content string."""
-    chain = llm | StrOutputParser()
-    return chain.invoke([HumanMessage(content=content)])
+    """Invokes LLM with raw content string. Includes better error logging."""
+    try:
+        chain = llm | StrOutputParser()
+        return chain.invoke([HumanMessage(content=content)])
+    except Exception as e:
+        print(f"[CRITICAL] LLM Invocation Failed: {e}")
+        # If it's a connection error, be explicit
+        if "Connection refused" in str(e):
+            print(" -> Check if Ollama is running on localhost:11434")
+        raise e
 
 def extract_tag_content(text, tag):
     start_tag = f"<{tag}>"
@@ -25,36 +32,32 @@ def extract_tag_content(text, tag):
 
 class SymbolUsageAgent:
     def get_unit_context(self, method_name, target_code, project_path):
-        """Extracts method body AND relevant dependency source codes."""
-        # 1. Target Method Body
-        pattern = fr'(?:public|protected|private).*?\s+{method_name}\s*\(.*?\)\s*(?:throws\s+[\w\s,]+)?\s*\{{(.*?)\}}'
+        pattern = fr'(?:public|protected|private).*?\s+{method_name}\s*\(.*\)\s*(?:throws\s+[\w\s,]+)?\s*\{{(.*?)\}}'
         match = re.search(pattern, target_code, re.DOTALL)
         method_content = match.group(0) if match else "// Method body not found"
         
-        # 2. Dependency Source Lookup (Naive but effective RAG)
-        context_files = []
-        # Find all CamelCase words (potential classes) in the method body
-        tokens = set(re.findall(r'\b[A-Z][a-zA-Z0-9]+\b', method_content))
+        # Simple dependency context (omitted detailed RAG for stability)
+        return f"[METHOD UNDER TEST]\n{method_content}"
+
+class CriticAgent:
+    """
+    The Critic: Reviews generated code and provides feedback.
+    """
+    def review(self, code_snippet):
+        issues = []
+        if "TODO" in code_snippet: issues.append("Contains 'TODO' placeholders.")
+        if "..." in code_snippet: issues.append("Contains ellipsis '...'.")
+        if ";;" in code_snippet: issues.append("Contains double semicolons ';;'.")
+        if "```" in code_snippet: issues.append("Contains markdown leakage.")
+        if not code_snippet.strip(): issues.append("Code is empty.")
         
-        for root, _, files in os.walk(os.path.join(project_path, "src/main/java")):
-            for file in files:
-                if file.endswith(".java"):
-                    class_name = file.replace(".java", "")
-                    if class_name in tokens:
-                        try:
-                            # Read file but limit size to avoid token overflow
-                            content = open(os.path.join(root, file), 'r').read()
-                            # Extract fields and public methods only
-                            slim_content = "\n".join([l.strip() for l in content.split('\n') if "public" in l or "private" in l])
-                            context_files.append(f"--- Class: {class_name} ---\n{slim_content[:500]}...") 
-                        except: pass
-        
-        return f"[METHOD UNDER TEST]\n{method_content}\n\n[DEPENDENCY CONTEXT]\n" + "\n".join(context_files)
+        return issues
 
 async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen2.5-coder:7b"):
     llm = ChatOllama(model=llm_model, temperature=0.0)
     strategy = get_strategy(target_file_path, ".")
     slicer = SymbolUsageAgent()
+    critic = CriticAgent()
     
     # 1. Structural Analysis
     class_match = re.search(r'public\s+class\s+(\w+)', target_code)
@@ -90,67 +93,65 @@ async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen
 
     for method_name, args_str in methods:
         print(f"[STATUS] 🔨 Forging test for: {method_name}")
-        
-        # 💡 RAG: Extract real code context from project
-        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(target_file_path)))))
-        if "src" not in project_root: project_root = "." # Fallback
-        
+        project_root = "." # Simplified
         unit_context = slicer.get_unit_context(method_name, target_code, project_root)
 
+        final_body = ""
+        
+        # 🔄 The Critic Loop
         for attempt in range(3):
-            prompt = f"[TASK] Write a JUnit 5 test method body for {class_name}.{method_name}.
+            prompt = f"""[TASK] Write a JUnit 5 test method body for {class_name}.{method_name}.
 [CONTEXT]
 Target Class: {class_name}
-Dependencies (Mocks): {mock_names}
-Instance under test: {instance_name}
+Method: {method_name}({args_str})
+Mocks: {mock_names}
+Instance: {instance_name}
 
-[DEPENDENCY KNOWLEDGE]
+[CODE]
 {unit_context}
 
 [INSTRUCTION]
-Generate the test logic separated into three parts. Wrap each part in specific XML tags.
-1. <GIVEN> Setup Mockito 'when' stubs. Initialize ALL required variables (User, Product, etc) with REAL dummy data. </GIVEN>
-2. <WHEN> Call the method: {instance_name}.{method_name}(...); </WHEN>
-3. <THEN> Use AssertJ 'assertThat' to verify results. Verify mock calls. </THEN>
+Generate logic in XML tags:
+1. <GIVEN> Mock setup </GIVEN>
+2. <WHEN> Call {instance_name}.{method_name} </WHEN>
+3. <THEN> Assertions </THEN>
 
-[STRICT RULES]
-- NO "TODO", NO "...", NO placeholders.
-- Instantiate objects with valid constructor arguments (e.g., new User(1L, "Name")).
-- Return ONLY code inside tags.
-"
-            response = asyncio.to_thread(_call_raw, llm, prompt)
-            
-            given = extract_tag_content(response, "GIVEN")
-            when = extract_tag_content(response, "WHEN")
-            then = extract_tag_content(response, "THEN")
-            
-            # 💡 Validation: If placeholders detected, retry!
-            if given and ("TODO" in given or "..." in given):
-                print(f"   -> ⚠️ Detected lazy output (TODO/...). Retrying...")
-                continue
-            
-            if given and when and then:
-                break # Success!
+[STRICT] No markdown. No TODOs.
+"""
+            # If retrying, add critic feedback
+            if attempt > 0 and issues:
+                prompt += f"\n[CRITIC FEEDBACK] Previous attempt had issues: {', '.join(issues)}. FIX THEM."
 
-        # Fallback (Only if LLM fails 3 times)
-        if not given: given = "// Error: LLM failed to generate GIVEN block"
-        if not when: when = "// Error: LLM failed to generate WHEN block"
-        if not then: then = "// Error: LLM failed to generate THEN block"
+            try:
+                response = await asyncio.to_thread(_call_raw, llm, prompt)
+                
+                given = extract_tag_content(response, "GIVEN")
+                when = extract_tag_content(response, "WHEN")
+                then = extract_tag_content(response, "THEN")
+                
+                body_candidate = f"// given\n        {given}\n        // when\n        {when}\n        // then\n        {then}"
+                
+                # Critic Review
+                issues = critic.review(body_candidate)
+                if not issues and given and when and then:
+                    final_body = body_candidate
+                    break # Passed! 
+                
+                print(f"   -> ⚠️ Critic found issues (Attempt {attempt+1}): {issues}")
+                
+            except Exception as e:
+                print(f"   -> ❌ LLM Error: {e}")
+                issues = ["LLM Execution Failed"]
 
-        body = f"// given
-        {given}
-        
-        // when
-        {when}
-        
-        // then
-        {then}"
-        
-        full_method = f"    @Test
-    @DisplayName(\"Success: {method_name}\")
+        # Final Fallback if Critic is never satisfied
+        if not final_body:
+            final_body = f"// [ERROR] Failed to generate valid code after 3 attempts.\n        // Last issues: {issues}"
+
+        full_method = f"""    @Test
+    @DisplayName("Success: {method_name}")
     void test{method_name[0].upper() + method_name[1:]}_Success() {{
-        {body}
-    }}"
+        {final_body}
+    }}"""
         builder.add_method(full_method)
 
     return builder.build()

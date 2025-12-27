@@ -6,8 +6,18 @@ import re
 
 def check_ollama_installed():
     try:
+        # Check CLI first
         subprocess.run(['ollama', '--version'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        return True
+        
+        # Check Server Connectivity (Optional but recommended)
+        import requests
+        try:
+            requests.get("http://localhost:11434", timeout=1)
+            return True
+        except:
+            print("[STATUS] ⚠️ Ollama CLI is found, but the server (localhost:11434) seems down.")
+            return True # CLI exists, so we proceed hoping it auto-starts or user starts it.
+            
     except: return False
 
 def ensure_ollama_models(llm_model="qwen2.5-coder:7b", embedding_model="nomic-embed-text"):
