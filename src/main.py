@@ -15,7 +15,7 @@ if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
 
 from src.ingest import ingest_codebase
-from src.rag_engine import generate_test
+from src.rag_engine import generate_test, validate_and_fix
 from src.dependency import ensure_ollama_models
 from src.utils.file_utils import get_project_data_dir
 
@@ -54,10 +54,9 @@ def ingest_deps(project_path, model):
 @click.option('--custom-rules', default='', help='Custom rules from IDE settings')
 @click.option('--context7-api-key', default='', help='API Key from VS Code settings')
 def generate(target_file, project_path, prefix, model, custom_rules, context7_api_key):
-    """Generate Unit Test and AUTO-SAVE to the correct location"""
+    """Generate Unit Test, AUTO-SAVE, and VALIDATE"""
     ensure_ollama_models(llm_model=model)
     
-    # 💡 VS Code 설정값이 있으면 환경 변수를 강제로 덮어씀라마!
     if context7_api_key and context7_api_key.strip():
         os.environ['UPSTASH_CONTEXT7_API_KEY'] = context7_api_key
         os.environ['CONTEXT7_API_KEY'] = context7_api_key
@@ -68,12 +67,12 @@ def generate(target_file, project_path, prefix, model, custom_rules, context7_ap
     # Generate Code
     result = generate_test(target_file, project_path, prefix, "", llm_model=model, custom_rules=custom_rules)
     
-    # Extract the actual code if wrapped in RESULT tags
+    # Extract the actual code
     clean_result = result
     if "[RESULT_START]" in result:
         clean_result = result.split("[RESULT_START]")[1].split("[RESULT_END]")[0].strip()
 
-    # 💡 자동 저장 및 검증
+    # Save Path
     save_path = _get_test_save_path(target_file, project_path)
     
     try:
@@ -81,15 +80,19 @@ def generate(target_file, project_path, prefix, model, custom_rules, context7_ap
         with open(save_path, 'w', encoding='utf-8') as f:
             f.write(clean_result)
         
-        # 🕵️‍♂️ 저장 검증
         if os.path.exists(save_path):
             size = os.path.getsize(save_path)
             click.echo(f"💾 [SAVED] {save_path} ({size} bytes)")
+            
+            # 🩺 Trigger Validation Loop
+            import asyncio
+            asyncio.run(validate_and_fix(save_path, project_path, llm_model=model))
+            
         else:
             click.echo(f"❌ [FAIL] File not found after write: {save_path}")
             
     except Exception as e:
-        click.echo(f"⚠️ [ERROR] Save failed: {e}")
+        click.echo(f"⚠️ [ERROR] Save/Validation failed: {e}")
 
     # Output for IDE
     click.echo("\n[RESULT_START]")
