@@ -73,14 +73,21 @@ def generate(target_file, project_path, prefix, model, custom_rules, context7_ap
     if "[RESULT_START]" in result:
         clean_result = result.split("[RESULT_START]")[1].split("[RESULT_END]")[0].strip()
 
-    # 💡 자동 저장 경로 계산
+    # 💡 자동 저장 및 검증
     save_path = _get_test_save_path(target_file, project_path)
     
     try:
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         with open(save_path, 'w', encoding='utf-8') as f:
             f.write(clean_result)
-        click.echo(f"💾 [SAVED] {save_path}")
+        
+        # 🕵️‍♂️ 저장 검증
+        if os.path.exists(save_path):
+            size = os.path.getsize(save_path)
+            click.echo(f"💾 [SAVED] {save_path} ({size} bytes)")
+        else:
+            click.echo(f"❌ [FAIL] File not found after write: {save_path}")
+            
     except Exception as e:
         click.echo(f"⚠️ [ERROR] Save failed: {e}")
 
