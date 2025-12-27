@@ -2,22 +2,11 @@ import os
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
-import re
 
 def check_ollama_installed():
     try:
-        # Check CLI first
         subprocess.run(['ollama', '--version'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-        
-        # Check Server Connectivity (Optional but recommended)
-        import requests
-        try:
-            requests.get("http://localhost:11434", timeout=1)
-            return True
-        except:
-            print("[STATUS] ⚠️ Ollama CLI is found, but the server (localhost:11434) seems down.")
-            return True # CLI exists, so we proceed hoping it auto-starts or user starts it.
-            
+        return True
     except: return False
 
 def ensure_ollama_models(llm_model="qwen2.5-coder:7b", embedding_model="nomic-embed-text"):
@@ -27,70 +16,46 @@ def ensure_ollama_models(llm_model="qwen2.5-coder:7b", embedding_model="nomic-em
     try:
         result = subprocess.run(['ollama', 'list'], capture_output=True, text=True)
         if llm_model not in result.stdout:
-            print(f"[STATUS] ⚠️ Pulling {llm_model}... (This may take a while)")
-            # Use Popen to filter out carriage returns that cause messy logs in VS Code
-            process = subprocess.Popen(
-                ['ollama', 'pull', llm_model],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True,
-                bufsize=1
-            )
-            last_percent = -1
-            for line in process.stdout:
-                # Extract percentage if exists (e.g., "6%")
-                match = re.search(r'(\d+)%', line)
-                if match:
-                    percent = int(match.group(1))
-                    if percent >= last_percent + 5: # Log every 5% to keep it clean
-                        print(f"[STATUS] 📥 {llm_model} pulling... {percent}%")
-                        last_percent = percent
-                elif "pulling manifest" in line or "verifying sha256" in line:
-                    if not any(x in line for x in ["\r", "▕"]): # Skip progress bars
-                        print(f"[STATUS] 📥 {line.strip()}")
-            process.wait()
-            print(f"[STATUS] ✅ {llm_model} is ready.")
-    except Exception as e:
-        print(f"[STATUS] ❌ Error pulling model: {e}")
+            print(f"[STATUS] ⚠️ Pulling {llm_model}...")
+            subprocess.run(['ollama', 'pull', llm_model], check=True)
+    except: pass
+
+def get_java_version(project_path):
+    """Detects Java version using simple string parsing (No Regex)."""
+    # 1. Check build.gradle
+    gradle_path = os.path.join(project_path, "build.gradle")
+    if os.path.exists(gradle_path):
+        try:
+            lines = open(gradle_path, 'r').readlines()
+            for line in lines:
+                if "sourceCompatibility" in line:
+                    # Parse: sourceCompatibility = '17' or 17
+                    parts = line.split("=")
+                    if len(parts) > 1:
+                        ver = parts[1].strip().replace("'", "").replace('"', "")
+                        return "1.8" if ver == "8" else ver
+        except: pass
+
+    # 2. Check pom.xml (XML parser is safe)
+    pom_path = os.path.join(project_path, "pom.xml")
+    if os.path.exists(pom_path):
+        try:
+            tree = ET.parse(pom_path); root = tree.getroot()
+            ns = {'mvn': 'http://maven.apache.org/POM/4.0.0'}
+            props = root.find(".//mvn:properties", ns)
+            if props is not None:
+                ver = props.find("mvn:java.version", ns)
+                if ver is not None: return ver.text
+        except: pass
+        
+    return "17" # Default
 
 def get_all_dependency_versions(project_path):
+    # Simplified dependency check without regex
     versions = {'spring-boot': '3.0.0', 'has-testcontainers': False, 'has-awaitility': False}
-    pom_path = os.path.join(project_path, "pom.xml")
-    if os.path.exists(pom_path):
-        try:
-            tree = ET.parse(pom_path); root = tree.getroot()
-            ns = {'mvn': 'http://maven.apache.org/POM/4.0.0'}
-            # Spring Boot Version
-            parent = root.find(".//mvn:parent/mvn:version", ns)
-            if parent is not None: versions['spring-boot'] = parent.text
-            
-            # Check for specific test libraries
-            text = ET.tostring(root, encoding='unicode')
-            if 'testcontainers' in text: versions['has-testcontainers'] = True
-            if 'awaitility' in text: versions['has-awaitility'] = True
-            
-            for dep in root.findall(".//mvn:dependency", ns):
-                aid_node = dep.find("mvn:artifactId", ns)
-                if aid_node is not None:
-                    aid = aid_node.text
-                    ver = dep.find("mvn:version", ns)
-                    if ver is not None: versions[aid] = ver.text
-        except: pass
+    gradle_path = os.path.join(project_path, "build.gradle")
+    if os.path.exists(gradle_path):
+        content = open(gradle_path, 'r').read()
+        if "testcontainers" in content: versions['has-testcontainers'] = True
+        if "awaitility" in content: versions['has-awaitility'] = True
     return versions
-
-def get_full_dependencies(project_path):
-    """Returns a list of {group, artifact, version} for all dependencies."""
-    deps = []
-    pom_path = os.path.join(project_path, "pom.xml")
-    if os.path.exists(pom_path):
-        try:
-            tree = ET.parse(pom_path); root = tree.getroot()
-            ns = {'mvn': 'http://maven.apache.org/POM/4.0.0'}
-            for dep in root.findall(".//mvn:dependency", ns):
-                group = dep.find("mvn:groupId", ns).text
-                artifact = dep.find("mvn:artifactId", ns).text
-                version_node = dep.find("mvn:version", ns)
-                version = version_node.text if version_node is not None else "latest"
-                deps.append({"group": group, "artifact": artifact, "version": version})
-        except: pass
-    return deps
