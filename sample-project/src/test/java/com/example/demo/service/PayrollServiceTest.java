@@ -9,21 +9,10 @@ import java.util.*;
 
 @ExtendWith(MockitoExtension.class)
 /* 🚨 이 테스트 코드는 반드시 통과되어야 합니다라마! */
-public class OrderServiceTest {
+public class PayrollServiceTest {
     ```java
-import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.BeforeEachAll;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-public class OrderOrderTest {
-
- {
-
- {
-
- void setUp()    //
-
-    @Test
-()
-   ```
+public class SalaryProcessorTest {
 }

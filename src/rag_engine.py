@@ -2,6 +2,7 @@ import os
 import re
 import asyncio
 import json
+import jinja2
 from langchain_ollama import OllamaEmbeddings, ChatOllama
 from langchain_core.output_parsers import StrOutputParser
 from src.languages import get_strategy
@@ -9,12 +10,23 @@ from src.mcp_client import MCPBridge
 from src.dependency import get_all_dependency_versions
 from src.utils import get_chroma_dir
 
-def _call_chain(prompt, llm, input_data):
-    """Helper to execute LangChain pipe with parser."""
-    chain = prompt | llm | StrOutputParser()
-    return chain.invoke(input_data)
+# 💡 0.6.0: Global Jinja2 Environment for absolute brace safety
+jinja_env = jinja2.Environment(
+    variable_start_string='[[',
+    variable_end_string=']]'
+)
 
-# --- 1. Defense & Utility Agents ---
+def _call_chain(prompt, llm, input_data):
+    if not input_data:
+        chain = llm | StrOutputParser()
+        # Use format_messages to get raw message objects safely
+        messages = prompt.format_messages()
+        return chain.invoke(messages)
+    else:
+        chain = prompt | llm | StrOutputParser()
+        return chain.invoke(input_data)
+
+# --- Agents ---
 class PrivacyAgent:
     def __init__(self):
         self.patterns = {
@@ -40,32 +52,15 @@ class StyleLibrarianAgent:
             elif any(x in line.lower() for x in ["always", "must", "style", "format"]): relevant.append(line)
         return "\n".join(relevant[:10])
 
-# --- 2. Technical Specialists ---
 class SymbolUsageAgent:
-    """
-    Precision Slicer: Extracts ONLY the used symbols (fields, methods, DTO fields)
-    to provide the absolute minimum context for 7b models.
-    """
-    def get_precision_context(self, target_code, full_context):
-        # Identify used words/symbols in target code (camelCase, PascalCase)
-        used_symbols = set(re.findall(r'\b[a-zA-Z_]\w*\b', target_code))
-        
-        lines = full_context.split('\n')
-        filtered = []
-        for line in lines:
-            if "---" in line: # Keep source markers
-                filtered.append(line)
-                continue
-            
-            # 💡 0.3.0: 핀셋 로직 - 사용 중인 필드나 메서드 정의만 골라냄라마!
-            # Example: product.getName() -> matches 'getName' in DTO field or method
-            clean_line = line.strip()
-            if any(sym in clean_line for sym in used_symbols):
-                # Only keep definitions (private String name, public void setX, etc.)
-                if any(kw in clean_line for kw in ["private", "public", "@", "class", "interface"]):
-                    filtered.append(clean_line)
-        
-        return "\n".join(filtered[:40]) # High density context
+    def get_contract_spec(self, target_code):
+        fields = re.findall(r'(private|protected|public)\s+([\w<>]+)\s+(\w+)\s*;', target_code)
+        methods = re.findall(r'(public|protected)\s+([\w<>]+)\s+(\w+)\s*\((.*?)\)', target_code)
+        spec = ["[FIELDS]"]
+        for f in fields: spec.append(f"- {f[1]} {f[2]}")
+        spec.append("\n[METHODS]")
+        for m in methods: spec.append(f"- {m[2]}({m[3]}) -> {m[1]}")
+        return "\n".join(spec)
 
 class MockingSpecialistAgent:
     def check_mocking_strategy(self, code, context):
@@ -77,15 +72,6 @@ class ContextPurifierAgent:
     def purify(self, scenario, full_context):
         relevant_lines = [line for line in full_context.split('\n') if '(' in line and ')' in line]
         return "\n".join(relevant_lines[:20])
-
-class InfraSpecialistAgent:
-    def suggest_tools(self, code):
-        tools = []
-        if "Kafka" in code: tools.append("EmbeddedKafka")
-        if "Redis" in code: tools.append("EmbeddedRedis")
-        if "@Async" in code: tools.append("Awaitility")
-        if any(x in code for x in ["synchronized", "Atomic", "Concurrent"]): tools.append("CountDownLatch (Concurrency)")
-        return tools
 
 class TestInfraAgent:
     def _find_module_root(self, path):
@@ -120,7 +106,6 @@ class TestInfraAgent:
             setup_log.append("Created AbstractTestBase.java")
         return setup_log
 
-# --- 3. RAG Librarian ---
 class LibrarianAgent:
     def select_collections(self, code, project_prefix):
         targets = [f"{project_prefix}_common", "docs_library"]
@@ -129,7 +114,7 @@ class LibrarianAgent:
         for imp in re.findall(r'import\s+([\w\.]+);', code):
             parts = imp.split('.')
             if len(parts) >= 2:
-                lib_id = f"lib_{parts[0]}_{parts[1]}"
+                lib_id = f"lib_{{parts[0]}}_{{parts[1]}}"
                 targets.extend([f"{lib_id}_api", f"{lib_id}_guide"])
         return list(set(targets))
 
@@ -148,20 +133,15 @@ def _retrieve_full_context(query, project_path, prefix, strategy, emb_model):
             except: pass
     return context
 
-# --- 4. Main Engine Workflow ---
 async def run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules):
     guardian = PrivacyAgent(); style_lib = StyleLibrarianAgent(); slicer = SymbolUsageAgent()
     safe_code = guardian.mask(target_code); safe_context = guardian.mask(initial_context)
+    contract_spec = slicer.get_contract_spec(safe_code)
     
     versions = get_all_dependency_versions(project_path)
     infra_eng = TestInfraAgent(); infra_eng.generate_and_save_setup(target_file_path, versions)
     
-    infra_expert = InfraSpecialistAgent()
-    suggested_tools = infra_expert.suggest_tools(safe_code)
     focused_rules = style_lib.filter_rules(safe_code, custom_rules)
-    if suggested_tools:
-        focused_rules += f"\n[INFRA_MANDATE] Use {', '.join(suggested_tools)}"
-
     llm = ChatOllama(model=llm_model, temperature=0.0)
     purifier = ContextPurifierAgent(); mocker = MockingSpecialistAgent()
     context7 = MCPBridge("context7|npx|-y|--node-options=--experimental-vm-modules --experimental-fetch|@upstash/context7-mcp@latest")
@@ -171,46 +151,39 @@ async def run_context7_agent(target_file_path, target_code, initial_context, llm
             try: await context7.connect(timeout=30)
             except: pass
             
-        arch_prompt = strategy.get_architect_prompt(safe_code, safe_context)
-        arch_response = _call_chain(arch_prompt, llm, {"target_code": safe_code, "dependency_context": safe_context})
+        # 💡 0.6.0: Use Jinja2 for Architect prompt
+        arch_tpl = "Architect. Design 3 failure tests for: [[ spec ]]. Return SCENARIO: [Desc] only."
+        arch_prompt_text = jinja_env.from_string(arch_tpl).render(spec=contract_spec)
+        from langchain_core.prompts import ChatPromptTemplate
+        arch_prompt = ChatPromptTemplate.from_template(arch_prompt_text)
+        
+        arch_response = _call_chain(arch_prompt, llm, {})
         scenarios = re.findall(r'SCENARIO: (.*)', arch_response) or [arch_response]
         
         final_methods = []
         for i, scenario in enumerate(scenarios[:10]):
             print(f"[STATUS] 🦙 Atomic Target {i+1}/{len(scenarios)}: {scenario[:40]}...")
+            pure_ctx = purifier.purify(scenario, safe_context)
             
-            # 🎯 0.3.0: Precision Slicing - DTO/Symbol filtering
-            precision_ctx = slicer.get_precision_context(safe_code, safe_context)
-            pure_ctx = purifier.purify(scenario, precision_ctx)
+            # 💡 0.6.0: Use Strategy's Jinja2-powered Implementer prompt
+            impl_prompt = strategy.get_implementer_prompt(contract_spec, scenario, pure_ctx, focused_rules)
             
-            for attempt in range(3): # Increased to 3 attempts
-                print(f"   -> [ATTEMPT {attempt+1}] Generating code...")
-                method_code = _call_chain(impl_prompt, llm, {
-                    "target_code": safe_code, 
-                    "plan_item": scenario, 
-                    "research_context": pure_ctx,
-                    "custom_rules": focused_rules
-                })
+            for attempt in range(3):
+                method_code = _call_chain(impl_prompt, llm, {})
                 
-                # Check for validity (must have code tags and looks like java)
-                code_match = re.search(r'<CODE>(.*?)</CODE>', method_code, re.DOTALL)
+                # 💡 0.6.3: Extract from standard Markdown code blocks
+                code_match = re.search(r'```(?:java)?\n?(.*?)\n?```', method_code, re.DOTALL)
                 candidate = code_match.group(1).strip() if code_match else method_code.strip()
                 
-                # 🧼 Stronger validation: if it's chatty, force a fix
-                if any(chat in candidate.lower() for chat in ["it looks like", "i can help", "address the issue"]) or ";" not in candidate:
-                    print(f"   -> [REFINE] Chat detected or invalid syntax. Forcing code-only retry...")
-                    fix_hint = "Your previous response was too conversational or syntactically invalid. Output ONLY the raw Java method body inside <CODE> tags. NO EXPLANATIONS."
-                    method_code = _call_chain(impl_prompt, llm, {"target_code": safe_code, "plan_item": f"{scenario}\n[RETRY HINT] {fix_hint}", "research_context": pure_ctx})
-                else:
-                    # Look like valid code! Let's do a final QA pass
-                    qa_prompt = strategy.get_quality_engineer_prompt(method_code, pure_ctx)
-                    method_code = _call_chain(qa_prompt, llm, {"generated_code": method_code, "target_context": pure_ctx})
-                    break
+                if any(chat in candidate.lower() for chat in ["it looks like", "i can help"]) or ";" not in candidate:
+                    fix_hint = "Previous response was chatty. Return ONLY Java code in ```java blocks."
+                    method_code = _call_chain(impl_prompt, llm, {}) # Retry with same pre-processed prompt
+                else: break
             
-            # Final assembly: even if imperfect, keep the best effort but mark it
-            code_match = re.search(r'<CODE>(.*?)</CODE>', method_code, re.DOTALL)
+            # Re-run extraction for the final candidate
+            code_match = re.search(r'```(?:java)?\n?(.*?)\n?```', method_code, re.DOTALL)
             final_snippet = code_match.group(1).strip() if code_match else method_code.strip()
-            final_methods.append(re.sub(r'```java|```', '', final_snippet).strip())
+            final_methods.append(final_snippet)
 
         return strategy.assemble_final_class(os.path.basename(target_file_path).replace(".java", ""), final_methods, target_code=target_code)
     finally:
@@ -224,9 +197,8 @@ def generate_test(target_file_path, project_path, project_collection, docs_colle
         initial_context = _retrieve_full_context(target_code, project_path, project_collection, strategy, embedding_model)
         result_code = asyncio.run(run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules))
         return f"[RESULT_START]\n{result_code}\n[RESULT_END]"
-    except Exception as e: return f"Error: {str(e)}"
+    except Exception as e: return f"/* 🦙 Error: {str(e)} */"
 
 class TroubleshooterAgent:
     def troubleshoot(self, error_log, project_context):
-        if "BeanCreationException" in error_log: return "Bean 생성 에러! @MockBean을 확인해봐라마."
-        return "에러 로그를 더 자세히 분석하려면 관련 설정 파일을 보여줘라마!"
+        return "Check configuration."
