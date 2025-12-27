@@ -18,7 +18,6 @@ def _call_raw(llm, content):
         return ""
 
 class CriticAgent:
-    """Evaluates code quality without regex."""
     def review(self, code, section):
         issues = []
         if "TODO" in code: issues.append(f"{section} contains TODO.")
@@ -28,10 +27,8 @@ class CriticAgent:
         return issues
 
 class SymbolUsageAgent:
-    """Uses Tree-sitter strategy to extract context without regex."""
     def get_unit_context(self, method_name, target_code, strategy):
         try:
-            # Use the robust Tree-sitter parser from JavaStrategy
             method_body = strategy.get_method_body(target_code, method_name)
             return f"[METHOD]\n{method_body}"
         except:
@@ -52,7 +49,6 @@ async def generate_nano_statement(llm, role, task, context, example):
 [YOUR CODE]
 """
     response = await asyncio.to_thread(_call_raw, llm, prompt)
-    # Simple string cleaning
     clean = response.replace("```java", "").replace("```", "").replace("`", "").strip()
     return clean
 
@@ -62,12 +58,18 @@ async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen
     slicer = SymbolUsageAgent()
     critic = CriticAgent()
     
-    # 1. Structural Analysis (Simple string/AST ops)
-    # Naive extraction for class name - safe enough
-    class_name = target_code.split("public class ")[1].split("{")[0].strip() if "public class " in target_code else "Target"
-    if "package " in target_code:
+    # 1. Structural Analysis (No Regex!)
+    # Naive extraction but safe
+    try:
+        class_name = target_code.split("public class ")[1].split("{")[0].strip()
+        if "extends" in class_name: class_name = class_name.split("extends")[0].strip()
+        if "implements" in class_name: class_name = class_name.split("implements")[0].strip()
+    except:
+        class_name = "Target"
+
+    try:
         package_name = target_code.split("package ")[1].split(";")[0].strip()
-    else:
+    except:
         package_name = "com.example.demo"
         
     dependencies = strategy.get_dependencies(target_code)
@@ -94,7 +96,6 @@ async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen
     builder.add_field("@InjectMocks", class_name, instance_name)
 
     # 3. Method Identification (AST based)
-    # Assuming get_units returns "Method: name" strings
     units = strategy.get_units(target_code)
     method_names = [u.split(": ")[1] for u in units if "Method" in u]
 
@@ -122,20 +123,17 @@ async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen
         issues = critic.review(given + when + then, method_name)
         if issues: 
             print(f"   -> ⚠️ Issues found: {issues}")
-            # Simple retry logic could go here, but sticking to linear for stability
 
-        body = f"""
-// given
+        body = f"""// given
         {given}
         
-// when
+        // when
         {when}
         
-// then
+        // then
         {then}"""
         
-        full_method = f"""
-    @Test
+        full_method = f"""    @Test
     @DisplayName("Success: {method_name}")
     void test{method_name[0].upper() + method_name[1:]}_Success() {{
         {body}

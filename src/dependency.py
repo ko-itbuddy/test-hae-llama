@@ -1,7 +1,6 @@
 import os
 import subprocess
 import sys
-import xml.etree.ElementTree as ET
 
 def check_ollama_installed():
     try:
@@ -14,6 +13,7 @@ def ensure_ollama_models(llm_model="qwen2.5-coder:7b", embedding_model="nomic-em
         print("[STATUS] ❌ Ollama not found.")
         return
     try:
+        # Simple string check instead of regex
         result = subprocess.run(['ollama', 'list'], capture_output=True, text=True)
         if llm_model not in result.stdout:
             print(f"[STATUS] ⚠️ Pulling {llm_model}...")
@@ -21,41 +21,47 @@ def ensure_ollama_models(llm_model="qwen2.5-coder:7b", embedding_model="nomic-em
     except: pass
 
 def get_java_version(project_path):
-    """Detects Java version using simple string parsing (No Regex)."""
-    # 1. Check build.gradle
-    gradle_path = os.path.join(project_path, "build.gradle")
-    if os.path.exists(gradle_path):
+    """
+    Detects Java version by asking Gradle or Maven directly.
+    """
+    # 1. Ask Gradle
+    if os.path.exists(os.path.join(project_path, "gradlew")) or os.path.exists(os.path.join(project_path, "build.gradle")):
         try:
-            lines = open(gradle_path, 'r').readlines()
-            for line in lines:
-                if "sourceCompatibility" in line:
-                    # Parse: sourceCompatibility = '17' or 17
-                    parts = line.split("=")
-                    if len(parts) > 1:
-                        ver = parts[1].strip().replace("'", "").replace('"', "")
-                        return "1.8" if ver == "8" else ver
+            cmd = ['./gradlew', '-q', 'properties'] if os.path.exists(os.path.join(project_path, "gradlew")) else ['gradle', '-q', 'properties']
+            result = subprocess.run(cmd, cwd=project_path, capture_output=True, text=True)
+            for line in result.stdout.split('\n'):
+                if line.startswith("sourceCompatibility:"):
+                    return line.split(":")[1].strip()
         except: pass
 
-    # 2. Check pom.xml (XML parser is safe)
-    pom_path = os.path.join(project_path, "pom.xml")
-    if os.path.exists(pom_path):
+    # 2. Ask Maven
+    if os.path.exists(os.path.join(project_path, "mvnw")) or os.path.exists(os.path.join(project_path, "pom.xml")):
         try:
-            tree = ET.parse(pom_path); root = tree.getroot()
-            ns = {'mvn': 'http://maven.apache.org/POM/4.0.0'}
-            props = root.find(".//mvn:properties", ns)
-            if props is not None:
-                ver = props.find("mvn:java.version", ns)
-                if ver is not None: return ver.text
+            cmd = ['./mvnw'] if os.path.exists(os.path.join(project_path, "mvnw")) else ['mvn']
+            cmd.extend(['help:evaluate', '-Dexpression=maven.compiler.source', '-q', '-DforceStdout'])
+            result = subprocess.run(cmd, cwd=project_path, capture_output=True, text=True)
+            ver = result.stdout.strip()
+            if ver and ver[0].isdigit(): return ver
         except: pass
         
-    return "17" # Default
+    return "17" # Default fallback
 
 def get_all_dependency_versions(project_path):
-    # Simplified dependency check without regex
+    # Simplified dependency check via text search (fast & safe)
     versions = {'spring-boot': '3.0.0', 'has-testcontainers': False, 'has-awaitility': False}
+    
+    # Check Gradle
     gradle_path = os.path.join(project_path, "build.gradle")
     if os.path.exists(gradle_path):
         content = open(gradle_path, 'r').read()
         if "testcontainers" in content: versions['has-testcontainers'] = True
         if "awaitility" in content: versions['has-awaitility'] = True
+        
+    # Check Maven
+    pom_path = os.path.join(project_path, "pom.xml")
+    if os.path.exists(pom_path):
+        content = open(pom_path, 'r').read()
+        if "testcontainers" in content: versions['has-testcontainers'] = True
+        if "awaitility" in content: versions['has-awaitility'] = True
+        
     return versions
