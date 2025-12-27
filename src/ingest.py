@@ -4,7 +4,7 @@ from langchain_community.document_loaders import TextLoader, DirectoryLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter, Language
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
-from src.utils import get_chroma_dir
+from src.utils.file_utils import get_chroma_dir
 
 def classify_component(content, filename):
     prefix = "t" if any(x in filename for x in ["Test.java", "Tests.java", "IT.java"]) else "c"

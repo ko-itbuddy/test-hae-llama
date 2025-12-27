@@ -1,168 +1,95 @@
 import os
 import re
 import asyncio
-import json
-import jinja2
 from langchain_ollama import OllamaEmbeddings, ChatOllama
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.messages import HumanMessage
+from src.utils.java_builder import JavaClassBuilder
 from src.languages import get_strategy
-from src.mcp_client import MCPBridge
-from src.dependency import get_all_dependency_versions
-from src.utils import get_chroma_dir
 
-# 💡 2.0.0: No Templates. Pure Python String Assembly.
 def _call_raw(llm, content):
+    """Invokes LLM with raw content string, bypassing all template parsing."""
     chain = llm | StrOutputParser()
     return chain.invoke([HumanMessage(content=content)])
 
-# --- Specialist Agents (The Assembly Line Workers) ---
-
-class ImportSpecialist:
-    """Station 1: Gather Imports"""
-    def generate_imports(self, target_code, existing_imports):
-        # Base imports for JUnit 5 & Mockito
-        imports = [
-            "package com.example.demo.service;", # Default fallback
-            "",
-            "import org.junit.jupiter.api.*;",
-            "import org.junit.jupiter.api.extension.ExtendWith;",
-            "import org.mockito.*;",
-            "import org.mockito.junit.jupiter.MockitoExtension;",
-            "import static org.mockito.Mockito.*;",
-            "import static org.assertj.core.api.Assertions.*;",
-            "import java.util.*;",
-            "import java.math.BigDecimal;"
-        ]
-        
-        # Extract package from target code
-        pkg_match = re.search(r'package\s+([\w\.]+);', target_code)
-        if pkg_match:
-            imports[0] = f"package {pkg_match.group(1).replace('.main.', '.test.')}"
-            # Adjust test package to standard
-            if ".service" in imports[0]: imports[0] = imports[0]
-            else: imports[0] = imports[0].replace("package ", "package test.") # Fallback
-
-        # Copy useful imports from source (Entity, DTOs)
-        source_imports = re.findall(r'import\s+([\w\.]+);', target_code)
-        for imp in source_imports:
-            if not imp.startswith("org.springframework.stereotype") and not imp.startswith("lombok"):
-                imports.append(f"import {imp};")
-        
-        return imports
-
-class MockBuilder:
-    """Station 2: Build Fields"""
-    def generate_fields(self, target_code, class_name):
-        fields = []
-        # Find dependencies (private final Type name;)
-        deps = re.findall(r'private\s+final\s+(\w+)\s+(\w+);', target_code)
-        
-        for type_name, var_name in deps:
-            fields.append(f"    @Mock\n    private {type_name} {var_name};")
-            
-        # Add InjectMocks
-        instance_name = class_name[0].lower() + class_name[1:]
-        fields.append(f"\n    @InjectMocks\n    private {class_name} {instance_name};")
-        
-        return fields, instance_name
-
-class LogicWriter:
-    """Station 3: The LLM Artist (Body Only)"""
-    def write_test_logic(self, llm, unit_name, scenario, context, instance_name):
-        prompt = f"""[TASK] Write the BODY of a JUnit 5 test method.
-Target: {instance_name}.{unit_name}
-Scenario: {scenario}
-
-[CONTEXT]
-{context}
-
-[RULES]
-1. Start with // given, // when, // then.
-2. Use AssertJ (assertThat).
-3. Do NOT write the method signature (void test...). 
-4. Do NOT write class or imports.
-5. JUST the logic inside the braces.
-
-[OUTPUT]
-Return ONLY code.
-"""
-        return _call_raw(llm, prompt)
-
-class Assembler:
-    """Station 4: Final Assembly"""
-    def assemble(self, imports, class_name, fields, methods):
-        lines = []
-        lines.extend(imports)
-        lines.append("")
-        lines.append("@ExtendWith(MockitoExtension.class)")
-        lines.append(f"class {class_name}Test {{")
-        lines.append("")
-        lines.extend(fields)
-        lines.append("")
-        lines.extend(methods)
-        lines.append("}")
-        return "\n".join(lines)
-
-# --- Engine ---
-
-async def run_context7_agent(target_file_path, target_code, initial_context, llm_model, project_path, strategy, custom_rules):
-    # Workers
-    importer = ImportSpecialist()
-    mocker = MockBuilder()
-    writer = LogicWriter()
-    assembler = Assembler()
+async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen2.5-coder:7b"):
+    llm = ChatOllama(model=llm_model, temperature=0.1)
+    strategy = get_strategy(target_file_path, ".")
     
-    llm = ChatOllama(model=llm_model, temperature=0.0)
-    
-    # 1. Prepare Parts
+    # --- Station 1: Analysis ---
     class_match = re.search(r'public\s+class\s+(\w+)', target_code)
     class_name = class_match.group(1) if class_match else "Target"
     
-    # 2. Build Skeleton (Python Logic - 100% Safe)
-    import_lines = importer.generate_imports(target_code, "")
-    field_lines, instance_name = mocker.generate_fields(target_code, class_name)
+    package_match = re.search(r'package\s+([\w\.]+);', target_code)
+    package_name = package_match.group(1) if package_match else "com.example.demo"
     
-    # 3. Identify Units (Regex for speed)
-    methods = re.findall(r'public\s+[\w<>]+\s+(\w+)\s*\(', target_code)
-    # Filter constructors/getters if needed
-    methods = [m for m in methods if m != class_name] 
-    if not methods: methods = ["method"]
-
-    print(f"[STATUS] 🏭 Assembly Line Started for {class_name}")
-    print(f"   -> Found {len(methods)} units to test.")
-
-    test_methods = []
+    dependencies = re.findall(r'private\s+final\s+([\w<>]+)\s+(\w+);', target_code)
     
-    # 4. Generate Bodies (LLM Task)
-    for method in methods:
-        print(f"   -> 🔨 Forging logic for: {method}")
-        # Simple extraction of method body for context
-        method_ctx = re.search(fr'{method}.*?{{(.*?)}}', target_code, re.DOTALL)
-        ctx_str = method_ctx.group(1)[:500] if method_ctx else "..."
+    # --- Station 2: Java Class Builder Initialization ---
+    builder = JavaClassBuilder(package=package_name, class_name=f"{class_name}Test")
+    
+    builder.add_import("org.junit.jupiter.api.*")
+    builder.add_import("org.junit.jupiter.api.extension.ExtendWith")
+    builder.add_import("org.mockito.*")
+    builder.add_import("org.mockito.junit.jupiter.MockitoExtension")
+    builder.add_import("static org.mockito.Mockito.*")
+    builder.add_import("static org.assertj.core.api.Assertions.*")
+    builder.add_import("java.util.*")
+    builder.add_import("java.math.BigDecimal")
+    
+    builder.add_class_annotation("@ExtendWith(MockitoExtension.class)")
+    
+    # --- Station 3: Field Generation ---
+    for dep_type, dep_name in dependencies:
+        builder.add_field("@Mock", dep_type, dep_name)
+    
+    instance_name = class_name[0].lower() + class_name[1:]
+    builder.add_field("@InjectMocks", class_name, instance_name)
+
+    # --- Station 4: Test Method Logic Generation (LLM) ---
+    all_units = strategy.get_units(target_code)
+    if not all_units: all_units = ["primary logic"]
+
+    for unit_info in all_units:
+        unit_name = unit_info.split(": ")[-1]
         
-        # LLM Call
-        body = writer.write_test_logic(llm, method, "Success Case", ctx_str, instance_name)
-        
-        # Cleaning
-        body = body.replace("```java", "").replace("```", "").strip()
-        
-        # Wrap in method signature (Python Logic)
-        method_code = f"""
-    @Test
-    @DisplayName("Success: {method}")
-    void test{method[0].upper() + method[1:]}() {{
-        {body}
+        # Architect Agent
+        scenario_prompt = f"List two test scenarios (one success, one failure) for the Java method: {unit_name}. Use a simple list format."
+        scenarios_str = await asyncio.to_thread(_call_raw, llm, scenario_prompt)
+        scenarios = [s.strip() for s in scenarios_str.split('\n') if s.strip()]
+
+        for scenario in scenarios:
+            test_name = f"test{unit_name[0].upper() + unit_name[1:]}_{scenario.split(' ')[0].replace(':', '')}"
+            
+            body_prompt_str = f"""Write only the Java code logic for a test case.
+Scenario: "{scenario}"
+Instance: {instance_name}
+Mocks: {[d[1] for d in dependencies]}
+Structure:
+// given
+...
+// when
+...
+// then
+..."""
+            body = await asyncio.to_thread(_call_raw, llm, body_prompt_str)
+            clean_body = body.replace("```java", "").replace("```", "").strip()
+
+            full_method = f"""    @Test
+    @DisplayName("{scenario}")
+    void {test_name}() {{
+        {clean_body}
     }}"""
-        test_methods.append(method_code)
+            builder.add_method(full_method)
 
-    # 5. Final Assembly
-    final_code = assembler.assemble(import_lines, class_name, field_lines, test_methods)
-    
-    # Save (Standard Logic)
-    # (Assuming external save logic handles the file write based on return)
-    return final_code
+    # --- Station 5: Final Assembly ---
+    return builder.build()
+
 
 def generate_test(target_file_path, project_path, project_collection, docs_collection, llm_model="qwen2.5-coder:7b", embedding_model="nomic-embed-text", custom_rules="", mcp_configs=None):
-    target_code = open(target_file_path, 'r', encoding='utf-8').read()
-    return asyncio.run(run_context7_agent(target_file_path, target_code, "", llm_model, project_path, None, custom_rules))
+    try:
+        target_code = open(target_file_path, 'r', encoding='utf-8').read()
+        result_code = asyncio.run(run_generation_pipeline(target_file_path, target_code, llm_model=llm_model))
+        return f"[RESULT_START]\n{result_code}\n[RESULT_END]"
+    except Exception as e:
+        return f"/* Error during test generation: {str(e)} */"

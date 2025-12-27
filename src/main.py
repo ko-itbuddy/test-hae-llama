@@ -17,7 +17,7 @@ if parent_dir not in sys.path:
 from src.ingest import ingest_codebase
 from src.rag_engine import generate_test
 from src.dependency import ensure_ollama_models
-from src.utils import get_project_data_dir
+from src.utils.file_utils import get_project_data_dir
 
 @click.group()
 @click.option('--proxy', help='HTTP/HTTPS Proxy URL')
