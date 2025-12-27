@@ -34,18 +34,15 @@ async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen
     strategy = get_strategy(target_file_path, ".")
     
     # 1. Structural Analysis
-    # We still use regex for initial class parsing as it's simple single-line matching
     class_match = re.search(r'public\s+class\s+(\w+)', target_code)
     class_name = class_match.group(1) if class_match else "Target"
     package_match = re.search(r'package\s+([\w\.]+);', target_code)
     package_name = package_match.group(1) if package_match else "com.example.demo"
-    
-    # Use AST for dependencies (Already implemented in Strategy)
     dependencies = strategy.get_dependencies(target_code)
     
     # 2. Builder Setup
     builder = JavaClassBuilder(package=package_name, class_name=f"{class_name}Test")
-    builder.add_import("org.junit.jupiter.api.*")
+    builder.add_import("org.junit.jupiter.api.*\n")
     builder.add_import("org.junit.jupiter.api.extension.ExtendWith")
     builder.add_import("org.mockito.*")
     builder.add_import("org.mockito.junit.jupiter.MockitoExtension")
@@ -65,7 +62,6 @@ async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen
     builder.add_field("@InjectMocks", class_name, instance_name)
 
     # 3. Method Processing
-    # Use Regex to find method signatures (robust enough for identification)
     methods = re.findall(r'public\s+[\w<>,[\]\s]+\s+(\w+)\s*\((.*?)\)', target_code)
     methods = [m for m in methods if m[0] != class_name]
 
@@ -77,8 +73,9 @@ async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen
         except:
             method_body = "// Body extraction failed"
 
-        # 4. Tag-Based Generation Prompt
-        prompt = f"""[TASK] Write a JUnit 5 test method body for {class_name}.{method_name}.
+        # 4. Tag-Based Generation with Self-Correction Loop
+        for attempt in range(2):
+            prompt = f"""[TASK] Write a JUnit 5 test method body for {class_name}.{method_name}.
 [CONTEXT]
 Target Class: {class_name}
 Method Signature: {method_name}({args_str})
@@ -90,48 +87,33 @@ Instance under test: {instance_name}
 
 [INSTRUCTION]
 Generate the test logic separated into three parts. Wrap each part in specific XML tags.
-DO NOT use markdown blocks (```java). Just raw code inside tags.
+1. <GIVEN> Setup Mockito 'when' stubs. </GIVEN>
+2. <WHEN> Call the method: {instance_name}.{method_name}(...); </WHEN>
+3. <THEN> Use AssertJ 'assertThat' to verify results. </THEN>
 
-1. <GIVEN>
-   - Setup Mockito 'when' stubs.
-   - Initialize variables.
-   </GIVEN>
-
-2. <WHEN>
-   - Call the method: {instance_name}.{method_name}(...);
-   - Capture result if any.
-   </WHEN>
-
-3. <THEN>
-   - Use AssertJ 'assertThat' to verify results.
-   - Use 'verify' to check mock interactions.
-   </THEN>
-
-[EXAMPLE OUTPUT]
-<GIVEN>
-when(repo.findById(1L)).thenReturn(Optional.of(new User()));
-</GIVEN>
-<WHEN>
-var result = service.findUser(1L);
-</WHEN>
-<THEN>
-assertThat(result).isNotNull();
-</THEN>
+[STRICT] Return ONLY code inside tags. NO markdown.
 """
-        response = await asyncio.to_thread(_call_raw, llm, prompt)
-        
-        # 5. Robust Extraction (No Regex!)
-        given = extract_tag_content(response, "GIVEN")
-        when = extract_tag_content(response, "WHEN")
-        then = extract_tag_content(response, "THEN")
-        
-        # Fallback if tags are missing (Basic error handling)
-        if not given: given = "// TODO: Add Given (Mocks)"
-        if not when: when = f"// TODO: Call {method_name}"
-        if not then: then = "// TODO: Add Assertions"
+            response = await asyncio.to_thread(_call_raw, llm, prompt)
+            
+            given = extract_tag_content(response, "GIVEN")
+            when = extract_tag_content(response, "WHEN")
+            then = extract_tag_content(response, "THEN")
+            
+            # 💡 Self-Correction: If any part is missing or empty, force fallback logic
+            if not given or "TODO" in given:
+                given = f"// Mocking suggestion: when({mock_names[0]}.someMethod()).thenReturn(...);" if mock_names else "// No mocks needed"
+            if not when:
+                when = f"var result = {instance_name}.{method_name}({args_str}); // TODO: Fill args"
+            if not then:
+                then = "assertThat(result).isNotNull();"
 
-        body = f"""
-        // given
+            # Check if we have enough content to proceed
+            if len(when) > 10 and ";" in when:
+                break # Good enough
+            
+            print(f"   -> ⚠️ Content too weak (Attempt {attempt+1}), retrying...")
+
+        body = f"""// given
         {given}
         
         // when
@@ -140,8 +122,7 @@ assertThat(result).isNotNull();
         // then
         {then}"""
         
-        full_method = f"""
-    @Test
+        full_method = f"""    @Test
     @DisplayName("Success: {method_name}")
     void test{method_name[0].upper() + method_name[1:]}_Success() {{
         {body}

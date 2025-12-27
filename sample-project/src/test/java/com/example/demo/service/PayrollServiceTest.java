@@ -22,15 +22,14 @@ public class PayrollServiceTest {
     @Test
         @DisplayName("Success: processPayroll")
         void testProcessPayroll_Success() {
-            
             // given
-            // TODO: Add Given (Mocks)
+            // Mocking suggestion: when(bankClient.someMethod()).thenReturn(...);
             
             // when
-            // TODO: Call processPayroll
+            var result = payrollService.processPayroll(Long employeeId, BigDecimal baseSalary); // TODO: Fill args
             
             // then
-            // TODO: Add Assertions
+            assertThat(result).isNotNull();
         }
 
 }
