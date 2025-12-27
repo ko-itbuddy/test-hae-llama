@@ -15,23 +15,46 @@ def _call_raw(llm, content):
     return chain.invoke([HumanMessage(content=content)])
 
 def extract_tag_content(text, tag):
-    """Robustly extracts content between <TAG> and </TAG> without regex."""
     start_tag = f"<{tag}>"
     end_tag = f"</{tag}>"
-    
     start_idx = text.find(start_tag)
     if start_idx == -1: return None
-    
     start_idx += len(start_tag)
     end_idx = text.find(end_tag, start_idx)
-    
-    if end_idx == -1: return None
-    
-    return text[start_idx:end_idx].strip()
+    return text[start_idx:end_idx].strip() if end_idx != -1 else None
+
+class SymbolUsageAgent:
+    def get_unit_context(self, method_name, target_code, project_path):
+        """Extracts method body AND relevant dependency source codes."""
+        # 1. Target Method Body
+        pattern = fr'(?:public|protected|private).*?\s+{method_name}\s*\(.*?\)\s*(?:throws\s+[\w\s,]+)?\s*\{{(.*?)\}}'
+        match = re.search(pattern, target_code, re.DOTALL)
+        method_content = match.group(0) if match else "// Method body not found"
+        
+        # 2. Dependency Source Lookup (Naive but effective RAG)
+        context_files = []
+        # Find all CamelCase words (potential classes) in the method body
+        tokens = set(re.findall(r'\b[A-Z][a-zA-Z0-9]+\b', method_content))
+        
+        for root, _, files in os.walk(os.path.join(project_path, "src/main/java")):
+            for file in files:
+                if file.endswith(".java"):
+                    class_name = file.replace(".java", "")
+                    if class_name in tokens:
+                        try:
+                            # Read file but limit size to avoid token overflow
+                            content = open(os.path.join(root, file), 'r').read()
+                            # Extract fields and public methods only
+                            slim_content = "\n".join([l.strip() for l in content.split('\n') if "public" in l or "private" in l])
+                            context_files.append(f"--- Class: {class_name} ---\n{slim_content[:500]}...") 
+                        except: pass
+        
+        return f"[METHOD UNDER TEST]\n{method_content}\n\n[DEPENDENCY CONTEXT]\n" + "\n".join(context_files)
 
 async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen2.5-coder:7b"):
     llm = ChatOllama(model=llm_model, temperature=0.0)
     strategy = get_strategy(target_file_path, ".")
+    slicer = SymbolUsageAgent()
     
     # 1. Structural Analysis
     class_match = re.search(r'public\s+class\s+(\w+)', target_code)
@@ -42,7 +65,7 @@ async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen
     
     # 2. Builder Setup
     builder = JavaClassBuilder(package=package_name, class_name=f"{class_name}Test")
-    builder.add_import("org.junit.jupiter.api.*\n")
+    builder.add_import("org.junit.jupiter.api.*")
     builder.add_import("org.junit.jupiter.api.extension.ExtendWith")
     builder.add_import("org.mockito.*")
     builder.add_import("org.mockito.junit.jupiter.MockitoExtension")
@@ -68,65 +91,66 @@ async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen
     for method_name, args_str in methods:
         print(f"[STATUS] 🔨 Forging test for: {method_name}")
         
-        try:
-            method_body = strategy.get_method_body(target_code, method_name)
-        except:
-            method_body = "// Body extraction failed"
+        # 💡 RAG: Extract real code context from project
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(target_file_path)))))
+        if "src" not in project_root: project_root = "." # Fallback
+        
+        unit_context = slicer.get_unit_context(method_name, target_code, project_root)
 
-        # 4. Tag-Based Generation with Self-Correction Loop
-        for attempt in range(2):
-            prompt = f"""[TASK] Write a JUnit 5 test method body for {class_name}.{method_name}.
+        for attempt in range(3):
+            prompt = f"[TASK] Write a JUnit 5 test method body for {class_name}.{method_name}.
 [CONTEXT]
 Target Class: {class_name}
-Method Signature: {method_name}({args_str})
-Method Body:
-{method_body}
-
 Dependencies (Mocks): {mock_names}
 Instance under test: {instance_name}
 
+[DEPENDENCY KNOWLEDGE]
+{unit_context}
+
 [INSTRUCTION]
 Generate the test logic separated into three parts. Wrap each part in specific XML tags.
-1. <GIVEN> Setup Mockito 'when' stubs. </GIVEN>
+1. <GIVEN> Setup Mockito 'when' stubs. Initialize ALL required variables (User, Product, etc) with REAL dummy data. </GIVEN>
 2. <WHEN> Call the method: {instance_name}.{method_name}(...); </WHEN>
-3. <THEN> Use AssertJ 'assertThat' to verify results. </THEN>
+3. <THEN> Use AssertJ 'assertThat' to verify results. Verify mock calls. </THEN>
 
-[STRICT] Return ONLY code inside tags. NO markdown.
-"""
-            response = await asyncio.to_thread(_call_raw, llm, prompt)
+[STRICT RULES]
+- NO "TODO", NO "...", NO placeholders.
+- Instantiate objects with valid constructor arguments (e.g., new User(1L, "Name")).
+- Return ONLY code inside tags.
+"
+            response = asyncio.to_thread(_call_raw, llm, prompt)
             
             given = extract_tag_content(response, "GIVEN")
             when = extract_tag_content(response, "WHEN")
             then = extract_tag_content(response, "THEN")
             
-            # 💡 Self-Correction: If any part is missing or empty, force fallback logic
-            if not given or "TODO" in given:
-                given = f"// Mocking suggestion: when({mock_names[0]}.someMethod()).thenReturn(...);" if mock_names else "// No mocks needed"
-            if not when:
-                when = f"var result = {instance_name}.{method_name}({args_str}); // TODO: Fill args"
-            if not then:
-                then = "assertThat(result).isNotNull();"
-
-            # Check if we have enough content to proceed
-            if len(when) > 10 and ";" in when:
-                break # Good enough
+            # 💡 Validation: If placeholders detected, retry!
+            if given and ("TODO" in given or "..." in given):
+                print(f"   -> ⚠️ Detected lazy output (TODO/...). Retrying...")
+                continue
             
-            print(f"   -> ⚠️ Content too weak (Attempt {attempt+1}), retrying...")
+            if given and when and then:
+                break # Success!
 
-        body = f"""// given
+        # Fallback (Only if LLM fails 3 times)
+        if not given: given = "// Error: LLM failed to generate GIVEN block"
+        if not when: when = "// Error: LLM failed to generate WHEN block"
+        if not then: then = "// Error: LLM failed to generate THEN block"
+
+        body = f"// given
         {given}
         
         // when
         {when}
         
         // then
-        {then}"""
+        {then}"
         
-        full_method = f"""    @Test
-    @DisplayName("Success: {method_name}")
+        full_method = f"    @Test
+    @DisplayName(\"Success: {method_name}\")
     void test{method_name[0].upper() + method_name[1:]}_Success() {{
         {body}
-    }}"""
+    }}"
         builder.add_method(full_method)
 
     return builder.build()
