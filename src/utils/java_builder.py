@@ -8,10 +8,11 @@ class JavaClassBuilder:
         self.annotations = []
 
     def add_import(self, import_stmt):
-        if import_stmt.startswith("import "):
-            self.imports.add(import_stmt)
+        clean_import = import_stmt.strip().rstrip(";")
+        if clean_import.startswith("import "):
+            self.imports.add(f"{clean_import};")
         else:
-            self.imports.add(f"import {import_stmt};")
+            self.imports.add(f"import {clean_import};")
 
     def add_class_annotation(self, annotation):
         self.annotations.append(annotation)

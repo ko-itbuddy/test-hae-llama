@@ -67,6 +67,52 @@ class JavaStrategy(LanguageStrategy):
         for child in node.children:
             self._find_units(child, code_bytes, units)
 
+    def get_dependencies(self, code):
+        """Extracts dependencies (fields) using Tree-sitter AST."""
+        encoded_code = code if isinstance(code, bytes) else code.encode('utf-8')
+        tree = self.parser.parse(encoded_code)
+        deps = []
+        
+        cursor = tree.walk()
+        
+        def visit(node):
+            if node.type == 'field_declaration':
+                type_node = node.child_by_field_name('type')
+                declarator = node.child_by_field_name('declarator')
+                if type_node and declarator:
+                    type_name = code[type_node.start_byte:type_node.end_byte]
+                    var_name = code[declarator.child_by_field_name('name').start_byte:declarator.child_by_field_name('name').end_byte]
+                    deps.append((type_name, var_name))
+            for child in node.children:
+                visit(child)
+                
+        visit(tree.root_node)
+        return deps
+
+    def get_method_body(self, code, method_name):
+        """Extracts the body of a specific method using Tree-sitter."""
+        encoded_code = code if isinstance(code, bytes) else code.encode('utf-8')
+        tree = self.parser.parse(encoded_code)
+        
+        # Traverse to find the method
+        cursor = tree.walk()
+        
+        # Recursive search for method_declaration
+        def find_node(node):
+            if node.type == 'method_declaration':
+                name_node = node.child_by_field_name('name')
+                if name_node and code[name_node.start_byte:name_node.end_byte] == method_name:
+                    body_node = node.child_by_field_name('body')
+                    if body_node:
+                        return code[body_node.start_byte:body_node.end_byte]
+            for child in node.children:
+                res = find_node(child)
+                if res: return res
+            return None
+
+        body_bytes = find_node(tree.root_node)
+        return body_bytes.decode('utf8') if body_bytes else f"// Body not found for {method_name}"
+
     def get_architect_prompt(self, target_code, dependency_context):
         template = "Architect. List 3 failure test scenarios for this Java spec:\n[[ spec ]]\nReturn ONLY SCENARIO: [Desc] lines."
         return ChatPromptTemplate.from_template(self.jinja_env.from_string(template).render(spec=target_code))
