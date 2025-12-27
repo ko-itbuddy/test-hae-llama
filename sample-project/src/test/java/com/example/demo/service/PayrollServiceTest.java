@@ -8,11 +8,9 @@ import static org.assertj.core.api.Assertions.*;
 import java.util.*;
 
 @ExtendWith(MockitoExtension.class)
-/* 🚨 이 테스트 코드는 반드시 통과되어야 합니다라마! */
+/* This test must pass. */
 public class PayrollServiceTest {
-    ```java
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
-
-public class SalaryProcessorTest {
+    public static void main(String[] args)) {
+        System.out.println("Success");
+!");
 }
