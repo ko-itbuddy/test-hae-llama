@@ -113,6 +113,40 @@ class JavaStrategy(LanguageStrategy):
         body_bytes = find_node(tree.root_node)
         return body_bytes.decode('utf8') if body_bytes else f"// Body not found for {method_name}"
 
+    def get_public_methods(self, code):
+        """Extracts public method signatures from code to guide the LLM."""
+        encoded_code = code if isinstance(code, bytes) else code.encode('utf-8')
+        tree = self.parser.parse(encoded_code)
+        methods = []
+        
+        cursor = tree.walk()
+        def visit(node):
+            if node.type == 'method_declaration':
+                modifiers = ""
+                for child in node.children:
+                    if child.type == 'modifiers':
+                        modifiers = code[child.start_byte:child.end_byte].decode('utf8', errors='ignore')
+                        break
+                
+                if "public" in modifiers:
+                    # Extract full signature (simplified)
+                    # e.g., boolean transfer(Long id, BigDecimal amount)
+                    name_node = node.child_by_field_name('name')
+                    params_node = node.child_by_field_name('parameters')
+                    type_node = node.child_by_field_name('type')
+                    
+                    if name_node and params_node and type_node:
+                        ret_type = code[type_node.start_byte:type_node.end_byte].decode('utf8', errors='ignore')
+                        m_name = code[name_node.start_byte:name_node.end_byte].decode('utf8', errors='ignore')
+                        params = code[params_node.start_byte:params_node.end_byte].decode('utf8', errors='ignore')
+                        methods.append(f"{ret_type} {m_name}{params}")
+            
+            for child in node.children:
+                visit(child)
+        
+        visit(tree.root_node)
+        return methods
+
     def get_architect_prompt(self, target_code, dependency_context):
         template = "Architect. List 3 failure test scenarios for this Java spec:\n[[ spec ]]\nReturn ONLY SCENARIO: [Desc] lines."
         return ChatPromptTemplate.from_template(self.jinja_env.from_string(template).render(spec=target_code))
