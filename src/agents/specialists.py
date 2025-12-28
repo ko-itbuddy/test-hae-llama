@@ -8,32 +8,36 @@ class DepartmentTeam:
         self.qa = qa
 
     async def execute_mission(self, mission_context, shared_brief=""):
-        """반려 사유(Feedback)를 실무자에게 전달하여 지능적으로 재공정합니다."""
         last_feedback = ""
         for attempt in range(3):
-            # 1. 실무자 작업 (공유 문서와 이전 피드백 참조)
+            # 1. 실무자 작업
             work = await self.clerk.task(mission_context, shared_brief, last_feedback)
             
-            # 2. 매니저 승인 (논리 점검)
+            # 2. 매니저 승인 (비즈니스 로직 점검)
             approval = await self.manager.approve(work, mission_context)
             if "APPROVED" not in approval.upper():
                 last_feedback = f"Manager Rejected: {approval}"
-                print(f"      🏢 [REJECTED] {last_feedback}")
                 continue
                 
-            # 3. QA 최종 검증 (기술 점검)
+            # 3. 🧪 기술 QA (실제 컴파일 기반 검증!)
+            print(f"      🔬 [{self.__class__.__name__}] Running Technical QA...")
             v_result = await self.qa.verify(work, mission_context)
-            if "PASSED" not in v_result.upper() and "VALID" not in v_result.upper():
-                last_feedback = f"QA Flagged: {v_result}"
-                print(f"      🏢 [REJECTED] {last_feedback}")
+            
+            if "PASSED" in v_result.upper():
+                return work.replace("```java", "").replace("```", "").replace("`", "").strip()
+            else:
+                # 💡 핵심: 실제 에러 메시지를 피드백으로 저장하여 실무자에게 전달
+                last_feedback = f"Technical QA Failed: {v_result}"
+                print(f"      ❌ [{self.__class__.__name__}] Flagged Error: {v_result}")
                 continue
                 
-            return work.replace("```java", "").replace("```", "").replace("`", "").strip()
-        return f"// Bureaucracy Failure: {last_feedback}"
+        return f"// Dept Failure: {last_feedback}"
 
 # --- 1. DATA DEPT ---
 class DataClerk(BaseAgent):
-    async def task(self, ctx): return await self._call_llm(f"Write ONE @CsvSource row for: {ctx}. Format: \"input1, expected\".", "Data Clerk")
+    async def task(self, ctx, brief, feedback=""): 
+        prompt = f"Write ONE @CsvSource row for: {ctx}.\nBRIEF: {brief}\nFEEDBACK: {feedback}\nFormat: \"input1, expected\"."
+        return await self._call_llm(prompt, "Data Entry Clerk")
 class DataManager(BaseAgent):
     async def approve(self, work, ctx): return await self._call_llm(f"Is this CSV data logical for {ctx}?\nDATA: {work}\nReturn 'APPROVED' or 'REJECT'.", "Data Manager")
 class DataQA(BaseAgent):
@@ -44,24 +48,50 @@ class DataDeptTeam(DepartmentTeam):
 
 # --- 2. MOCK DEPT ---
 class MockerClerk(BaseAgent):
-    async def task(self, ctx, brief, feedback=""):
-        instruction = f"Write Mockito code for: {ctx}.\nCONTEXT: {brief}"
-        if feedback:
-            instruction += f"\n\n🚨 PREVIOUS ERROR: {feedback}\nFIX THIS ERROR in your new response."
-            
-        prompt = f"{instruction}\n\nReturn ONLY the single line of Java code."
-        return await self._call_llm(prompt, "Expert Mockery Clerk")
+    async def task(self, ctx, brief, feedback=""): 
+        prompt = f"Write ONE line of Mockito 'when' for: {ctx}.\nBRIEF: {brief}\nFEEDBACK: {feedback}"
+        return await self._call_llm(prompt, "Mockery Clerk")
 class MockManager(BaseAgent):
     async def approve(self, work, ctx): return await self._call_llm(f"Is this mock logic correct?\nMOCK: {work}\nReturn 'APPROVED' or 'REJECT'.", "Mock Manager")
 class MockQA(BaseAgent):
-    async def verify(self, work, ctx): return await self._call_llm(f"Is this valid Mockito syntax?\nMOCK: {work}\nReturn 'PASSED' or 'FIX'.", "Mock QA")
+    class MockQA(BaseAgent):
+    async def verify(self, code, ctx):
+        # 1. 1차 정적 분석 (LLM)
+        llm_check = await self._call_llm(f"Check Mockito syntax: {code}", "Syntax QA")
+        if "PASSED" not in llm_check.upper():
+            return llm_check
+
+        # 2. 🧪 2차 실기 분석 (javac)
+        # 임시 파일에 코드를 넣고 문법이 맞는지 실제로 확인합니다.
+        # (실제 구현 시에는 utils.java_builder 등을 활용해 완전한 클래스 형태로 만들어 컴파일 시도)
+        import subprocess, tempfile, os
+        
+        with tempfile.NamedTemporaryFile(suffix=".java", delete=False) as tmp:
+            test_code = f"import static org.mockito.Mockito.*; public class Tmp {{ void m() {{ {code} }} }}"
+            tmp.write(test_code.encode())
+            tmp_path = tmp.name
+
+        try:
+            # 💡 javac로 문법만 체크 (-proc:none)
+            result = subprocess.run(["javac", "-proc:none", tmp_path], capture_output=True, text=True)
+            if result.returncode == 0:
+                return "PASSED"
+            else:
+                # 에러 메시지 요약 (경로 등 지저분한 정보 제거)
+                error = result.stderr.split("error:")[1].strip() if "error:" in result.stderr else "Syntax error"
+                return f"Actual Java Error: {error}"
+        finally:
+            if os.path.exists(tmp_path): os.remove(tmp_path)
+            if os.path.exists(tmp_path.replace(".java", ".class")): os.remove(tmp_path.replace(".java", ".class"))
 
 class MockDeptTeam(DepartmentTeam):
     def __init__(self, llm): super().__init__(MockerClerk(llm), MockManager(llm), MockQA(llm))
 
 # --- 3. EXEC DEPT ---
 class ExecClerk(BaseAgent):
-    async def task(self, ctx): return await self._call_llm(f"Write ONE line of Java calling target for: {ctx}.", "Exec Clerk")
+    async def task(self, ctx, brief, feedback=""): 
+        prompt = f"Write ONE line of Java calling target for: {ctx}.\nBRIEF: {brief}\nFEEDBACK: {feedback}"
+        return await self._call_llm(prompt, "Execution Clerk")
 class ExecManager(BaseAgent):
     async def approve(self, work, ctx): return await self._call_llm(f"Does this call match the method signature?\nCODE: {work}\nReturn 'APPROVED' or 'REJECT'.", "Exec Manager")
 class ExecQA(BaseAgent):
@@ -72,7 +102,9 @@ class ExecDeptTeam(DepartmentTeam):
 
 # --- 4. VERIFY DEPT ---
 class AssertClerk(BaseAgent):
-    async def task(self, ctx): return await self._call_llm(f"Write ONE line of AssertJ 'assertThat' for: {ctx}.", "Assert Clerk")
+    async def task(self, ctx, brief, feedback=""): 
+        prompt = f"Write ONE line of AssertJ 'assertThat' for: {ctx}.\nBRIEF: {brief}\nFEEDBACK: {feedback}"
+        return await self._call_llm(prompt, "Assertion Clerk")
 class AssertManager(BaseAgent):
     async def approve(self, work, ctx): return await self._call_llm(f"Is this assertion logical?\nCODE: {work}\nReturn 'APPROVED' or 'REJECT'.", "Assert Manager")
 class AssertQA(BaseAgent):

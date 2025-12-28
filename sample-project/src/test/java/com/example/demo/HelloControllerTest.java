@@ -8,35 +8,49 @@ import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @ExtendWith(MockitoExtension.class)
-public class HelloControllerTest { 
+public class HelloControllerTest {
+
+    @Mock
+    private SomeDependency someDependency; // Assuming there's a dependency to mock
 
     @InjectMocks
     private HelloController helloController;
 
     @Test
-    void testDefaultNameUsedWhenNoParameterProvided() {
-        // When called directly, the @RequestParam defaultValue is not applied by Spring.
-        // We simulate the behavior or update the test expectation.
-        // If we want to test the default logic, we should use MockMvc.
-        // Here we just test the method behavior: String.format("Hello, %s!", null) -> "Hello, null!"
+    public void testHello() {
+        // given
+        when(someDependency.someMethod("Llama")).thenReturn("Hello, Llama!");
+
+        // when
         String result = helloController.hello("Llama");
-        assertEquals("Hello, Llama!", result);
+
+        // then
+        assertThat(result).isEqualTo("Hello, Llama!");
     }
 
     @Test
-    void testHelloWithValidName() {
-        String name = "Alice";
-        String expectedResponse = String.format("Hello, %s!", name);
-        assertEquals(expectedResponse, helloController.hello(name));
+    public void testHelloCustomName() {
+        // given
+        when(someDependency.someMethod("CustomName")).thenReturn("Hello, CustomName!");
+
+        // when
+        String result = helloController.hello("CustomName");
+
+        // then
+        assertThat(result).isEqualTo("Hello, CustomName!");
     }
 
     @Test
-    void testHelloWithEmptyStringName() {
-        String result = helloController.hello("");
-        assertEquals("Hello, !", result);
-    }
+    public void testHelloWithInvalidName() {
+        // given
+        doThrow(new InvalidParameterException()).when(someDependency).someMethod("InvalidName");
 
+        // when
+        Throwable thrown = catchThrowable(() -> helloController.hello("InvalidName"));
+
+        // then
+        assertThat(thrown).isInstanceOf(InvalidParameterException.class);
+    }
 }
