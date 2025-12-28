@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
 public class ProductService {
     private final ProductRepository productRepository;
@@ -19,6 +21,7 @@ public class ProductService {
         this.exchangeRateClient = exchangeRateClient;
     }
 
+    @Transactional(readOnly = true)
     public BigDecimal getDiscountedPriceInUsd(Long productId) {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> new RuntimeException("Product not found"));
@@ -32,5 +35,10 @@ public class ProductService {
         return product.getPrice()
             .multiply(BigDecimal.valueOf(0.9))
             .divide(BigDecimal.valueOf(rate), 2, RoundingMode.HALF_UP);
+    }
+
+    @Transactional(readOnly = true)
+    public java.util.List<Product> getExpensiveProducts(BigDecimal price) {
+        return productRepository.findProductsExpensiveThan(price);
     }
 }

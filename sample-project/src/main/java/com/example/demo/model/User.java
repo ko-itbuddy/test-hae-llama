@@ -20,4 +20,10 @@ public class User {
     @Email
     @NotBlank
     private String email;
+    private String grade;
+    private String phoneNumber;
+
+    public String getGrade() { return grade; }
+    public String getPhoneNumber() { return phoneNumber; }
+    public String getEmail() { return email; }
 }

@@ -80,8 +80,8 @@ class JavaStrategy(LanguageStrategy):
                 type_node = node.child_by_field_name('type')
                 declarator = node.child_by_field_name('declarator')
                 if type_node and declarator:
-                    type_name = code[type_node.start_byte:type_node.end_byte]
-                    var_name = code[declarator.child_by_field_name('name').start_byte:declarator.child_by_field_name('name').end_byte]
+                    type_name = encoded_code[type_node.start_byte:type_node.end_byte].decode('utf-8', errors='ignore')
+                    var_name = encoded_code[declarator.child_by_field_name('name').start_byte:declarator.child_by_field_name('name').end_byte].decode('utf-8', errors='ignore')
                     deps.append((type_name, var_name))
             for child in node.children:
                 visit(child)
@@ -101,10 +101,10 @@ class JavaStrategy(LanguageStrategy):
         def find_node(node):
             if node.type == 'method_declaration':
                 name_node = node.child_by_field_name('name')
-                if name_node and code[name_node.start_byte:name_node.end_byte] == method_name:
+                if name_node and encoded_code[name_node.start_byte:name_node.end_byte].decode('utf-8', errors='ignore') == method_name:
                     body_node = node.child_by_field_name('body')
                     if body_node:
-                        return code[body_node.start_byte:body_node.end_byte]
+                        return encoded_code[body_node.start_byte:body_node.end_byte]
             for child in node.children:
                 res = find_node(child)
                 if res: return res
@@ -125,20 +125,19 @@ class JavaStrategy(LanguageStrategy):
                 modifiers = ""
                 for child in node.children:
                     if child.type == 'modifiers':
-                        modifiers = code[child.start_byte:child.end_byte].decode('utf8', errors='ignore')
+                        modifiers = encoded_code[child.start_byte:child.end_byte].decode('utf8', errors='ignore')
                         break
                 
                 if "public" in modifiers:
                     # Extract full signature (simplified)
-                    # e.g., boolean transfer(Long id, BigDecimal amount)
                     name_node = node.child_by_field_name('name')
                     params_node = node.child_by_field_name('parameters')
                     type_node = node.child_by_field_name('type')
                     
                     if name_node and params_node and type_node:
-                        ret_type = code[type_node.start_byte:type_node.end_byte].decode('utf8', errors='ignore')
-                        m_name = code[name_node.start_byte:name_node.end_byte].decode('utf8', errors='ignore')
-                        params = code[params_node.start_byte:params_node.end_byte].decode('utf8', errors='ignore')
+                        ret_type = encoded_code[type_node.start_byte:type_node.end_byte].decode('utf8', errors='ignore')
+                        m_name = encoded_code[name_node.start_byte:name_node.end_byte].decode('utf8', errors='ignore')
+                        params = encoded_code[params_node.start_byte:params_node.end_byte].decode('utf8', errors='ignore')
                         methods.append(f"{ret_type} {m_name}{params}")
             
             for child in node.children:
@@ -147,16 +146,16 @@ class JavaStrategy(LanguageStrategy):
         visit(tree.root_node)
         return methods
 
+
     def get_architect_prompt(self, target_code, dependency_context):
         template = "Architect. List 3 failure test scenarios for this Java spec:\n[[ spec ]]\nReturn ONLY SCENARIO: [Desc] lines."
-        return ChatPromptTemplate.from_template(self.jinja_env.from_string(template).render(spec=target_code))
+        return self.jinja_env.from_string(template).render(spec=target_code)
 
     def get_researcher_prompt(self, unknown_libraries):
-        return ChatPromptTemplate.from_template("Info: {unknown_libraries}")
+        return f"Info: {unknown_libraries}"
 
     def get_implementer_prompt(self, target_code, plan_item, research_context, custom_rules=""):
-        # This is a wrapper to satisfy the base class, but we use get_implementer_prompt_raw in the engine
-        return ChatPromptTemplate.from_template("Implement test for {plan_item}")
+        return f"Implement test for {plan_item}"
 
     def get_implementer_prompt_raw(self, target_code, plan_item, research_context, custom_rules="", class_name="Target", mock_info="", instance_name="service"):
         raw_tpl = """

@@ -5,8 +5,13 @@ import java.util.concurrent.CompletableFuture;
 
 @Service
 public class AiService {
-    @Async
+    @Async("taskExecutor")
     public CompletableFuture<String> analyzeProductTrend(String productName) {
-        return CompletableFuture.completedFuture("TRENDY");
+        try {
+            Thread.sleep(1000); // Simulate AI processing time
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        return CompletableFuture.completedFuture("TRENDY_ANALYSIS_FOR_" + productName);
     }
 }

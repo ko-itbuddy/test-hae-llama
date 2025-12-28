@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 import com.example.demo.client.BankClient;
 import com.example.demo.repository.PaymentRepository;
 
+import org.springframework.transaction.annotation.Transactional;
+
 @Service
 public class PayrollService {
     private final BankClient bankClient;
@@ -16,6 +18,7 @@ public class PayrollService {
         this.paymentRepository = paymentRepository;
     }
 
+    @Transactional
     public boolean processPayroll(Long employeeId, BigDecimal baseSalary) {
         // 1. 유효성 검사 (Edge Cases)
         if (employeeId == null || baseSalary == null || baseSalary.compareTo(BigDecimal.ZERO) <= 0) {
