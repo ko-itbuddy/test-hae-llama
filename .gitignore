@@ -36,3 +36,6 @@ ollama_*.log
 .gemini/
 .env
 .env.*
+
+# Local AI Test Generator Data
+.ai-test-gen/

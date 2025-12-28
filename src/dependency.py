@@ -46,6 +46,31 @@ def get_java_version(project_path):
         
     return "17" # Default fallback
 
+def get_project_classpath(project_path):
+    """
+    Finds and returns the project's classpath including source classes and dependencies.
+    """
+    paths = []
+    
+    # 1. Main classes
+    main_classes = os.path.join(project_path, "build/classes/java/main")
+    if os.path.exists(main_classes):
+        paths.append(main_classes)
+    
+    # 2. Test dependencies (Attempt to find common library locations)
+    # For now, we'll look into common Gradle cache patterns or project libs
+    # A robust way is to ask Gradle, but for a quick check, we'll scan the build dir
+    lib_dir = os.path.join(project_path, "build/libs")
+    if os.path.exists(lib_dir):
+        paths.append(os.path.join(lib_dir, "*"))
+
+    # Fallback: Add current directory
+    paths.append(".")
+    
+    # Join with system path separator
+    separator = ";" if os.name == 'nt' else ":"
+    return separator.join(paths)
+
 def get_all_dependency_versions(project_path):
     # Simplified dependency check via text search (fast & safe)
     versions = {'spring-boot': '3.0.0', 'has-testcontainers': False, 'has-awaitility': False}

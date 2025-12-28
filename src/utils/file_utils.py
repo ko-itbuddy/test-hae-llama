@@ -32,3 +32,15 @@ def ensure_gitignore(project_path):
                 f.write("\n# Local AI Test Generator Data\n.ai-test-gen/\n")
     except Exception:
         pass
+
+def get_log_dir(project_path):
+    """Returns and ensures the logs directory exists."""
+    log_dir = os.path.join(get_project_data_dir(project_path), "logs")
+    os.makedirs(log_dir, exist_ok=True)
+    return log_dir
+
+def write_audit_log(project_path, filename, content):
+    """Appends content to a specific audit log file."""
+    log_path = os.path.join(get_log_dir(project_path), filename)
+    with open(log_path, "a", encoding="utf-8") as f:
+        f.write(content + "\n")
