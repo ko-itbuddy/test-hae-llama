@@ -6,28 +6,30 @@ class TechnicalInspector:
     """컴파일러 법전을 펼쳐 문법을 심판하는 검찰청입니다."""
     @staticmethod
     def check_syntax(code_snippet):
-        # 💡 Strong cleaning: Remove markdown code blocks before compiling
+        # 💡 Clean noise
         clean_code = code_snippet.replace("```java", "").replace("```", "").replace("`", "").strip()
         
-        template = "import static org.mockito.Mockito.*; import static org.assertj.core.api.Assertions.*; import java.util.*; import java.math.*; public class Tmp { void m() { %s } }"
+        # 💡 Use a fixed filename for the temporary class to avoid 'public class' mismatch
+        tmp_dir = tempfile.gettempdir()
+        tmp_file_path = os.path.join(tmp_dir, "SerenaTmpCheck.java")
+        
+        template = "import static org.mockito.Mockito.*; import static org.assertj.core.api.Assertions.*; import java.util.*; import java.math.*; public class SerenaTmpCheck { void m() { %s } }"
         full_code = template % clean_code
         
-        with tempfile.NamedTemporaryFile(suffix=".java", delete=False) as tmp:
-            tmp.write(full_code.encode())
-            tmp_path = tmp.name
-
         try:
-            result = subprocess.run(["javac", "-proc:none", tmp_path], capture_output=True, text=True)
+            with open(tmp_file_path, "w", encoding="utf-8") as f:
+                f.write(full_code)
+
+            result = subprocess.run(["javac", "-proc:none", tmp_file_path], capture_output=True, text=True)
             if result.returncode == 0:
                 return "PASSED"
             else:
-                error = result.stderr.split("error:")[1].strip() if "error:" in result.stderr else "Syntax error"
-                return f"Actual Java Error: {error}"
+                error = result.stderr.split("error:")[1].strip() if "error:" in result.stderr else result.stderr
+                return f"Actual Java Error: {error[:200]}"
         finally:
-            if os.path.exists(tmp_path): os.remove(tmp_path)
-            if os.path.exists(tmp_path.replace(".java", ".class")): 
-                try: os.remove(tmp_path.replace(".java", ".class"))
-                except: pass
+            if os.path.exists(tmp_file_path): os.remove(tmp_file_path)
+            class_file = tmp_file_path.replace(".java", ".class")
+            if os.path.exists(class_file): os.remove(class_file)
 
 # --- Base Department Team ---
 class DepartmentTeam:
@@ -131,7 +133,20 @@ class ExecClerk(BaseAgent):
         prompt = f"SPEC:\n{intel}\nMISSION: {ctx}\nLAST FEEDBACK: {feedback}\n\nTask: Write ONE line of Java calling the target method."
         return await self._call_llm(prompt, "Execution Clerk")
 class ExecManager(BaseAgent):
-    async def approve(self, work, intel, ctx): return await self._call_llm(f"Check Call {work} against {intel}. APPROVED or REJECT?", "Exec Manager")
+    async def approve(self, work, intel, ctx): 
+        prompt = f"""[AUDIT MISSION]
+Spec: {intel}
+Proposed Code: {work}
+Goal: {ctx}
+
+[TASK]
+Verify if this code calls the correct method name and types.
+STRICT RULES:
+1. Reply ONLY 'APPROVED' or 'REJECT: [Brief Reason]'.
+2. DO NOT provide code examples in your response.
+3. Be concise (max 2 sentences).
+"""
+        return await self._call_llm(prompt, "Technical Audit Manager")
 class ExecQA(BaseAgent):
     async def verify(self, work, intel, ctx): return TechnicalInspector.check_syntax(work)
 

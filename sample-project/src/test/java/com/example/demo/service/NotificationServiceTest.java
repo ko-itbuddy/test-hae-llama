@@ -22,42 +22,46 @@ public class NotificationServiceTest {
     private NotificationService notificationService;
 
     @Test
-    public void testSendNotification_SuccessfulSmsAndEmailForVipUser() {
+    public void testSendNotification_SuccessfulForVIPUser() {
         // given
-        User vipUser = new User("VIP123", true);
-    
+        VIPUser vipUser = new VIPUser();
+        String notificationMessage = "Your notification message here.";
+        
         // when
-        boolean result = notificationService.sendNotification(vipUser);
+        notificationService.sendNotification(vipUser, notificationMessage);
     
         // then
-        assertTrue(result);
+        verify(smsClient).sendSMS(vipUser, notificationMessage);
+        verify(emailClient).sendEmail(vipUser, notificationMessage);
     }
 
     @Test
-    public void testSendNotification_SuccessfulEmailForNonVIPUser() {
+    public void testSendNotification_FailedForVIPUser() {
         // given
-        User user = new User("non-vip-user@example.com", false);
-        EmailService emailService = mock(EmailService.class);
-        NotificationService notificationService = new NotificationService(emailService);
+        User vipUser = new User("vip123", true);
+        String message = "Important notification";
+        when(smsClient.send(vipUser, message)).thenReturn(false);
+        when(emailClient.send(vipUser, message)).thenReturn(false);
     
         // when
-        boolean result = notificationService.sendNotification(user, "Test Subject", "Test Body");
+        boolean result = notificationService.sendNotification(vipUser, message);
     
         // then
-        verify(emailService).sendEmail("non-vip-user@example.com", "Test Subject", "Test Body");
-        assertTrue(result);
+        assertFalse(result);
     }
 
     @Test
-    public void sendNotification_throwsIllegalArgumentException_forNullOrEmptyMessage() {
+    public void testSendNotificationForNonVipUser() {
         // given
-        MasterAssembler assembler = new MasterAssembler();
-        String nullMessage = null;
-        String emptyMessage = "";
-    
-        // when & then
-        assertThrows(IllegalArgumentException.class, () -> assembler.sendNotification(nullMessage));
-        assertThrows(IllegalArgumentException.class, () -> assembler.sendNotification(emptyMessage));
+        User user = new User("nonVipUser", "email@example.com");
+        EmailClient emailClient = mock(EmailClient.class);
+        NotificationService notificationService = new NotificationService(emailClient);
+        
+        // when
+        notificationService.sendNotification(user, "Your notification message");
+        
+        // then
+        verify(emailClient).sendEmail(eq("email@example.com"), eq("Your notification message"));
     }
 
 }

@@ -6,18 +6,18 @@ class AssemblerAgent(BaseAgent):
         super().__init__(llm, role="Master Assembler")
 
     async def assemble_test_method(self, scenario_name, data_part, mock_part, exec_part, verify_part):
-        prompt = f"""[SCENARIO] {scenario_name}
-[PARTS]
-Mock: {mock_part}
+        prompt = f"""[COMPONENTS]
+Scenario: {scenario_name}
+Mocks: {mock_part}
 Exec: {exec_part}
 Verify: {verify_part}
 
 [TASK]
-Assemble these into ONE Java JUnit 5 @Test method.
+STITCH these components together into a single @Test method.
 STRICT RULES:
-1. Output ONLY the method code.
-2. DO NOT include class declaration, imports, or markdown.
-3. Start with @Test.
-4. Ensure sections are separated by // given, // when, // then comments.
+1. Use ONLY the code provided in [COMPONENTS].
+2. DO NOT invent new classes or logic.
+3. Organize using // given, // when, // then sections.
+4. Output ONLY the method code. No class wrapper.
 """
-        return await self._call_llm(prompt, "Master Assembler")
+        return await self._call_llm(prompt, "Mechanical Assembler")
