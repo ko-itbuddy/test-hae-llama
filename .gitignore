@@ -38,4 +38,8 @@ ollama_*.log
 .env.*
 
 # Local AI Test Generator Data
-.ai-test-gen/
+# Test-Hae-Llama Data
+.test-hea-llama/
+
+# Test-Hae-Llama Data
+.test-hea-llama/

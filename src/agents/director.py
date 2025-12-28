@@ -4,7 +4,11 @@ from .architect import ArchitectAgent
 from .critic import CriticAgent
 from .librarian import LibrarianAgent
 from .assembler import AssemblerAgent
-from .specialists import ScoutAgent, DataDeptTeam, MockDeptTeam, ExecDeptTeam, VerifyDeptTeam
+from .specialists.utils import ScoutAgent
+from .specialists.data import DataDeptTeam
+from .specialists.mock import MockDeptTeam
+from .specialists.exec import ExecDeptTeam
+from .specialists.verify import VerifyDeptTeam
 
 class ScenarioSquad:
     """초정밀 프로젝트 팀: 팀원 간 정보를 공유하고 피드백을 주고받습니다."""
@@ -45,33 +49,54 @@ class ScenarioSquad:
 class DirectorAgent(BaseAgent):
     """글로벌 본부: 시나리오별 TF(ScenarioSquad)를 창설하고 최종 성과를 검수합니다."""
     def __init__(self, llm, mcp_configs=None, target_file="unknown"):
+        from src.utils.config_loader import config
         super().__init__(llm, role="Global Project Director", target_file=target_file)
         self.llm = llm
         self.target_file = target_file
         self.architect = ArchitectAgent(llm, target_file=target_file)
         self.scout = ScoutAgent(llm, target_file=target_file)
         
-        mcp_conf = mcp_configs[0] if mcp_configs else "context7|npx|@upstash/mcp-context7"
+        # 💡 [v6.3] Use MCP Config from Global Config
+        mcp_conf = mcp_configs[0] if mcp_configs else config.get("mcp.context7", "context7|npx|@upstash/mcp-context7")
         self.librarian = LibrarianAgent(llm, mcp_conf, target_file=target_file)
 
     async def orchestrate_test_generation(self, target_code, dependencies, context_mgr, strategy):
-        # ... (기존 RAG 수집 로직)
+        # 1. 시나리오 기획
+        print("[Director] 📜 Phase 1: High-Level Project Planning...")
+        scenarios = await self.architect.plan_scenarios(target_code)
+        
+        # 2. 고해상도 정보 수집 (Multi-Index RAG)
+        print("[Director] 🕵️ Phase 2: Gathering Context via Hybrid RAG...")
+        source_context = await self.librarian.fetch_precise_context(f"Related classes for {dependencies}", ["source"])
+        
+        # 3. 정밀 첩보 수집 (Scout)
         target_intel = await self.scout.analyze_target("primary methods", target_code)
         
+        # 💡 Step 2.1: Robust Conditional Intelligence
         extra_guide = ""
-        if "RESEARCH_REQUIRED" in target_intel:
-            lib_name = target_intel.split("RESEARCH_REQUIRED:")[1].split("\n")[0].strip()
-            print(f"[Director] 📚 New library '{lib_name}' found. Authorizing research...")
-            
-            # 💡 [v5.1] 실시간 학습 엔진 가동
-            raw_guide = await self.librarian.get_technical_guide(lib_name, "JUnit 5 testing")
-            
-            if "RESEARCH_MODE_REQUIRED" in raw_guide:
-                # 여기에 실제 Serena 도구(google_web_search)를 연동하는 로직이 들어갑니다.
-                # 지금은 14b 모델에게 직접 검색한 결과라고 가정하거나, 추후 자동화 훅을 겁니다.
-                extra_guide = f"Please refer to the latest {lib_name} API documentation for this test."
-            else:
-                extra_guide = raw_guide
+        if "RESEARCH_REQUIRED" in target_intel and "None" not in target_intel:
+            try:
+                lib_name = target_intel.split("RESEARCH_REQUIRED:")[1].split("\n")[0].strip()
+                if lib_name and len(lib_name) > 2:
+                    extra_guide = await self.librarian.get_technical_guide(lib_name, "unit testing")
+            except: pass
         
-        # ... (시나리오 실행 로직 동일)
-        return await self._run_squads(target_code, target_intel, extra_guide)
+        enriched_intel = f"{target_intel}\n\n[SOURCE_CONTEXT]\n{source_context[:1000]}"
+        
+        # 💡 [STEP 3] Ordered Project Execution (Semaphore: 1)
+        semaphore = asyncio.Semaphore(1)
+        results = []
+
+        async def run_squad(scenario):
+            async with semaphore:
+                print(f"\n{'='*10} 🚀 Squad Launch: {scenario} {'='*10}")
+                squad = ScenarioSquad(self.llm, scenario, enriched_intel, self.librarian, extra_guide, target_file=self.target_file)
+                outcome = await squad.execute_project(enriched_intel, ".")
+                print(f"{'='*10} ✅ Squad Finished: {scenario} {'='*10}")
+                return outcome
+
+        print(f"[Director] 🏢 Dispatching {len(scenarios)} squads sequentially...")
+        tasks = [run_squad(s) for s in scenarios]
+        results = await asyncio.gather(*tasks)
+
+        return results

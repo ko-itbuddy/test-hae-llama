@@ -1,5 +1,4 @@
 from .base import BaseAgent
-from .scouts import EdgeCaseHunter, SuccessPathScout
 import re
 
 class ArchitectAgent(BaseAgent):
@@ -7,21 +6,19 @@ class ArchitectAgent(BaseAgent):
         super().__init__(llm, role="Senior QA Architect", target_file=target_file)
 
     async def plan_scenarios(self, target_code):
-        prompt = f"""[TASK] Plan COMPREHENSIVE unit test scenarios for this Java code.
-[STRICT REQUIREMENTS]
-1. Include Boundary Tests: NULL inputs, Empty strings (""), and whitespace (" ").
-2. Include Logical Branches: Every 'if' check and 'throw' statement must have a scenario.
-3. Include Type Tests: Invalid numeric values (0, negative) if applicable.
-4. Output ONLY lines starting with 'SCENARIO:'.
+        prompt = f"""[TASK] Plan COMPACT unit tests with a focus on FAILURE.
+[RATIO RULE: 1 Success vs N Failures]
+1. Plan ONLY ONE comprehensive success scenario.
+2. Plan MULTIPLE failure scenarios covering EVERY possible rejection point:
+   - All NULL/Empty/Boundary checks.
+   - All Business logic violations (if/throw).
+   - All Dependency exceptions.
+3. Group these into a few high-quality @ParameterizedTest methods.
 
-[JAVA CODE]
+[CODE]
 {target_code[:2000]}
 
-[EXAMPLE OUTPUT]
-SCENARIO: placeOrder - Throws exception when userId is NULL
-SCENARIO: placeOrder - Throws exception when quantity is ZERO
-SCENARIO: placeOrder - Success with valid data and VIP coupon
+[OUTPUT FORMAT]
+SCENARIO: [GroupName] - [Annotation] - [Focus: 1 Success or Multiple Failures]
 """
-        response = await self._call_llm(prompt, "Strategic Test Planner")
-        scenarios = [line.replace("SCENARIO:", "").strip() for line in response.split("\n") if "SCENARIO:" in line]
-        return scenarios if scenarios else ["Basic success case"]
+        return await self._call_llm(prompt, "Strategic Failure Hunter")

@@ -17,12 +17,16 @@ class ContextManager:
         except:
             return "// Source not available"
 
-async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen2.5-coder:14b"):
-    # Split & Conquer with robust sampling
-    llm = ChatOllama(model=llm_model, temperature=0.3)
+async def run_generation_pipeline(target_file_path, target_code, llm_model=None):
+    from src.utils.config_loader import config
+    
+    # 💡 [v6.3] Centralized configuration for LLM
+    model = llm_model or config.get("llm.model", "qwen2.5-coder:14b")
+    temp = config.get("llm.temperature", 0.3)
+    
+    llm = ChatOllama(model=model, temperature=temp)
     
     strategy = get_strategy(target_file_path, ".")
-    # 💡 Now passing target_file_path for structured logging
     director = DirectorAgent(llm, target_file=target_file_path)
     guardian = GuardianAgent(llm, target_file=target_file_path)
     critic = CriticAgent(llm, target_file=target_file_path)
@@ -32,22 +36,19 @@ async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen
     print(f"[STATUS] 🛡️ Privacy Guardian masking sensitive data...")
     masked_target_code = guardian.mask_code(target_code)
     
-    # (Rest of the logic remains the same...)
+    # 1. Structural Analysis
     try:
-        class_name = masked_target_code.split("public class ")[1].split("{")[0].strip()
-        class_name = class_name.split(" ")[0]
-    except:
-        class_name = "Target"
-
-    try:
+        class_name = masked_target_code.split("public class ")[1].split("{")[0].strip().split(" ")[0]
         package_name = masked_target_code.split("package ")[1].split(";")[0].strip()
     except:
-        package_name = "com.example.demo"
+        class_name, package_name = "Target", "com.example.demo"
         
     dependencies = strategy.get_dependencies(masked_target_code)
     
+    # 2. Test Generation Orchestration
     generated_methods = await director.orchestrate_test_generation(masked_target_code, dependencies, ctx_mgr, strategy)
 
+    # 3. Final Assembly
     builder = JavaClassBuilder(package=package_name, class_name=f"{class_name}Test")
     builder.add_import("org.junit.jupiter.api.*")
     builder.add_import("org.junit.jupiter.api.extension.ExtendWith")

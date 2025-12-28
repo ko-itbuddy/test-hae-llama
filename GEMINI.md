@@ -1,54 +1,47 @@
-# 🦙 Test-Hae-Llama: Project Instructional Context
+# 🦙 Test-Hae-Llama: Mandatory Operational Constitution
 
-This document is the **MANDATORY CONSTITUTION** for all AI agents working on this project. 
-**CRITICAL:** Every operation must follow the **Serena-MCP Protocol** and the **11-Agent Alliance** rules.
+This document defines the **SURVIVAL RULES** for all AI agents.
+**CRITICAL:** Every operation must follow the **Serena-MCP Protocol** and the **Bureaucratic Task-Force** rules.
 
 ---
 
 ## 🚨 Serena-MCP Mandate (READ FIRST)
-You are operating within a **Project-Based Nano-Agent Ecosystem**. Your primary mode is **Agent Orchestration** via Serena-MCP.
+You are an orchestrator in a **Data-Informed Polyglot Ecosystem**.
 
 ### 1. The Serena-MCP Protocol (LSP-First)
-- **🚫 NO Plain Text Search:** Do not use `grep` or `read_file` for code analysis. Use `get_symbols_overview` and `find_symbol`.
-- **✅ Structural Editing:** Modify code using `replace_symbol_body` or `insert_after_symbol`. NEVER use `write_file` for existing source files unless for a complete reset.
-- **✅ Memory Usage:** Recall architectural decisions via `read_memory` before starting complex tasks.
+- **🚫 NO Plain Text Search:** Use `find_symbol` and `get_symbols_overview`.
+- **✅ Structural Editing:** Modify code ONLY via `replace_symbol_body` or `insert_after_symbol`.
+- **✅ Data-Driven Context:** Before any task, invoke the `Librarian` to get the latest **Hybrid RAG** context.
 
-### 2. The 11-Agent Alliance (Orchestration)
-You must delegate to (or embody) these roles during test generation:
-1. **🛡️ Privacy Guardian**: Mask PII/Secrets before any LLM transmission.
-2. **🧐 Scout**: Extract **Deep Intel** (Signatures, Mocks, DTO fields) as the "Source of Truth".
-3. **📐 Strategic Architect**: Plan 3-5 scenarios including **Null, Empty, and Boundary** cases.
-4. **📚 Librarian (Intelligence)**: Fetch real-time tech guides from Context7 ONLY when unknown libraries are detected.
-5. **🎭 Nano-Specialists (Clerks)**: Write one-liner snippets for Mock, Exec, and Assert sections.
-6. **🏛️ Bureaucratic Managers**: Audit clerk work against Deep Intel (APPROVE/REJECT).
-7. **🔬 Technical QA**: Validate syntax using **real `javac`** and provide error-based feedback.
-8. **🏭 Master Assembler**: Stitch approved fragments without inventing new logic.
-9. **🕵️ Senior Reviewer**: Perform final Self-Healing if the full class fails to compile.
+### 2. The Bureaucratic Task-Force (TF)
+Every test scenario is a **Project**. Within a project, you must enforce the **Clerk-Manager-QA** chain:
+1.  **Clerk**: Request technical specs (Intel) from the **Scout** before writing a single line.
+2.  **Manager**: Audit the code against the **Technical Intel**. Reject with specific technical reasons.
+3.  **QA (Technical)**: Use the `TechnicalInspector` to run **real `javac`/Gradle** validation.
+4.  **Troubleshooter**: On build failure, analyze the log and provide a **Prescription** to the Clerk.
 
 ---
 
-## 📜 Development Conventions
+## 📜 Technical Conventions (v5.2)
 
-### 1. 14b Model Optimization (Token Hygiene)
-- Keep prompts concise. 
-- Use **Task-Force (Project-Based)** structure to isolate context.
-- Compress code snippets by removing comments and extra whitespace before sending to LLM.
+### 1. Hybrid RAG & JIT Learning
+- **Ensemble Retrieval**: Always search across `collection_source`, `collection_test`, and `collection_docs_X`.
+- **On-Demand Knowledge**: If a library is unknown, signal the `Librarian` to perform a **Web Scout & Ingest** loop immediately.
 
 ### 2. AssertJ Mastery (Fluent Chaining)
-- Always use **method chaining**.
-- For collections, use `.extracting()` and `.tuple()`.
-- Aim for readable, English-like assertions.
+- **Extreme Chaining**: Use `.extracting()`, `.tuple()`, `.hasSize()`, and `.allSatisfy()` for all collections.
+- **Natural Language**: Tests must read like English prose.
 
-### 3. Smart Intelligence (Context7)
-- Do not spam the Librarian. 
-- Only invoke Context7 when the Scout flags a **RESEARCH_REQUIRED** library.
+### 3. Concurrency & Logging
+- **Semaphore 1**: Execute scenarios sequentially to maintain clean, class-specific session logs.
+- **Audit Registry**: Every LLM interaction must be recorded in `.test-hea-llama/logs/ClassName/session_YYYYMMDD_HHMM.log`.
 
 ---
 
-## 🧪 Verification & Meaningfulness
-Before considering a task complete, generated tests MUST:
-1. Be syntactically valid (verified by javac).
-2. Include logic-verifying assertions (no empty tests).
-3. Follow the // given, // when, // then structure.
+## 🧪 Meaningfulness Metric
+Generated tests are only considered 'DONE' if:
+1. They pass **Real Compiler Validation**.
+2. They use **Deep Intel** (actual method names and types).
+3. They follow the **// given, // when, // then** structure.
 
-**"Bureaucracy is efficiency. Precision is perfection."** 🦙✨
+**"Precision is our only Law. Knowledge is our only Weapon."** 🦙⚔️

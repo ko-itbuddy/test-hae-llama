@@ -1,34 +1,28 @@
-# 🦙 Test-Hae-Llama: Project-Based Nano-Agent Alliance
+# 🦙 Test-Hae-Llama: Self-Learning Multi-Agent Alliance (v5.2)
 
-Test-Hae-Llama is a local AI-powered unit test generation suite for Java/Spring Boot. It moves beyond simple prompts to a **Rigorous Bureaucratic Bureau** of 11+ specialized nano-agents that plan, write, audit, and self-heal test code.
+Test-Hae-Llama is an autonomous, AI-powered test generation suite that **learns as it works**. It features a "Bureaucratic Task-Force" of nano-agents and a "Self-Growing Hybrid RAG" system to produce industrial-grade JUnit 5 tests.
 
-## 🚀 Key Innovations (v3.3)
+## 🚀 Key Innovations
 
-### 🏛️ Project-Based Task Force (TF) Architecture
-Each test scenario is handled by an independent **ScenarioSquad**. Inside each squad, a 3-tier approval process ensures 100% precision:
-- **Clerk**: Writes the code snippet based on deep technical intel.
-- **Manager**: Audits the logic against the target method specification.
-- **QA (Technical)**: Validates syntax using a **real Java compiler (`javac`)** and provides direct feedback for self-correction.
+### 🏛️ Bureaucratic Task-Force (TF)
+Each scenario is a dedicated project handled by a **ScenarioSquad**.
+- **Clerk-Manager-QA Loop**: Every line of code is written by a clerk, audited by a manager, and verified by a **real Java compiler (`javac`/Gradle)**.
+- **Troubleshooter Cycle**: Failures trigger an analyzer and a solution architect to prescribe fixes to the clerk.
 
-### 🧠 On-Demand Intelligence (Context7 MCP)
-- **Smart Scout**: Automatically detects unknown or non-standard libraries.
-- **Librarian Bureau**: Fetches real-time technical guides from Context7 (RAG) only when needed, minimizing token noise.
+### 🧠 Self-Growing Hybrid RAG (Multi-Index)
+- **Multi-Index Isolation**: Source code, test cases, and library documentation are stored in isolated ChromaDB collections to eliminate hallucinations.
+- **Just-in-Time (JIT) Learning**: If an unknown library is detected, the **Librarian Bureau** automatically scouts the web (DuckDuckGo), fetches the Javadoc, and vectorizes it into a new collection in real-time.
+- **Ensemble Retrieval**: Combines keyword and semantic search for 100% accurate context delivery.
 
-### 🩺 Self-Healing Pipeline
-- If a test fails to compile, the **Senior Code Reviewer** analyzes the error log and patches the code until it passes.
+### 🛡️ Privacy & Stability
+- **Guardian Agent**: Masks sensitive data before any LLM transmission.
+- **Concurrency Control**: Strict semaphore-based execution to ensure resource stability and clean audit logs.
 
-## 🛠️ Tech Stack
-- **Core**: Python 3.11+, LangChain
-- **LLM**: Ollama (`qwen2.5-coder:14b` recommended)
-- **Context**: Upstash Context7 MCP (RAG)
-- **Verification**: JDK 17+ (`javac`), Gradle
-
-## 🏗️ How it Works
-1. **Ingest**: Scans your Java project and indexes it into ChromaDB.
-2. **Scout**: Extracts **Deep Intel** (Signatures, Mocks, DTO Skeletons).
-3. **Plan**: Strategic Architect maps out null checks, boundary cases, and business logic.
-4. **Execute**: Nano-agents (Mock, Exec, Verify) work in a chain of responsibility.
-5. **Assemble**: Master Assembler stitches approved fragments into a clean JUnit 5 test.
+## 🏗️ Core Workflow
+1. **Scout & Learn**: Librarian fetches deep intel from RAG or the Web.
+2. **Strategic Plan**: Architect maps boundary and edge cases.
+3. **Manufacture**: Squads produce approved code fragments.
+4. **Self-Heal**: Senior Reviewer patches entire files based on build logs.
 
 ---
-*"With Test-Hae-Llama, unit testing is no longer a chore—it's an automated art form."* 🦙✨
+*"We don't just generate tests—we build a self-evolving knowledge base for your project."* 🦙✨

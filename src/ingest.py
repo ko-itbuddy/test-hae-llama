@@ -19,9 +19,10 @@ def classify_component(content, filename):
 def ingest_codebase(project_path, embedding_model="nomic-embed-text"):
     print(f"📦 [Ingest] Organizing Codebase into Isolated Collections...")
     java_files = glob.glob(os.path.join(project_path, "**/*.java"), recursive=True)
-    java_files = [f for f in java_files if ".ai-test-gen" not in f]
+    # 💡 [v6.3] Updated to use the new project name
+    java_files = [f for f in java_files if ".test-hea-llama" not in f]
     
-    # 💡 Categorize into Source and Test
+    # (Rest of the categorization logic...)
     collections = {"source": [], "test": []}
     for f in java_files:
         loader = TextLoader(f, encoding='utf-8')

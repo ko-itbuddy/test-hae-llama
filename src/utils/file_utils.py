@@ -2,10 +2,9 @@ import os
 
 def get_project_data_dir(project_path):
     """
-    Returns the project-local .ai-test-gen directory.
-    Example: ./sample-project/.ai-test-gen/
+    Returns the project-local .test-hea-llama directory.
     """
-    data_dir = os.path.join(project_path, ".ai-test-gen")
+    data_dir = os.path.join(project_path, ".test-hea-llama")
     os.makedirs(data_dir, exist_ok=True)
     ensure_gitignore(project_path)
     return data_dir
@@ -15,21 +14,21 @@ def get_chroma_dir(project_path):
 
 def ensure_gitignore(project_path):
     """
-    Adds .ai-test-gen/ to the .gitignore file.
+    Adds .test-hea-llama/ to the .gitignore file.
     """
     gitignore_path = os.path.join(project_path, ".gitignore")
     if not os.path.exists(gitignore_path):
         with open(gitignore_path, "w", encoding="utf-8") as f:
-            f.write("# Local AI Test Generator Data\n.ai-test-gen/\n")
+            f.write("# Test-Hae-Llama Data\n.test-hea-llama/\n")
         return
 
     try:
         with open(gitignore_path, "r", encoding="utf-8") as f:
             content = f.read()
         
-        if ".ai-test-gen/" not in content:
+        if ".test-hea-llama/" not in content:
             with open(gitignore_path, "a", encoding="utf-8") as f:
-                f.write("\n# Local AI Test Generator Data\n.ai-test-gen/\n")
+                f.write("\n# Test-Hae-Llama Data\n.test-hea-llama/\n")
     except Exception:
         pass
 
