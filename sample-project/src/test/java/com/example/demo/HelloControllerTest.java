@@ -1,56 +1,51 @@
 package com.example.demo;
 
-import java.math.BigDecimal;
-import java.util.*;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoExtension;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class HelloControllerTest {
 
-    @Mock
-    private SomeDependency someDependency; // Assuming there's a dependency to mock
-
     @InjectMocks
     private HelloController helloController;
 
+    @Mock
+    private HttpServletRequest mockedRequest;
+
     @Test
-    public void testHello() {
+    public void testHelloWithDefaultName() {
         // given
-        when(someDependency.someMethod("Llama")).thenReturn("Hello, Llama!");
+        when(mockedRequest.getParameter("name")).thenReturn(null);
 
         // when
-        String result = helloController.hello("Llama");
+        String result = helloController.hello(mockedRequest);
 
         // then
         assertThat(result).isEqualTo("Hello, Llama!");
     }
 
-    @Test
-    public void testHelloCustomName() {
-        // given
-        when(someDependency.someMethod("CustomName")).thenReturn("Hello, CustomName!");
-
-        // when
-        String result = helloController.hello("CustomName");
-
-        // then
-        assertThat(result).isEqualTo("Hello, CustomName!");
-    }
+    @Mock
+    private MockMvc mockMvc;
 
     @Test
-    public void testHelloWithInvalidName() {
+    public void testHelloWithValidName() throws Exception {
         // given
-        doThrow(new InvalidParameterException()).when(someDependency).someMethod("InvalidName");
-
+        String name = "Alice";
+        String expectedResponse = "Hello, Alice!";
+        
         // when
-        Throwable thrown = catchThrowable(() -> helloController.hello("InvalidName"));
-
-        // then
-        assertThat(thrown).isInstanceOf(InvalidParameterException.class);
+        mockMvc.perform(MockMvcRequestBuilders.get("/hello")
+                .param("name", name)
+                .accept(MediaType.TEXT_PLAIN))
+                .andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(MockMvcResultMatchers.content().string(expectedResponse));
     }
 }

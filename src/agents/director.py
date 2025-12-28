@@ -19,20 +19,20 @@ class ScenarioSquad:
         self.verify_team = VerifyDeptTeam(llm)
         self.assembler = AssemblerAgent(llm)
 
-    async def execute_project(self):
-        print(f"   🚀 [Project-Squad] Executing TF Mission: {self.name}")
+    async def execute_project(self, deep_intel): # 💡 Now receiving deep_intel
+        print(f"   🚀 [Project-Squad] Launching informed TF for: {self.name}")
         
-        # 1. 각 팀에게 브리핑 전달 및 수행 (Chain of Context)
-        data_row = await self.data_team.execute_mission(self.name, self.brief)
-        self.brief += f"\nGenerated Data: {data_row}"
+        # 1. 모든 공정에 Deep Intel을 전수하며 작업 수행
+        data_row = await self.data_team.execute_mission(self.name, deep_intel, self.brief)
+        self.brief += f"\nData: {data_row}"
         
-        mock_code = await self.mock_team.execute_mission(self.name, self.brief)
-        self.brief += f"\nMocks Configured: {mock_code}"
+        mock_code = await self.mock_team.execute_mission(self.name, deep_intel, self.brief)
+        self.brief += f"\nMocks: {mock_code}"
         
-        exec_code = await self.exec_team.execute_mission(self.name, self.brief)
-        self.brief += f"\nExecution Call: {exec_code}"
+        exec_code = await self.exec_team.execute_mission(self.name, deep_intel, self.brief)
+        self.brief += f"\nExec: {exec_code}"
         
-        verify_code = await self.verify_team.execute_mission(self.name, self.brief)
+        verify_code = await self.verify_team.execute_mission(self.name, deep_intel, self.brief)
 
         # 2. 최종 조립
         return await self.assembler.assemble_test_method(
@@ -51,15 +51,17 @@ class DirectorAgent(BaseAgent):
         print("[Director] 📜 Phase 1: High-Level Project Planning...")
         scenarios = await self.architect.plan_scenarios(target_code)
         
-        # 2. 정보 수집 (Scout)
+        # 2. 정밀 첩보 수집 (Deep Intel)
         scout = ScoutAgent(self.llm)
-        target_intel = await scout.analyze_target("primary methods", target_code)
+        print("[Director] 🕵️ Requesting Deep Intel for primary methods...")
+        target_intel = await scout.analyze_target("the target service methods", target_code)
         
         results = []
         # 3. 프로젝트 팀(Squad) 파견
         for scenario in scenarios:
             squad = ScenarioSquad(self.llm, scenario, target_intel)
-            outcome = await squad.execute_project()
+            # 💡 Fixed: Passing target_intel to execute_project
+            outcome = await squad.execute_project(target_intel)
             results.append(outcome)
 
         return results

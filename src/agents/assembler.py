@@ -7,15 +7,17 @@ class AssemblerAgent(BaseAgent):
 
     async def assemble_test_method(self, scenario_name, data_part, mock_part, exec_part, verify_part):
         prompt = f"""[SCENARIO] {scenario_name}
-[DATA] {data_part}
-[MOCK] {mock_part}
-[EXEC] {exec_part}
-[VERIFY] {verify_part}
+[PARTS]
+Mock: {mock_part}
+Exec: {exec_part}
+Verify: {verify_part}
 
-[TASK] Assemble these into ONE JUnit 5 @Test method.
--section given: contains mocks.
--section when: contains execution.
--section then: contains assertions.
--Return ONLY valid Java code. No markdown. No backticks.
+[TASK]
+Assemble these into ONE Java JUnit 5 @Test method.
+STRICT RULES:
+1. Output ONLY the method code.
+2. DO NOT include class declaration, imports, or markdown.
+3. Start with @Test.
+4. Ensure sections are separated by // given, // when, // then comments.
 """
         return await self._call_llm(prompt, "Master Assembler")
