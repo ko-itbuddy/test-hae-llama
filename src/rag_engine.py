@@ -22,16 +22,17 @@ async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen
     llm = ChatOllama(model=llm_model, temperature=0.3)
     
     strategy = get_strategy(target_file_path, ".")
-    guardian = GuardianAgent(llm) # Privacy First!
-    director = DirectorAgent(llm)
-    critic = CriticAgent(llm)
+    # 💡 Now passing target_file_path for structured logging
+    director = DirectorAgent(llm, target_file=target_file_path)
+    guardian = GuardianAgent(llm, target_file=target_file_path)
+    critic = CriticAgent(llm, target_file=target_file_path)
     ctx_mgr = ContextManager()
     
     # 0. Privacy Masking
     print(f"[STATUS] 🛡️ Privacy Guardian masking sensitive data...")
     masked_target_code = guardian.mask_code(target_code)
     
-    # 1. Structural Analysis
+    # (Rest of the logic remains the same...)
     try:
         class_name = masked_target_code.split("public class ")[1].split("{")[0].strip()
         class_name = class_name.split(" ")[0]
@@ -45,13 +46,13 @@ async def run_generation_pipeline(target_file_path, target_code, llm_model="qwen
         
     dependencies = strategy.get_dependencies(masked_target_code)
     
-    # 2. Test Generation Orchestration
     generated_methods = await director.orchestrate_test_generation(masked_target_code, dependencies, ctx_mgr, strategy)
 
-    # 3. Final Assembly
     builder = JavaClassBuilder(package=package_name, class_name=f"{class_name}Test")
     builder.add_import("org.junit.jupiter.api.*")
     builder.add_import("org.junit.jupiter.api.extension.ExtendWith")
+    builder.add_import("org.junit.jupiter.params.ParameterizedTest")
+    builder.add_import("org.junit.jupiter.params.provider.*")
     builder.add_import("org.mockito.*")
     builder.add_import("org.mockito.junit.jupiter.MockitoExtension")
     builder.add_import("static org.mockito.Mockito.*")

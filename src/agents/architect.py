@@ -3,10 +3,8 @@ from .scouts import EdgeCaseHunter, SuccessPathScout
 import re
 
 class ArchitectAgent(BaseAgent):
-    def __init__(self, llm):
-        super().__init__(llm, role="Test Strategy Manager")
-        self.edge_hunter = EdgeCaseHunter(llm)
-        self.success_scout = SuccessPathScout(llm)
+    def __init__(self, llm, target_file="unknown"):
+        super().__init__(llm, role="Senior QA Architect", target_file=target_file)
 
     async def plan_scenarios(self, target_code):
         prompt = f"""[TASK] Plan COMPREHENSIVE unit test scenarios for this Java code.

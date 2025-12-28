@@ -33,14 +33,31 @@ def ensure_gitignore(project_path):
     except Exception:
         pass
 
-def get_log_dir(project_path):
-    """Returns and ensures the logs directory exists."""
-    log_dir = os.path.join(get_project_data_dir(project_path), "logs")
-    os.makedirs(log_dir, exist_ok=True)
-    return log_dir
+def get_log_dir(project_path, target_file="unknown"):
+    """Returns a directory named after the class being tested."""
+    import os
+    file_base = os.path.basename(target_file).replace(".", "_")
+    log_root = os.path.join(get_project_data_dir(project_path), "logs", file_base)
+    os.makedirs(log_root, exist_ok=True)
+    return log_root
 
-def write_audit_log(project_path, filename, content):
-    """Appends content to a specific audit log file."""
-    log_path = os.path.join(get_log_dir(project_path), filename)
+def write_audit_log(project_path, filename, content, target_file="unknown"):
+    """This function is now legacy. Agents should write directly to their assigned session file."""
+    pass
+
+def write_audit_log(project_path, filename, content, target_file="unknown"):
+    """Writes to a structured session log."""
+    # 💡 Redirects to the unique session directory
+    session_dir = get_log_dir(project_path, target_file)
+    log_path = os.path.join(session_dir, filename)
     with open(log_path, "a", encoding="utf-8") as f:
         f.write(content + "\n")
+    return session_dir
+
+def write_audit_log(project_path, filename, content, target_file="unknown"):
+    """Writes to a structured session log using the target filename for categorization."""
+    session_dir = get_log_dir(project_path, target_file)
+    log_path = os.path.join(session_dir, filename)
+    with open(log_path, "a", encoding="utf-8") as f:
+        f.write(content + "\n")
+    return session_dir

@@ -16,30 +16,51 @@ def classify_component(content, filename):
     else: layer = "common"
     return f"{prefix}_{layer}"
 
-def ingest_codebase(project_path, collection_name_prefix="spring_project", embedding_model="nomic-embed-text"):
-    print(f"Scanning for Java files in: {project_path}")
+def ingest_codebase(project_path, embedding_model="nomic-embed-text"):
+    print(f"📦 [Ingest] Organizing Codebase into Isolated Collections...")
     java_files = glob.glob(os.path.join(project_path, "**/*.java"), recursive=True)
     java_files = [f for f in java_files if ".ai-test-gen" not in f]
-    buckets = {}
-    for file_path in java_files:
-        try:
-            loader = TextLoader(file_path, encoding='utf-8')
-            docs = loader.load()
-            for doc in docs:
-                filename = os.path.basename(file_path)
-                doc.metadata["source"] = file_path
-                category = classify_component(doc.page_content, filename)
-                if category not in buckets: buckets[category] = []
-                buckets[category].append(doc)
-        except: pass
+    
+    # 💡 Categorize into Source and Test
+    collections = {"source": [], "test": []}
+    for f in java_files:
+        loader = TextLoader(f, encoding='utf-8')
+        docs = loader.load()
+        category = "test" if "src/test/" in f else "source"
+        for doc in docs:
+            doc.metadata["source"] = f
+            collections[category].append(doc)
 
-    splitter = RecursiveCharacterTextSplitter.from_language(language=Language.JAVA, chunk_size=1000, chunk_overlap=200)
+    splitter = RecursiveCharacterTextSplitter.from_language(language=Language.JAVA, chunk_size=1500, chunk_overlap=300)
     embedding_function = OllamaEmbeddings(model=embedding_model)
     persist_dir = get_chroma_dir(project_path)
-    for category, documents in buckets.items():
-        splits = splitter.split_documents(documents)
-        if splits:
-            Chroma.from_documents(documents=splits, embedding=embedding_function, collection_name=f"{collection_name_prefix}_{category}", persist_directory=persist_dir)
+
+    for name, docs in collections.items():
+        if not docs: continue
+        print(f"   -> Saving {len(docs)} files to 'collection_{name}'...")
+        splits = splitter.split_documents(docs)
+        Chroma.from_documents(documents=splits, embedding=embedding_function, 
+                             collection_name=f"collection_{name}", 
+                             persist_directory=persist_dir)
+
+def ingest_web_docs(project_path, url, library_name, embedding_model="nomic-embed-text"):
+    """Fetches web documentation and stores it in a dedicated collection."""
+    from langchain_community.document_loaders import WebBaseLoader
+    print(f"🌍 [Ingest] Fetching Javadoc for '{library_name}' from {url}...")
+    
+    loader = WebBaseLoader(url)
+    docs = loader.load()
+    
+    splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
+    embedding_function = OllamaEmbeddings(model=embedding_model)
+    persist_dir = get_chroma_dir(project_path)
+    
+    splits = splitter.split_documents(docs)
+    if splits:
+        Chroma.from_documents(documents=splits, embedding=embedding_function, 
+                             collection_name=f"collection_docs_{library_name.lower()}", 
+                             persist_directory=persist_dir)
+        print(f"✅ [Ingest] Library '{library_name}' is now vectorized.")
 
 def ingest_dependencies_javadocs(project_path, embedding_model="nomic-embed-text"):
     from src.dependency import get_full_dependencies

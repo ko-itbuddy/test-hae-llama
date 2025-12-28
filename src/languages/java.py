@@ -1,7 +1,6 @@
 import os
 import glob
 import re
-import jinja2
 import tree_sitter_java as tsjava
 from tree_sitter import Language, Parser
 from langchain_core.prompts import ChatPromptTemplate
@@ -13,10 +12,7 @@ class JavaStrategy(LanguageStrategy):
         self.JAVA_LANGUAGE = Language(tsjava.language())
         self.parser = Parser(self.JAVA_LANGUAGE)
         self.file_map = self._index_files()
-        self.jinja_env = jinja2.Environment(
-            variable_start_string='[[',
-            variable_end_string=']]'
-        )
+        # 💡 Removed jinja2 dependency to ensure portability
 
     def get_supported_extensions(self):
         return ['.java']
@@ -148,8 +144,8 @@ class JavaStrategy(LanguageStrategy):
 
 
     def get_architect_prompt(self, target_code, dependency_context):
-        template = "Architect. List 3 failure test scenarios for this Java spec:\n[[ spec ]]\nReturn ONLY SCENARIO: [Desc] lines."
-        return self.jinja_env.from_string(template).render(spec=target_code)
+        # 💡 Replaced jinja2 with native f-string
+        return f"Architect. List 3 failure test scenarios for this Java spec:\n{target_code}\nReturn ONLY SCENARIO: [Desc] lines."
 
     def get_researcher_prompt(self, unknown_libraries):
         return f"Info: {unknown_libraries}"

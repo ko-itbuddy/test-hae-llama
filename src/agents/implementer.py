@@ -2,8 +2,8 @@ from .base import BaseAgent
 import re
 
 class ImplementerAgent(BaseAgent):
-    def __init__(self, llm):
-        super().__init__(llm, role="JUnit 5 Expert")
+    def __init__(self, llm, target_file="unknown"):
+        super().__init__(llm, role="JUnit 5 Expert", target_file=target_file)
 
     async def implement_test_method(self, scenario_obj, target_method, context, mock_info, instance_name):
         clean_context = re.sub(r'//.*', '', context)

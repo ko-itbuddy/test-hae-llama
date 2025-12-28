@@ -1,28 +1,55 @@
+import os
 from src.mcp_client import MCPBridge
 from .base import BaseAgent
 
 class LibrarianAgent(BaseAgent):
-    """정보국: Context7 MCP를 통해 실시간 기술 명세와 프로젝트 지식을 공급합니다."""
-    def __init__(self, llm, mcp_config):
-        super().__init__(llm, role="Technical Intelligence Officer")
+    """정보국: 내부 DB 검색 및 외부 웹(DuckDuckGo) 검색을 통해 지식을 자급자족합니다."""
+    def __init__(self, llm, mcp_config, project_path=".", target_file="unknown"):
+        super().__init__(llm, role="Technical Intelligence Officer", project_path=project_path, target_file=target_file)
+        self.project_path = project_path
         self.bridge = MCPBridge(mcp_config)
 
     async def get_technical_guide(self, library_name, usage_scenario):
-        """실시간으로 라이브러리 최신 문법과 사용법을 검색해옵니다."""
-        print(f"🕵️ [Librarian] Consulting Intel Bureau for {library_name}...")
-        query = f"Latest JUnit 5 {library_name} examples for {usage_scenario}"
-        try:
-            # 💡 Fail-safe connection
-            await self.bridge.connect()
-            if self.bridge.session:
-                result = await self.bridge.session.call_tool("upstash_context7_search", {"query": query})
-                await self.bridge.disconnect()
-                return result.content[0].text
-            return f"No active MCP session for {library_name}."
-        except Exception as e:
-            print(f"⚠️ [Librarian] Intelligence skip: {e}")
-            return f"Standard documentation for {library_name} should be used."
+        """Finds, learns, and vectorizes new library knowledge."""
+        print(f"🕵️ [Librarian] Initiating knowledge acquisition for {library_name}...")
+        
+        # 1. Check existing archives
+        context = await self.fetch_precise_context(f"{library_name} {usage_scenario}", [f"docs_{library_name.lower()}"])
+        if context and "No relevant" not in context: return context
 
-    async def fetch_knowledge(self, query):
-        # (기존 프로젝트 지식 검색 로직 유지)
-        pass
+        # 2. External Search (Context7 or Web)
+        print(f"      🌍 [Librarian] Searching external web for {library_name}...")
+        raw_info = ""
+        try:
+            from langchain_community.tools import DuckDuckGoSearchRun
+            search = DuckDuckGoSearchRun()
+            search_query = f"official Java Javadoc and examples for {library_name} {usage_scenario}"
+            raw_info = search.run(search_query)
+        except Exception as e:
+            print(f"      ⚠️ Search failed: {e}")
+
+        # 3. 💡 REAL-TIME INGESTION: Learn and store forever
+        if raw_info and len(raw_info) > 100:
+            print(f"      📥 [Librarian] Vectorizing new knowledge for '{library_name}'...")
+            try:
+                from src.ingest import ingest_web_docs
+                # Simulate a document structure for ingestion
+                from langchain_core.documents import Document
+                new_doc = Document(page_content=raw_info, metadata={"source": "web_search", "lib": library_name})
+                
+                # Use our pre-built ingestion logic
+                # (Assuming ingest_web_docs is available or we wrap Chroma directly)
+                from langchain_chroma import Chroma
+                from langchain_ollama import OllamaEmbeddings
+                persist_dir = os.path.join(self.project_path, ".ai-test-gen", "chroma_db")
+                Chroma.from_documents(
+                    documents=[new_doc], 
+                    embedding=OllamaEmbeddings(model="nomic-embed-text"),
+                    collection_name=f"collection_docs_{library_name.lower()}",
+                    persist_directory=persist_dir
+                )
+                print(f"      ✅ [Librarian] Knowledge for '{library_name}' archived.")
+            except Exception as e:
+                print(f"      ⚠️ Ingestion failed: {e}")
+
+        return raw_info if raw_info else f"Standard patterns for {library_name}."

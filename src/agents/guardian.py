@@ -2,13 +2,13 @@ import re
 from .base import BaseAgent
 
 class GuardianAgent(BaseAgent):
-    def __init__(self, llm):
-        super().__init__(llm, role="Security & Privacy Guardian")
+    def __init__(self, llm, target_file="unknown"):
+        super().__init__(llm, role="Security & Privacy Guardian", target_file=target_file)
         # Basic PII patterns
         self.patterns = {
             "email": r'[\w\.-]+@[\w\.-]+\.\w+',
             "phone": r'\d{2,3}-\d{3,4}-\d{4}',
-            "password": r'(?i)(password|passwd|secret|token|api_key|apikey)\s*[:=]\s*["\']([^"\\]+)["\\]'
+            "password": r'(?i)(password|passwd|secret|token|api_key|apikey)\s*[:=]\s*["\']([^"\']+)["\']'
         }
 
     def mask_code(self, code):

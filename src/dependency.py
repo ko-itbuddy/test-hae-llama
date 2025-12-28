@@ -21,30 +21,29 @@ def ensure_ollama_models(llm_model="qwen2.5-coder:7b", embedding_model="nomic-em
     except: pass
 
 def get_java_version(project_path):
-    """
-    Detects Java version by asking Gradle or Maven directly.
-    """
-    # 1. Ask Gradle
+    """Detects Java version by asking Gradle or Maven directly."""
     if os.path.exists(os.path.join(project_path, "gradlew")) or os.path.exists(os.path.join(project_path, "build.gradle")):
         try:
             cmd = ['./gradlew', '-q', 'properties'] if os.path.exists(os.path.join(project_path, "gradlew")) else ['gradle', '-q', 'properties']
             result = subprocess.run(cmd, cwd=project_path, capture_output=True, text=True)
             for line in result.stdout.split('\n'):
-                if line.startswith("sourceCompatibility:"):
-                    return line.split(":")[1].strip()
+                if line.startswith("sourceCompatibility:"): return line.split(":")[1].strip()
         except: pass
+    return "17"
 
-    # 2. Ask Maven
-    if os.path.exists(os.path.join(project_path, "mvnw")) or os.path.exists(os.path.join(project_path, "pom.xml")):
-        try:
-            cmd = ['./mvnw'] if os.path.exists(os.path.join(project_path, "mvnw")) else ['mvn']
-            cmd.extend(['help:evaluate', '-Dexpression=maven.compiler.source', '-q', '-DforceStdout'])
-            result = subprocess.run(cmd, cwd=project_path, capture_output=True, text=True)
-            ver = result.stdout.strip()
-            if ver and ver[0].isdigit(): return ver
-        except: pass
-        
-    return "17" # Default fallback
+def get_build_command(project_path):
+    """
+    Returns the appropriate build command (gradlew, mvnw, gradle, or mvn).
+    """
+    if os.path.exists(os.path.join(project_path, "gradlew")):
+        return "./gradlew" if os.name != 'nt' else "gradlew.bat"
+    if os.path.exists(os.path.join(project_path, "build.gradle")):
+        return "gradle"
+    if os.path.exists(os.path.join(project_path, "mvnw")):
+        return "./mvnw" if os.name != 'nt' else "mvnw.cmd"
+    if os.path.exists(os.path.join(project_path, "pom.xml")):
+        return "mvn"
+    return None # Default fallback
 
 def get_project_classpath(project_path):
     """

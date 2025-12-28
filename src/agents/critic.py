@@ -1,8 +1,8 @@
 from .base import BaseAgent
 
 class CriticAgent(BaseAgent):
-    def __init__(self, llm):
-        super().__init__(llm, role="Senior Code Reviewer")
+    def __init__(self, llm, target_file="unknown"):
+        super().__init__(llm, role="Senior Code Reviewer", target_file=target_file)
 
     def quick_review(self, code, scenario, target_method_name):
         issues = []

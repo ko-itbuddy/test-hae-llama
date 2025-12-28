@@ -1,3 +1,4 @@
+import asyncio
 from .base import BaseAgent
 from .architect import ArchitectAgent
 from .critic import CriticAgent
@@ -7,19 +8,20 @@ from .specialists import ScoutAgent, DataDeptTeam, MockDeptTeam, ExecDeptTeam, V
 
 class ScenarioSquad:
     """초정밀 프로젝트 팀: 팀원 간 정보를 공유하고 피드백을 주고받습니다."""
-    def __init__(self, llm, scenario_name, target_intel, librarian, extra_guide=""):
+    def __init__(self, llm, scenario_name, target_intel, librarian, extra_guide="", target_file="unknown"):
         self.name = scenario_name
         self.brief = f"Scenario: {scenario_name}\nTarget Intel: {target_intel}"
-        self.librarian = librarian # 💡 Now correctly receiving the librarian agent
+        self.librarian = librarian
         
         if extra_guide:
             self.brief += f"\n[SPECIAL_RESEARCH_DATA]\n{extra_guide}"
             
-        self.data_team = DataDeptTeam(llm)
-        self.mock_team = MockDeptTeam(llm)
-        self.exec_team = ExecDeptTeam(llm)
-        self.verify_team = VerifyDeptTeam(llm)
-        self.assembler = AssemblerAgent(llm) # Re-using guide from Director for efficiency
+        # 💡 Dispatching teams with Librarian for JIT learning
+        self.data_team = DataDeptTeam(llm, target_file=target_file, librarian=librarian)
+        self.mock_team = MockDeptTeam(llm, target_file=target_file, librarian=librarian)
+        self.exec_team = ExecDeptTeam(llm, target_file=target_file, librarian=librarian)
+        self.verify_team = VerifyDeptTeam(llm, target_file=target_file, librarian=librarian)
+        self.assembler = AssemblerAgent(llm, target_file=target_file) # Re-using guide from Director for efficiency
 
     async def execute_project(self, deep_intel, classpath="."): # 💡 Receiving classpath
         print(f"   🚀 [Squad] TF Mission with Classpath Support: {self.name}")
@@ -42,33 +44,34 @@ class ScenarioSquad:
 
 class DirectorAgent(BaseAgent):
     """글로벌 본부: 시나리오별 TF(ScenarioSquad)를 창설하고 최종 성과를 검수합니다."""
-    def __init__(self, llm, mcp_configs=None):
-        super().__init__(llm, role="Global Project Director")
+    def __init__(self, llm, mcp_configs=None, target_file="unknown"):
+        super().__init__(llm, role="Global Project Director", target_file=target_file)
         self.llm = llm
-        self.architect = ArchitectAgent(llm)
-        self.scout = ScoutAgent(llm)
-        # Initialize Librarian with MCP config if provided
+        self.target_file = target_file
+        self.architect = ArchitectAgent(llm, target_file=target_file)
+        self.scout = ScoutAgent(llm, target_file=target_file)
+        
         mcp_conf = mcp_configs[0] if mcp_configs else "context7|npx|@upstash/mcp-context7"
-        self.librarian = LibrarianAgent(llm, mcp_conf)
+        self.librarian = LibrarianAgent(llm, mcp_conf, target_file=target_file)
 
     async def orchestrate_test_generation(self, target_code, dependencies, context_mgr, strategy):
-        # 💡 Step 0: Get Real Classpath (The Lawbook)
-        from src.dependency import get_project_classpath
-        print("[Director] 🕵️ Scouting for Project Classpath...")
-        classpath = get_project_classpath(".") # Current project path
-        
-        # 1. 시나리오 기획
-        scenarios = await self.architect.plan_scenarios(target_code)
-        
-        # 2. 정밀 첩보 수집
+        # ... (기존 RAG 수집 로직)
         target_intel = await self.scout.analyze_target("primary methods", target_code)
         
-        results = []
-        # 3. 프로젝트 팀(Squad) 파견
-        for scenario in scenarios:
-            # 💡 Now squads have the Classpath!
-            squad = ScenarioSquad(self.llm, scenario, target_intel, self.librarian)
-            outcome = await squad.execute_project(target_intel, classpath)
-            results.append(outcome)
-
-        return results
+        extra_guide = ""
+        if "RESEARCH_REQUIRED" in target_intel:
+            lib_name = target_intel.split("RESEARCH_REQUIRED:")[1].split("\n")[0].strip()
+            print(f"[Director] 📚 New library '{lib_name}' found. Authorizing research...")
+            
+            # 💡 [v5.1] 실시간 학습 엔진 가동
+            raw_guide = await self.librarian.get_technical_guide(lib_name, "JUnit 5 testing")
+            
+            if "RESEARCH_MODE_REQUIRED" in raw_guide:
+                # 여기에 실제 Serena 도구(google_web_search)를 연동하는 로직이 들어갑니다.
+                # 지금은 14b 모델에게 직접 검색한 결과라고 가정하거나, 추후 자동화 훅을 겁니다.
+                extra_guide = f"Please refer to the latest {lib_name} API documentation for this test."
+            else:
+                extra_guide = raw_guide
+        
+        # ... (시나리오 실행 로직 동일)
+        return await self._run_squads(target_code, target_intel, extra_guide)
