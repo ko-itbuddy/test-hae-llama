@@ -50,54 +50,38 @@ def ingest_deps(project_path, model):
 @click.option('--target-file', prompt='Target Java File', help='Path to the file to test')
 @click.option('--project-path', default='.', help='Workspace root')
 @click.option('--prefix', default='spring_project', help='Prefix for vector collections')
-@click.option('--model', default='qwen2.5-coder:7b', help='Ollama model to use')
+@click.option('--model', default=None, help='Ollama model to use')
 @click.option('--custom-rules', default='', help='Custom rules from IDE settings')
-@click.option('--context7-api-key', default='', help='API Key from VS Code settings')
-def generate(target_file, project_path, prefix, model, custom_rules, context7_api_key):
-    """Generate Unit Test, AUTO-SAVE, and VALIDATE"""
-    ensure_ollama_models(llm_model=model)
+def generate(target_file, project_path, prefix, model, custom_rules):
+    """Generate Unit Test with Full Environment Check"""
+    from src.dependency import run_full_health_check, ensure_ollama_models
     
-    if context7_api_key and context7_api_key.strip():
-        os.environ['UPSTASH_CONTEXT7_API_KEY'] = context7_api_key
-        os.environ['CONTEXT7_API_KEY'] = context7_api_key
-        click.echo("🔑 Using API Key from VS Code Settings.")
-        
-    click.echo(f"[STATUS] Starting generation for {os.path.basename(target_file)}...")
+    # 💡 [v6.3] Health Check First!
+    click.echo(f"🔍 [Health] Checking environment...")
+    report = run_full_health_check(project_path)
+    if report["status"] == "CRITICAL":
+        for issue in report["issues"]: click.echo(issue)
+        sys.exit(1)
     
-    # Generate Code
-    result = generate_test(target_file, project_path, prefix, "", llm_model=model, custom_rules=custom_rules)
+    # Ensure model is ready
+    target_model = model or "qwen2.5-coder:14b"
+    ensure_ollama_models(llm_model=target_model)
     
-    # Extract the actual code
-    clean_result = result
+    click.echo(f"[STATUS] 🚀 Mission Start: {os.path.basename(target_file)}")
+    
+    # Code generation...
+    result = generate_test(target_file, project_path, prefix, "", llm_model=target_model, custom_rules=custom_rules)
+    
+    # (Rest of the saving logic remains same)
     if "[RESULT_START]" in result:
         clean_result = result.split("[RESULT_START]")[1].split("[RESULT_END]")[0].strip()
-
-    # Save Path
-    save_path = _get_test_save_path(target_file, project_path)
-    
-    try:
+        save_path = _get_test_save_path(target_file, project_path)
         os.makedirs(os.path.dirname(save_path), exist_ok=True)
         with open(save_path, 'w', encoding='utf-8') as f:
             f.write(clean_result)
-        
-        if os.path.exists(save_path):
-            size = os.path.getsize(save_path)
-            click.echo(f"💾 [SAVED] {save_path} ({size} bytes)")
-            
-            # 🩺 Trigger Validation Loop
-            import asyncio
-            asyncio.run(validate_and_fix(save_path, project_path, llm_model=model))
-            
-        else:
-            click.echo(f"❌ [FAIL] File not found after write: {save_path}")
-            
-    except Exception as e:
-        click.echo(f"⚠️ [ERROR] Save/Validation failed: {e}")
-
-    # Output for IDE
-    click.echo("\n[RESULT_START]")
-    click.echo(clean_result)
-    click.echo("[RESULT_END]")
+        click.echo(f"💾 [SAVED] {save_path}")
+        import asyncio
+        asyncio.run(validate_and_fix(save_path, project_path, llm_model=target_model))
 
 def _get_test_save_path(target_file, project_path):
     """

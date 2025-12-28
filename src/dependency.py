@@ -89,3 +89,33 @@ def get_all_dependency_versions(project_path):
         if "awaitility" in content: versions['has-awaitility'] = True
         
     return versions
+
+def run_full_health_check(project_path="."):
+    """
+    Performs a comprehensive environment scan.
+    Returns a dict with status and messages.
+    """
+    report = {"status": "HEALTHY", "issues": []}
+    
+    # 1. Ollama Check
+    if not check_ollama_installed():
+        report["status"] = "CRITICAL"
+        report["issues"].append("❌ Ollama not found. Please install from https://ollama.ai")
+    
+    # 2. Java Check
+    try:
+        res = subprocess.run(["javac", "-version"], capture_output=True, text=True)
+        if res.returncode != 0:
+            report["status"] = "CRITICAL"
+            report["issues"].append("❌ JDK (javac) not found. Required for test validation.")
+    except:
+        report["status"] = "CRITICAL"
+        report["issues"].append("❌ JDK (javac) not found. Required for test validation.")
+
+    # 3. Build Tool Check
+    build_cmd = get_build_command(project_path)
+    if not build_cmd:
+        report["status"] = "WARNING"
+        report["issues"].append("⚠️ No build tool (Gradle/Maven) detected in project path.")
+
+    return report
