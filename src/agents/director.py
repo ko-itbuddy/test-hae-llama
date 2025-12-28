@@ -19,22 +19,22 @@ class ScenarioSquad:
         self.verify_team = VerifyDeptTeam(llm)
         self.assembler = AssemblerAgent(llm)
 
-    async def execute_project(self, deep_intel): # 💡 Now receiving deep_intel
-        print(f"   🚀 [Project-Squad] Launching informed TF for: {self.name}")
+    async def execute_project(self, deep_intel):
+        print(f"   🚀 [Squad] Executing TF Mission: {self.name}")
         
-        # 1. 모든 공정에 Deep Intel을 전수하며 작업 수행
+        # 1. Sequential data gathering with technical-only brief
         data_row = await self.data_team.execute_mission(self.name, deep_intel, self.brief)
-        self.brief += f"\nData: {data_row}"
+        self.brief += f"\n[INPUT_DATA] {data_row}"
         
         mock_code = await self.mock_team.execute_mission(self.name, deep_intel, self.brief)
-        self.brief += f"\nMocks: {mock_code}"
+        self.brief += f"\n[STUBBING] {mock_code}"
         
         exec_code = await self.exec_team.execute_mission(self.name, deep_intel, self.brief)
-        self.brief += f"\nExec: {exec_code}"
+        self.brief += f"\n[EXECUTION] {exec_code}"
         
         verify_code = await self.verify_team.execute_mission(self.name, deep_intel, self.brief)
 
-        # 2. 최종 조립
+        # 2. Final assembly by the Master Assembler
         return await self.assembler.assemble_test_method(
             self.name, data_row, mock_code, exec_code, verify_code
         )

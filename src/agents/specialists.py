@@ -6,8 +6,11 @@ class TechnicalInspector:
     """컴파일러 법전을 펼쳐 문법을 심판하는 검찰청입니다."""
     @staticmethod
     def check_syntax(code_snippet):
+        # 💡 Strong cleaning: Remove markdown code blocks before compiling
+        clean_code = code_snippet.replace("```java", "").replace("```", "").replace("`", "").strip()
+        
         template = "import static org.mockito.Mockito.*; import static org.assertj.core.api.Assertions.*; import java.util.*; import java.math.*; public class Tmp { void m() { %s } }"
-        full_code = template % code_snippet
+        full_code = template % clean_code
         
         with tempfile.NamedTemporaryFile(suffix=".java", delete=False) as tmp:
             tmp.write(full_code.encode())
@@ -22,7 +25,7 @@ class TechnicalInspector:
                 return f"Actual Java Error: {error}"
         finally:
             if os.path.exists(tmp_path): os.remove(tmp_path)
-            if os.path.exists(tmp_path.replace(".java", ".class")):
+            if os.path.exists(tmp_path.replace(".java", ".class")): 
                 try: os.remove(tmp_path.replace(".java", ".class"))
                 except: pass
 
@@ -34,39 +37,48 @@ class DepartmentTeam:
         self.qa = qa
 
     async def execute_mission(self, mission_context, deep_intel, shared_brief=""):
+        """3-tier approval process: Clerk -> Manager -> QA (Technical)"""
         last_feedback = ""
         for attempt in range(3):
+            # 1. Clerk work (informed by deep intel and brief)
             work = await self.clerk.task(mission_context, deep_intel, shared_brief, last_feedback)
+            
+            # 2. Manager logical approval
             approval = await self.manager.approve(work, deep_intel, mission_context)
             if "APPROVED" not in approval.upper():
                 last_feedback = f"Manager Rejected: {approval}"
+                print(f"      🏢 [REJECTED] {last_feedback}")
                 continue
-            
+                
+            # 3. Technical QA (real compiler check)
             v_result = await self.qa.verify(work, deep_intel, mission_context)
             if "PASSED" in v_result.upper():
                 return work.replace("```java", "").replace("```", "").replace("`", "").strip()
             else:
                 last_feedback = f"Technical QA Failed: {v_result}"
+                print(f"      ❌ [REJECTED] {last_feedback}")
                 continue
-        return f"// Dept Failure: {last_feedback}"
+                
+        return f"// Bureaucracy Failure: {last_feedback}"
 
 # --- 1. DATA DEPT (CSV & Inputs) ---
 class DataClerk(BaseAgent):
     async def task(self, ctx, intel, brief, feedback=""): 
-        prompt = f"""[SPECIFICATION]
+        prompt = f"""[SPEC]
 {intel}
+[GOAL]
+{ctx}
+[FEEDBACK]
+{feedback}
 
-[MISSION]
-Generate a single @CsvSource row for scenario: {scenario}
-Current Brief: {brief}
-Last Feedback: {feedback}
-
-[REQUIREMENTS]
-- Use standard CSV format: "input1, expected_result"
-- Ensure values match the types in [SPECIFICATION]
-- Output ONLY the row.
+[TASK]
+Write ONE JUnit 5 Parameterized row.
+- If CSV: "input1, expected"
+- If ValueSource: "value"
+- NO explanation. NO quotes around the whole line.
+- Use only values that match the SPEC.
 """
-        return await self._call_llm(prompt, "Data Engineering Specialist")
+        return await self._call_llm(prompt, "Data Specialist")
 class DataManager(BaseAgent):
     async def approve(self, work, intel, ctx): return await self._call_llm(f"Check CSV {work} against {intel}. APPROVED or REJECT?", "Data Manager")
 class DataQA(BaseAgent):
@@ -106,7 +118,9 @@ Reply only 'APPROVED' or 'REJECT: [Reason in English]'.
 """
         return await self._call_llm(prompt, "Technical Audit Manager")
 class MockQA(BaseAgent):
-    async def verify(self, work, intel, ctx): return TechnicalInspector.check_syntax(work)
+    async def verify(self, code, intel, ctx):
+        print(f"      🔬 [MockQA] Verifying Mockito syntax...")
+        return TechnicalInspector.check_syntax(code)
 
 class MockDeptTeam(DepartmentTeam):
     def __init__(self, llm): super().__init__(MockerClerk(llm), MockManager(llm), MockQA(llm))
@@ -114,21 +128,8 @@ class MockDeptTeam(DepartmentTeam):
 # --- 3. EXEC DEPT (Call Target) ---
 class ExecClerk(BaseAgent):
     async def task(self, ctx, intel, brief, feedback=""): 
-        prompt = f"""[TARGET SPEC]
-{intel}
-
-[WORK CONTEXT]
-Scenario: {ctx}
-Dependencies Configured: {brief}
-Error to Fix: {feedback}
-
-[TASK]
-Write one line of Java code to invoke the target method.
-- Match method name and parameter types exactly from SPEC.
-- Store result in 'result' variable if applicable.
-- Output ONLY the Java code.
-"""
-        return await self._call_llm(prompt, "Execution Specialist")
+        prompt = f"SPEC:\n{intel}\nMISSION: {ctx}\nLAST FEEDBACK: {feedback}\n\nTask: Write ONE line of Java calling the target method."
+        return await self._call_llm(prompt, "Execution Clerk")
 class ExecManager(BaseAgent):
     async def approve(self, work, intel, ctx): return await self._call_llm(f"Check Call {work} against {intel}. APPROVED or REJECT?", "Exec Manager")
 class ExecQA(BaseAgent):
@@ -140,21 +141,8 @@ class ExecDeptTeam(DepartmentTeam):
 # --- 4. VERIFY DEPT (Assertions) ---
 class AssertClerk(BaseAgent):
     async def task(self, ctx, intel, brief, feedback=""): 
-        prompt = f"""[SCENARIO GOAL]
-{ctx}
-
-[DATA CONTEXT]
-{intel}
-Current Execution State: {brief}
-Correction: {feedback}
-
-[TASK]
-Write one line of AssertJ 'assertThat' to verify the scenario.
-- Use valid AssertJ methods.
-- Semicolon required.
-- Output ONLY the Java code.
-"""
-        return await self._call_llm(prompt, "Assertion Specialist")
+        prompt = f"SPEC:\n{intel}\nMISSION: {ctx}\nLAST FEEDBACK: {feedback}\n\nTask: Write ONE line of AssertJ 'assertThat' with fluent chaining."
+        return await self._call_llm(prompt, "Assertion Clerk")
 class AssertManager(BaseAgent):
     async def approve(self, work, intel, ctx): return await self._call_llm(f"Check Assertion {work} against {intel}. APPROVED or REJECT?", "Assert Manager")
 class AssertQA(BaseAgent):
