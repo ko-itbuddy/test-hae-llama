@@ -8,10 +8,13 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import javax.lang.model.element.Modifier;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class TestClassBuilder {
     private final String packageName;
     private final String className;
+    private final Set<String> imports = new HashSet<>(); // 💡 Store as strings for flexibility
     private final List<FieldSpec> fields = new ArrayList<>();
     private final List<MethodSpec> methods = new ArrayList<>();
     private final List<AnnotationSpec> classAnnotations = new ArrayList<>();
@@ -19,10 +22,15 @@ public class TestClassBuilder {
     public TestClassBuilder(String packageName, String className) {
         this.packageName = packageName;
         this.className = className;
-        // Default Annotation
         this.classAnnotations.add(AnnotationSpec.builder(ExtendWith.class)
                 .addMember("value", "$T.class", MockitoExtension.class)
                 .build());
+    }
+
+    public void addImport(String importStmt) {
+        if (importStmt == null || importStmt.isBlank()) return;
+        String clean = importStmt.replace("import ", "").replace(";", "").trim();
+        this.imports.add(clean);
     }
 
     public void addField(ClassName type, String name, Class<?> annotation) {
@@ -33,12 +41,11 @@ public class TestClassBuilder {
     }
 
     public void addTestMethod(String name, String body) {
-        // 💡 [JavaPoet] Correct return type handling
         MethodSpec method = MethodSpec.methodBuilder(name)
-                .addModifiers(Modifier.PUBLIC) // JUnit 5 methods can be package-private, but public is safe
+                .addModifiers(Modifier.PUBLIC)
                 .addAnnotation(Test.class)
                 .returns(void.class)
-                .addCode(body) // LLM logic is still injected as code blocks
+                .addCode(body)
                 .build();
         methods.add(method);
     }
@@ -50,9 +57,13 @@ public class TestClassBuilder {
                 .addFields(fields)
                 .addMethods(methods);
 
-        return JavaFile.builder(packageName, testClassBuilder.build())
-                .indent("    ")
-                .build()
-                .toString();
+        JavaFile.Builder fileBuilder = JavaFile.builder(packageName, testClassBuilder.build());
+        
+        // 💡 Add custom imports
+        for (String imp : imports) {
+            fileBuilder.addStaticImport(ClassName.bestGuess(imp), "*"); // Or handle properly
+        }
+
+        return fileBuilder.indent("    ").build().toString();
     }
 }
