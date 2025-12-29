@@ -21,6 +21,7 @@ public class ScenarioProcessingPipeline {
 
     private final AgentFactory agentFactory;
     private final CodeAnalyzer codeAnalyzer;
+    private final CodeSynthesizer codeSynthesizer; // New Dependency
 
     public GeneratedCode process(Scenario scenario, String sourceCode) {
         log.info("Starting pipeline for scenario: {}", scenario.description());
@@ -43,20 +44,26 @@ public class ScenarioProcessingPipeline {
                 agentFactory.create(AgentType.VERIFY_MANAGER)
         );
 
-        // 3. Execute Stages (Sequential)
-        // Note: For a real implementation, we would parse the team output into GeneratedCode objects.
-        // Here we simulate the accumulation of string output for simplicity in this refactoring phase.
-        
-        String dataCode = dataTeam.execute("Create test data fixtures.", context);
-        String mockCode = mockTeam.execute("Mock necessary dependencies.", context);
-        String verifyCode = verifyTeam.execute("Write assertions.", context);
+        // 3. Execute Stages & Sanitize
+        GeneratedCode dataCode = codeSynthesizer.sanitizeAndExtract(
+                dataTeam.execute("Create test data fixtures (POJOs/Setup). Output JAVA CODE ONLY.", context)
+        );
+        GeneratedCode mockCode = codeSynthesizer.sanitizeAndExtract(
+                mockTeam.execute("Mock necessary dependencies using Mockito. Output JAVA CODE ONLY.", context)
+        );
+        GeneratedCode verifyCode = codeSynthesizer.sanitizeAndExtract(
+                verifyTeam.execute("Write assertions using AssertJ. Output JAVA CODE ONLY.", context)
+        );
 
-        // 4. Assemble Result
-        // Ideally, agents should return JSON or structured text to separate imports.
-        // For now, we wrap the text result.
-        String body = String.format("// given\n%s\n\n// when\n// (method call placeholder)\n\n// then\n%s\n%s", 
-                dataCode, mockCode, verifyCode);
+        // 4. Assemble Result using AST
+        String fullSource = codeSynthesizer.assembleTestClass(
+                intel.packageName(),
+                intel.className() + "Test",
+                dataCode, mockCode, verifyCode
+        );
 
-        return new GeneratedCode(Collections.emptySet(), body);
+        // We return a 'GeneratedCode' that contains the full file content as body for now
+        // Ideally, GeneratedCode should strictly be fragments, but for the Writer port, full source is easier.
+        return new GeneratedCode(Collections.emptySet(), fullSource);
     }
 }

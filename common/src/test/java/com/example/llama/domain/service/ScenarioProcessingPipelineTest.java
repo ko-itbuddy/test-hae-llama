@@ -26,13 +26,14 @@ class ScenarioProcessingPipelineTest {
 
     @Mock AgentFactory agentFactory;
     @Mock CodeAnalyzer codeAnalyzer;
+    @Mock CodeSynthesizer codeSynthesizer;
     @Mock Agent mockAgent;
 
     ScenarioProcessingPipeline pipeline;
 
     @BeforeEach
     void setUp() {
-        pipeline = new ScenarioProcessingPipeline(agentFactory, codeAnalyzer);
+        pipeline = new ScenarioProcessingPipeline(agentFactory, codeAnalyzer, codeSynthesizer);
     }
 
     @Test
@@ -57,17 +58,19 @@ class ScenarioProcessingPipelineTest {
         
         given(mockAgent.act(anyString(), anyString())).willReturn("Code Part", "APPROVED"); // Worker acts, Reviewer approves
         given(mockAgent.getRole()).willReturn("Mock Role");
+        
+        // Mock CodeSynthesizer
+        GeneratedCode mockCode = new GeneratedCode(java.util.Collections.emptySet(), "Code Part");
+        given(codeSynthesizer.sanitizeAndExtract(anyString())).willReturn(mockCode);
+        given(codeSynthesizer.assembleTestClass(anyString(), anyString(), any(GeneratedCode.class), any(GeneratedCode.class), any(GeneratedCode.class)))
+                .willReturn("Final Assembled Code");
 
         // when
         GeneratedCode result = pipeline.process(scenario, sourceCode);
 
         // then
         assertThat(result).isNotNull();
-        assertThat(result.body())
-                .contains("// given")
-                .contains("// when")
-                .contains("// then")
-                .contains("Code Part");
+        assertThat(result.body()).isEqualTo("Final Assembled Code");
 
         verify(codeAnalyzer).extractIntelligence(sourceCode);
         verify(agentFactory, times(6)).create(any(AgentType.class)); // 3 Teams * 2 Agents
