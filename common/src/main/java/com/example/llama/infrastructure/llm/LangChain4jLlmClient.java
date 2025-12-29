@@ -3,11 +3,13 @@ package com.example.llama.infrastructure.llm;
 import com.example.llama.domain.service.LlmClient;
 import com.example.llama.utils.EngineConfig;
 import dev.langchain4j.model.ollama.OllamaChatModel;
+import org.springframework.stereotype.Component;
 import java.time.Duration;
 
 /**
  * Adapter that implements LlmClient using LangChain4j and Ollama.
  */
+@Component
 public class LangChain4jLlmClient implements LlmClient {
 
     private final OllamaChatModel model;

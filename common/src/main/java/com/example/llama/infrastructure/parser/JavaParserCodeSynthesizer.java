@@ -14,6 +14,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.Test; // for default imports
+import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -23,6 +24,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
+@Component
 public class JavaParserCodeSynthesizer implements CodeSynthesizer {
 
     private final JavaParser parser;

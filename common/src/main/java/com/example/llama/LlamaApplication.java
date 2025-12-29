@@ -2,11 +2,10 @@ package com.example.llama;
 
 import com.example.llama.domain.model.GeneratedCode;
 import com.example.llama.domain.model.Scenario;
-import com.example.llama.domain.service.*;
-import com.example.llama.infrastructure.io.FileSystemCodeWriter;
-import com.example.llama.infrastructure.llm.LangChain4jLlmClient;
-import com.example.llama.infrastructure.parser.JavaParserCodeAnalyzer;
-import com.example.llama.infrastructure.parser.JavaParserCodeSynthesizer;
+import com.example.llama.domain.service.CodeAnalyzer;
+import com.example.llama.domain.service.CodeWriter;
+import com.example.llama.domain.service.ScenarioProcessingPipeline;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -18,7 +17,12 @@ import java.nio.file.Paths;
 
 @Slf4j
 @SpringBootApplication
+@RequiredArgsConstructor
 public class LlamaApplication implements CommandLineRunner {
+
+    private final ScenarioProcessingPipeline pipeline;
+    private final CodeWriter codeWriter;
+    private final CodeAnalyzer codeAnalyzer;
 
     public static void main(String[] args) {
         SpringApplication.run(LlamaApplication.class, args);
@@ -37,26 +41,18 @@ public class LlamaApplication implements CommandLineRunner {
 
         log.info("🚀 [Llama Engine v2.0] Starting processing for: {}", targetPath);
 
-        // 1. Bootstrap Infrastructure (Manual wiring for CLI simplicity)
-        LlmClient llmClient = new LangChain4jLlmClient();
-        CodeAnalyzer codeAnalyzer = new JavaParserCodeAnalyzer();
-        CodeSynthesizer codeSynthesizer = new JavaParserCodeSynthesizer();
-        CodeWriter codeWriter = new FileSystemCodeWriter();
-        AgentFactory agentFactory = new AgentFactory(llmClient);
-
-        // 2. Create Service Pipeline
-        ScenarioProcessingPipeline pipeline = new ScenarioProcessingPipeline(agentFactory, codeAnalyzer, codeSynthesizer);
-
-        // 3. Execution
+        // 1. Read Source Code
         String sourceCode = Files.readString(targetPath);
         
+        // 2. Define Scenario
         // TODO: In a real app, 'Scenario' should be derived from user input or analysis
         Scenario scenario = new Scenario("Generate comprehensive unit tests for this class");
 
+        // 3. Execute Pipeline
         GeneratedCode result = pipeline.process(scenario, sourceCode);
 
         // 4. Save Result
-        // Extract package name from source logic (simplification)
+        // Extract package name from source logic
         String packageName = codeAnalyzer.extractIntelligence(sourceCode).packageName();
         String className = codeAnalyzer.extractIntelligence(sourceCode).className() + "Test";
 

@@ -3,12 +3,14 @@ package com.example.llama.infrastructure.io;
 import com.example.llama.domain.model.GeneratedCode;
 import com.example.llama.domain.service.CodeWriter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 @Slf4j
+@Component
 public class FileSystemCodeWriter implements CodeWriter {
 
     @Override
