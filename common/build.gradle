@@ -25,13 +25,21 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
     implementation 'org.yaml:snakeyaml:2.2'
     
-    // 🧪 Testing Support (Used in main for Code Generation)
+    // 🧪 Testing Support
+    // Note: Some are kept as 'implementation' because they are used in main for code generation logic
     implementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     implementation 'org.mockito:mockito-junit-jupiter:5.5.0'
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
 tasks.named('test') {
     useJUnitPlatform()
+    testLogging {
+        events "passed", "skipped", "failed"
+        showStandardStreams = true
+        exceptionFormat = "full"
+    }
 }
 
 java {

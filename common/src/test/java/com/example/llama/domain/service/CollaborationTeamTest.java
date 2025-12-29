@@ -1,0 +1,65 @@
+package com.example.llama.domain.service;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+
+@ExtendWith(MockitoExtension.class)
+@DisplayName("Collaboration Team Test")
+class CollaborationTeamTest {
+
+    @Mock Agent worker;
+    @Mock Agent reviewer;
+
+    @Test
+    @DisplayName("should return output immediately if approved first time")
+    void successOnFirstTry() {
+        // given
+        CollaborationTeam team = new CollaborationTeam(worker, reviewer);
+        given(worker.act(anyString(), anyString())).willReturn("Good Code");
+        given(reviewer.act(anyString(), anyString())).willReturn("APPROVED");
+        given(worker.getRole()).willReturn("Worker");
+        given(reviewer.getRole()).willReturn("Reviewer");
+
+        // when
+        String result = team.execute("Write Code", "Context");
+
+        // then
+        assertThat(result).isEqualTo("Good Code");
+        verify(worker, times(1)).act(anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("should retry upon rejection and eventually succeed")
+    void retryAndSucceed() {
+        // given
+        CollaborationTeam team = new CollaborationTeam(worker, reviewer);
+        
+        // 1st attempt: Bad code -> Reject
+        given(worker.act(contains("Write Code"), anyString())).willReturn("Bad Code");
+        given(reviewer.act(anyString(), contains("Bad Code"))).willReturn("Fix bugs");
+        
+        // 2nd attempt: Good code -> Approve
+        given(worker.act(contains("Fix bugs"), anyString())).willReturn("Fixed Code");
+        given(reviewer.act(anyString(), contains("Fixed Code"))).willReturn("APPROVED");
+
+        given(worker.getRole()).willReturn("Worker");
+        given(reviewer.getRole()).willReturn("Reviewer");
+
+        // when
+        String result = team.execute("Write Code", "Context");
+
+        // then
+        assertThat(result).isEqualTo("Fixed Code");
+        verify(worker, times(2)).act(anyString(), anyString());
+    }
+}
