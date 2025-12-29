@@ -45,9 +45,13 @@ class BaseAgent:
         import os
         
         if system_msg is None:
-            system_msg = f"You are a {self.role}."
+            system_msg = "You are an expert technical engineer."
         
-        full_text = f"Context: {system_msg}\n\nTask: {prompt}\n\nResponse:"
+        full_text = f"Directive: {system_msg}\n\nTask: {prompt}\n\nResponse:"
+        
+        # 💡 [v9.0] Token Metrics
+        char_count = len(full_text)
+        approx_tokens = char_count // 4 # Basic heuristic for English/Code
         
         import time
         start_time = time.time()
@@ -55,7 +59,6 @@ class BaseAgent:
         content = ""
         for attempt in range(3):
             try:
-                # 💡 Crucial: Get the content string from the AIMessage object
                 response = self.llm.invoke([HumanMessage(content=full_text)])
                 content = response.content.strip()
                 if content: break
@@ -64,8 +67,8 @@ class BaseAgent:
         
         duration = time.time() - start_time
         
-        # Log entry for structured registry
-        log_entry = f"\n{'='*80}\nTIMESTAMP: {datetime.now().strftime('%H:%M:%S')}\nAGENT: {self.role}\nPROMPT:\n{full_text}\nRESPONSE:\n{content}\n{'='*80}\n"
+        # 💡 Logging tokens for evaluation
+        log_entry = f"\n{'='*80}\nTIMESTAMP: {datetime.now().strftime('%H:%M:%S')}\nROLE: {self.role}\nMETRICS: {approx_tokens} tokens / {duration:.2f}s\nPROMPT:\n{full_text}\nRESPONSE:\n{content}\n{'='*80}\n"
         with open(self.log_file_path, "a", encoding="utf-8") as f:
             f.write(log_entry)
         

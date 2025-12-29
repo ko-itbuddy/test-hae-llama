@@ -142,6 +142,26 @@ class JavaStrategy(LanguageStrategy):
         visit(tree.root_node)
         return methods
 
+    def get_class_skeleton(self, code):
+        """Returns a string representing the class structure (fields and method signatures)."""
+        encoded_code = code if isinstance(code, bytes) else code.encode('utf-8')
+        tree = self.parser.parse(encoded_code)
+        
+        skeleton = []
+        
+        # 1. Package & Imports (Partial)
+        # 2. Fields
+        deps = self.get_dependencies(code)
+        for dtype, dname in deps:
+            skeleton.append(f"Field: {dtype} {dname}")
+            
+        # 3. Methods
+        methods = self.get_public_methods(code)
+        for m in methods:
+            skeleton.append(f"Method: {m}")
+            
+        return "\n".join(skeleton)
+
 
     def get_architect_prompt(self, target_code, dependency_context):
         # 💡 Replaced jinja2 with native f-string

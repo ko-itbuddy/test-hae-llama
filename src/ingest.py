@@ -16,13 +16,22 @@ def classify_component(content, filename):
     else: layer = "common"
     return f"{prefix}_{layer}"
 
-def ingest_codebase(project_path, embedding_model="nomic-embed-text"):
+def ingest_codebase(project_path, embedding_model="nomic-embed-text", reset=False):
+    """
+    Scans and indexes the codebase. Optionally resets the database.
+    """
+    persist_dir = get_chroma_dir(project_path)
+    
+    if reset and os.path.exists(persist_dir):
+        print(f"🔥 [Ingest] Resetting database at {persist_dir}...")
+        import shutil
+        shutil.rmtree(persist_dir)
+
     print(f"📦 [Ingest] Organizing Codebase into Isolated Collections...")
     java_files = glob.glob(os.path.join(project_path, "**/*.java"), recursive=True)
-    # 💡 [v6.3] Updated to use the new project name
     java_files = [f for f in java_files if ".test-hea-llama" not in f]
     
-    # (Rest of the categorization logic...)
+    # ... (Rest of the logic remains same)
     collections = {"source": [], "test": []}
     for f in java_files:
         loader = TextLoader(f, encoding='utf-8')
@@ -34,7 +43,6 @@ def ingest_codebase(project_path, embedding_model="nomic-embed-text"):
 
     splitter = RecursiveCharacterTextSplitter.from_language(language=Language.JAVA, chunk_size=1500, chunk_overlap=300)
     embedding_function = OllamaEmbeddings(model=embedding_model)
-    persist_dir = get_chroma_dir(project_path)
 
     for name, docs in collections.items():
         if not docs: continue

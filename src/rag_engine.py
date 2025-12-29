@@ -13,9 +13,14 @@ from src.agents.guardian import GuardianAgent
 class ContextManager:
     def get_method_context(self, method_name, target_code, strategy):
         try:
-            return strategy.get_method_body(target_code, method_name)
-        except:
-            return "// Source not available"
+            body = strategy.get_method_body(target_code, method_name)
+            if not body or len(body.strip()) < 10:
+                print(f"      ⚠️ [Context] Failed to extract body for {method_name}. Checking fallback...")
+                return None # 💡 Let the Director know it failed
+            return body
+        except Exception as e:
+            print(f"      ❌ [Context] Error during extraction: {e}")
+            return None
 
 async def run_generation_pipeline(target_file_path, target_code, llm_model=None):
     from src.utils.config_loader import config

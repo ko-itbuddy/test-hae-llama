@@ -61,42 +61,46 @@ class DirectorAgent(BaseAgent):
         self.librarian = LibrarianAgent(llm, mcp_conf, target_file=target_file)
 
     async def orchestrate_test_generation(self, target_code, dependencies, context_mgr, strategy):
-        # 1. 시나리오 기획
-        print("[Director] 📜 Phase 1: High-Level Project Planning...")
+        # 💡 [v8.0 PRECISION] High-Efficiency Data Orchestration
+        from src.dependency import get_project_classpath
+        classpath = get_project_classpath(".")
+        
+        # 1. Blueprint Phase
         scenarios = await self.architect.plan_scenarios(target_code)
         
-        # 2. 고해상도 정보 수집 (Multi-Index RAG)
-        print("[Director] 🕵️ Phase 2: Gathering Context via Hybrid RAG...")
-        source_context = await self.librarian.fetch_precise_context(f"Related classes for {dependencies}", ["source"])
+        # 2. Extract Dependency Skeletons
+        dep_classes = [dep[0] for dep in dependencies if dep[0] not in ["String", "int", "Long", "boolean"]]
+        print(f"[Director] 🕵️ Extracting skeletal specs for: {dep_classes}")
+        skeletal_manual = await self.librarian.fetch_class_intel(dep_classes)
         
-        # 3. 정밀 첩보 수집 (Scout)
-        target_intel = await self.scout.analyze_target("primary methods", target_code)
+        # Get target class summary
+        target_intel = await self.scout.analyze_target("target class", target_code, strategy)
         
-        # 💡 Step 2.1: Robust Conditional Intelligence
-        extra_guide = ""
-        if "RESEARCH_REQUIRED" in target_intel and "None" not in target_intel:
-            try:
-                lib_name = target_intel.split("RESEARCH_REQUIRED:")[1].split("\n")[0].strip()
-                if lib_name and len(lib_name) > 2:
-                    extra_guide = await self.librarian.get_technical_guide(lib_name, "unit testing")
-            except: pass
-        
-        enriched_intel = f"{target_intel}\n\n[SOURCE_CONTEXT]\n{source_context[:1000]}"
-        
-        # 💡 [STEP 3] Ordered Project Execution (Semaphore: 1)
-        semaphore = asyncio.Semaphore(1)
         results = []
+        semaphore = asyncio.Semaphore(1)
 
         async def run_squad(scenario):
             async with semaphore:
-                print(f"\n{'='*10} 🚀 Squad Launch: {scenario} {'='*10}")
-                squad = ScenarioSquad(self.llm, scenario, enriched_intel, self.librarian, extra_guide, target_file=self.target_file)
-                outcome = await squad.execute_project(enriched_intel, ".")
-                print(f"{'='*10} ✅ Squad Finished: {scenario} {'='*10}")
+                print(f"\n{'='*10} 🚀 Launching Elite Team for: {scenario} {'='*10}")
+                
+                # 💡 [PRECISION] Get ONLY the method body under test
+                method_name = scenario.split(" - ")[0].strip()
+                method_body = context_mgr.get_method_context(method_name, target_code, strategy)
+                
+                # 💡 ENRICHED MINIMAL CONTEXT
+                final_intel = f"""[TARGET_METHOD_CODE]
+{method_body or target_code[:1000]}
+
+[DEPENDENCY_SKELETONS]
+{skeletal_manual}
+
+[OVERALL_SPEC]
+{target_intel}
+"""
+                squad = ScenarioSquad(self.llm, scenario, final_intel, self.librarian, "", target_file=self.target_file)
+                outcome = await squad.execute_project(final_intel, classpath)
                 return outcome
 
-        print(f"[Director] 🏢 Dispatching {len(scenarios)} squads sequentially...")
         tasks = [run_squad(s) for s in scenarios]
         results = await asyncio.gather(*tasks)
-
         return results

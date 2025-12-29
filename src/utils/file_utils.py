@@ -2,12 +2,22 @@ import os
 
 def get_project_data_dir(project_path):
     """
-    Returns the project-local .test-hea-llama directory.
+    [CENTRAL PATH] Returns the official .test-hea-llama directory.
+    All engine data MUST stay within this folder.
     """
     data_dir = os.path.join(project_path, ".test-hea-llama")
     os.makedirs(data_dir, exist_ok=True)
-    ensure_gitignore(project_path)
     return data_dir
+
+def get_chroma_dir(project_path):
+    return os.path.join(get_project_data_dir(project_path), "chroma_db")
+
+def get_log_dir(project_path, target_file="unknown"):
+    """Returns a directory named after the class for session grouping."""
+    file_base = os.path.basename(target_file).replace(".", "_")
+    log_root = os.path.join(get_project_data_dir(project_path), "logs", file_base)
+    os.makedirs(log_root, exist_ok=True)
+    return log_root
 
 def get_chroma_dir(project_path):
     return os.path.join(get_project_data_dir(project_path), "chroma_db")

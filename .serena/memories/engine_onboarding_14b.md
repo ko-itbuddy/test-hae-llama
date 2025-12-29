@@ -1,24 +1,21 @@
-# 🦙 Test-Hae-Llama Engine Onboarding (14b & Multi-Agent)
+# 🦙 Test-Hae-Llama v6.3: Engineering Core Onboarding
 
-Operational guide for working with the Test-Hae-Llama Python engine.
+## 🏛️ Bureaucratic Architecture (The Alliance)
+The engine is no longer a monolithic script. It is an **Orchestration of specialized Departments**.
+- **Director**: Project PM. Manages ScenarioSquads with Semaphore 1.
+- **Departments (Data, Mock, Exec, Verify)**: Each has a [Clerk-Manager-QA] team.
+- **Troubleshooters**: Analyzer & Solution Architect for self-healing.
+- **Librarian**: Chief Intelligence Officer using Multi-Index Hybrid RAG.
 
-## 🛠️ Core Components
-- **Orchestrator**: `src/rag_engine.py` (Phase 1: Plan -> Phase 2: Implement -> Phase 3: Validate/Fix).
-- **Agents**:
-  - `ArchitectAgent`: Generates test scenarios using zero-temp LLM.
-  - `ImplementerAgent`: Generates JUnit 5 code snippets from context.
-  - `CriticAgent`: Performs code review and compiler-driven self-healing.
-- **Tools**: `JavaClassBuilder` for structured Java code assembly.
+## 🧼 SOLID & DRY Standards
+- **Centralized Paths**: All data must reside in `.test-hea-llama/`. Use `src/utils/file_utils.py` for paths.
+- **Independent Config**: Use `.test-hea-llama/config/engine_config.yml` for all environment settings.
+- **Portability**: The engine is designed for `uv` distribution. Minimize external dependencies.
 
-## 🚀 14b Model Strategy
-- **Enhanced Context**: Use `qwen2.5-coder:14b` for deeper dependency analysis.
-- **High Precision**: Maintain `temperature=0.0` for planning to ensure stable scenarios.
-- **Complex Mocks**: 14b model is preferred for mocking complex interfaces like `QueryDSL` custom repositories.
+## 🧪 Testing Philosophy
+- **Success 1 : Failure N**: Exhaustively hunt for boundary cases.
+- **Fluent Assertions**: Master AssertJ chaining and extracting.
+- **Mechanical Assembly**: No creativity in assembly; only stitch approved parts.
 
-## 🩺 Self-Healing Pipeline
-The system uses a `javac` based loop (max 2 attempts) to catch and fix compilation errors automatically, leveraging the `CriticAgent`.
-
-## 📂 Source Structure (Engine)
-- `src/main.py`: Entry point.
-- `src/agents/`: Agent logic.
-- `src/languages/`: Language-specific strategies (Java focus).
+---
+*"We build the law, then we follow it."* 🦙⚖️

@@ -1,160 +1,184 @@
 package com.example.demo.service;
 
 import java.math.BigDecimal;
-import java.util.*;
-import org.junit.jupiter.api.*;
+import java.util.Optional;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoExtension;
 import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class OrderServiceTest { 
+public class OrderServiceTest {
 
     @Mock
     private ProductRepository productRepository;
+
     @Mock
     private UserRepository userRepository;
+
     @Mock
     private ApplicationEventPublisher eventPublisher;
+
     @InjectMocks
     private OrderService orderService;
 
     @Test
-    void placeOrder_throwsExceptionWhenUserIdIsNull() {
-        // given
-        when(userRepository.findById(null)).thenReturn(Optional.empty());
-    
-        // when
-        assertThatThrownBy(() -> orderService.placeOrder(null, 1L, 2, "COUPON123"))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void placeOrder_throwsExceptionWhenProductIdIsNull() {
-        // given
-        Long userId = 1L;
-    
-        // when
-        assertThatThrownBy(() -> orderService.placeOrder(userId, null, 2, "COUPON123"))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void placeOrder_throwsIllegalArgumentException_whenQuantityIsZero() {
-        // given
-        Long userId = 1L;
-        Long productId = 101L;
-        int quantity = 0;
-        String couponCode = "SAVE20";
-    
-        // when
-        assertThatThrownBy(() -> orderService.placeOrder(userId, productId, quantity, couponCode))
-            .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @Test
-    void placeOrder_throwsExceptionWhenQuantityIsNegative() {
+    void testPlaceOrder_SuccessWithValidInput() {
         // given
         Long userId = 1L;
         Long productId = 2L;
-        int quantity = -1;
+        int quantity = 3;
+        String couponCode = null; // No coupon code applied
+
+        User user = new User();
+        Product product = new Product();
+        product.setPrice(new BigDecimal("10.00")); // Example price per unit
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+        when(eventPublisher.publishEvent(any(OrderPlacedEvent.class))).thenReturn(null);
+
+        // when
+        String orderId = orderService.placeOrder(userId, productId, quantity, couponCode);
+
+        // then
+        assertThat(orderId).isNotNull().matches(UUID_PATTERN); // Assuming UUID_PATTERN is defined
+
+        verify(userRepository, times(1)).findById(userId);
+        verify(productRepository, times(1)).findById(productId);
+        verify(eventPublisher, times(1)).publishEvent(any(OrderPlacedEvent.class));
+
+        // Additional assertions for business logic
+        assertThat(product.getStock()).isEqualTo(originalStock - quantity); // Assuming originalStock is defined
+
+        ArgumentCaptor<OrderPlacedEvent> eventCaptor = ArgumentCaptor.forClass(OrderPlacedEvent.class);
+        verify(eventPublisher).publishEvent(eventCaptor.capture());
+        OrderPlacedEvent capturedEvent = eventCaptor.getValue();
+        assertThat(capturedEvent.getOrderId()).isEqualTo(orderId);
+        assertThat(capturedEvent.getUserId()).isEqualTo(userId);
+        assertThat(capturedEvent.getFinalPrice()).isEqualByComparingTo(new BigDecimal("30.00")); // 10 * 3 with no discount
+    }
+
+    @Test
+    void placeOrder_WhenUserIdIsNull_ShouldThrowIllegalArgumentException() {
+        // given
+        Long userId = null;
+        Long productId = 1L;
+        int quantity = 1;
+        String couponCode = "coupon";
+
+        when(userRepository.findById(userId)).thenThrow(new IllegalArgumentException("IDs cannot be null"));
+
+        // when
+        // then
+        assertThatThrownBy(() -> orderService.placeOrder(userId, productId, quantity, couponCode))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("IDs cannot be null");
+    }
+
+    @Test
+    void placeOrder_WithNullProductId_ShouldThrowIllegalArgumentException() {
+        // given
+        Long userId = 1L;
+        Long productId = null;
+        int quantity = 2;
+        String couponCode = "DISCOUNT10";
+
+        when(productRepository.findById(null)).thenReturn(Optional.empty());
+
+        // when and then
+        assertThatThrownBy(() -> orderService.placeOrder(userId, productId, quantity, couponCode))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("IDs cannot be null");
+    }
+
+    @Test
+    void testPlaceOrder_WithZeroQuantity_ShouldThrowIllegalArgumentException() {
+        // given
+        Long userId = 1L;
+        Long productId = 2L;
+        int quantity = 0; // Zero quantity to trigger the exception
         String couponCode = "COUPON123";
-    
+
         // when & then
         assertThatThrownBy(() -> orderService.placeOrder(userId, productId, quantity, couponCode))
-                .isInstanceOf(IllegalArgumentException.class);
-    }
-
-    @ParameterizedTest
-    @CsvSource("12345, 67890, 2, null, true")
-    void placeOrder_SuccessWithValidDataAndNoCoupon(Long userId, Long productId, int quantity, String couponCode, boolean expectedResult) {
-        // given
-        when(productRepository.getStock(productId)).thenReturn(10); // Assuming there is enough stock
-    
-        // when
-        String result = orderService.placeOrder(userId, productId, quantity, couponCode);
-    
-        // then
-        assertThat(result).isEqualTo("success");
-    }
-
-    @ParameterizedTest
-    @CsvSource("1001, 2001, 5, VIPDISCOUNT, Order placed successfully for user 1001 with product 2001")
-    void placeOrder_SuccessWithValidDataAndVIPCoupon(int userId, int productId, int quantity, String couponCode, String expectedResult) {
-        // given
-        when(userRepository.findById(userId)).thenReturn(Optional.of(new User()));
-        
-        // when
-        String result = orderService.placeOrder(userId, productId, quantity, "VIP123");
-        
-        // then
-        assertThat(result).isEqualTo(expectedResult);
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Quantity must be positive");
     }
 
     @Test
-    void placeOrder_throwsExceptionWhenUserNotFound() {
+    void testPlaceOrderWithNegativeQuantity() {
         // given
         Long userId = 1L;
-        Long productId = 2L;
-        int quantity = 3;
-        String couponCode = "COUPON123";
-        
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
-        
-        // when
-        Exception exception = assertThrows(Exception.class, () -> {
-            orderService.placeOrder(userId, productId, quantity, couponCode);
-        });
-        
-        // then
-        assertThat(exception.getMessage()).isEqualTo("User not found");
-    }
-
-    @Test
-    void placeOrder_throwsExceptionWhenProductNotFound() {
-        // given
-        Long userId = 1L;
-        Long productId = 2L;
-        int quantity = 3;
+        Long productId = 1L;
+        int quantity = -1; // Negative quantity to trigger the exception
         String couponCode = "COUPON";
-    
-        when(productRepository.findProductById(productId)).thenReturn(null);
-    
+
+        // when
+        Throwable thrown = catchThrowable(() -> orderService.placeOrder(userId, productId, quantity, couponCode));
+
+        // then
+        assertThat(thrown)
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("Quantity must be positive");
+    }
+
+    @Test
+    void placeOrder_ThrowsRuntimeExceptionWhenUserNotFound() {
+        // given
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+        when(productRepository.findById(anyLong())).thenReturn(Optional.of(new Product()));
+        when(eventPublisher.publishEvent(any(OrderPlacedEvent.class))).thenReturn(null);
+
+        // when
+        try {
+            orderService.placeOrder(1L, 2L, 3, "COUPON");
+        } catch (RuntimeException e) {
+            // then
+            assertThat(e).isInstanceOf(RuntimeException.class)
+                         .hasMessage("User not found");
+        }
+    }
+
+    @Test
+    void testPlaceOrder_ThrowsRuntimeExceptionWhenProductNotFound() {
+        // given
+        Long userId = 1L;
+        Long productId = null; // Product ID is null to trigger the exception
+        int quantity = 2;
+        String couponCode = "DISCOUNT10";
+
+        when(productRepository.findById(productId)).thenReturn(Optional.empty());
+
         // when & then
         assertThatThrownBy(() -> orderService.placeOrder(userId, productId, quantity, couponCode))
-                .isInstanceOf(ProductNotFoundException.class);
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("Product not found");
     }
 
     @Test
-    void placeOrder_SuccessWithValidDataAndNonVIPCoupon() {
+    void placeOrder_concurrentModification_throwsException() {
         // given
-        Long userId = 1001L;
-        Long productId = 2001L;
+        Long userId = 1L;
+        Long productId = 1L;
         int quantity = 5;
-        String couponCode = "COUPON123";
-    
-        when(productRepository.findById(productId)).thenReturn(Optional.of(new Product()));
-    
-        // when
-        String result = orderService.placeOrder(userId, productId, quantity, couponCode);
-    
-        // then
-        assertThat(result).isEqualTo("Order placed successfully");
-    }
+        String couponCode = null;
 
-    @Test
-    void placeOrder_throwsObjectOptimisticLockingFailureException_onStockUpdateConflict() {
-        // given
-        long productId = 1L;
-        int quantity = 10;
-        when(productRepository.updateStock(anyLong(), anyInt())).thenThrow(new ObjectOptimisticLockingFailureException("Stock update conflict"));
-    
-        // when & then
-        assertThatThrownBy(() -> orderService.placeOrder(1L, productId, quantity, "COUPON"))
-                .isInstanceOf(ObjectOptimisticLockingFailureException.class);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(new User()));
+        when(productRepository.findById(productId))
+            .thenThrow(new ObjectOptimisticLockingFailureException("Product", null));
+
+        // when
+        Throwable thrown = catchThrowable(() -> orderService.placeOrder(userId, productId, quantity, couponCode));
+
+        // then
+        assertThat(thrown)
+            .isInstanceOf(RuntimeException.class)
+            .hasMessage("Order failed due to high concurrency. Please try again.");
     }
 }

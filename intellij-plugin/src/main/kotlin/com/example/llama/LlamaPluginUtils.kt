@@ -22,7 +22,7 @@ object LlamaPluginUtils {
 
     private fun getVenvPythonPath(): String {
         val home = System.getProperty("user.home")
-        val venvDir = File(home, ".ai-test-gen/venv")
+        val venvDir = File(home, ".test-hea-llama/venv")
         val isWindows = System.getProperty("os.name").lowercase().contains("win")
         return if (isWindows) {
             File(venvDir, "Scripts/python.exe").absolutePath
@@ -39,7 +39,7 @@ object LlamaPluginUtils {
             override fun run(indicator: ProgressIndicator) {
                 indicator.isIndeterminate = true
                 val home = System.getProperty("user.home")
-                val venvDir = File(home, ".ai-test-gen/venv")
+                val venvDir = File(home, ".test-hea-llama/venv")
                 venvDir.parentFile.mkdirs()
 
                 try {

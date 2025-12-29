@@ -9,16 +9,26 @@ class ArchitectAgent(BaseAgent):
         prompt = f"""[TASK] Plan COMPACT unit tests with a focus on FAILURE.
 [RATIO RULE: 1 Success vs N Failures]
 1. Plan ONLY ONE comprehensive success scenario.
-2. Plan MULTIPLE failure scenarios covering EVERY possible rejection point:
-   - All NULL/Empty/Boundary checks.
-   - All Business logic violations (if/throw).
-   - All Dependency exceptions.
-3. Group these into a few high-quality @ParameterizedTest methods.
+2. Plan MULTIPLE failure scenarios covering every 'if' and 'throw'.
+3. Output ONLY lines starting with 'SCENARIO:'.
 
 [CODE]
 {target_code[:2000]}
 
 [OUTPUT FORMAT]
-SCENARIO: [GroupName] - [Annotation] - [Focus: 1 Success or Multiple Failures]
+SCENARIO: [MethodName] - [Description]
 """
-        return await self._call_llm(prompt, "Strategic Failure Hunter")
+        response = await self._call_llm(prompt, "Strategic Failure Hunter")
+        
+        # 💡 [v6.9] Robust scenario cleanup
+        import re
+        scenarios = []
+        for line in response.split("\n"):
+            if "SCENARIO:" in line:
+                clean_line = line.replace("SCENARIO:", "").replace("`", "").strip()
+                # Remove common markdown artifact prefixes
+                clean_line = re.sub(r'^[\d\.\-\s\*]+', '', clean_line)
+                if clean_line:
+                    scenarios.append(clean_line)
+                    
+        return scenarios if scenarios else ["placeOrder - Basic success case"]

@@ -2,8 +2,21 @@ from .base import BaseAgent, DepartmentTeam
 
 class DataClerk(BaseAgent):
     async def task(self, ctx, intel, brief, feedback=""): 
-        prompt = f"SPEC:\n{intel}\nMISSION: {ctx}\nLAST FEEDBACK: {feedback}\n\nTask: Write ONE JUnit 5 Parameterized row. Format: \"input1, expected\"."
-        return await self._call_llm(prompt, "Data Specialist")
+        prompt = f"""[TECHNICAL_SPEC]
+{intel}
+
+[MISSION_DETAILS]
+Scenario: {ctx}
+Previous Progress: {brief}
+Correction: {feedback}
+
+[TASK]
+Provide ONE @CsvSource row.
+- Format: "input1, input2, expected"
+- Use only valid Java literals (e.g., 1L, true, "string").
+- NO markdown. NO explanation. NO JSON.
+"""
+        return await self._call_llm(prompt, "Senior Java Developer")
 
 class DataManager(BaseAgent):
     async def approve(self, work, intel, ctx): 

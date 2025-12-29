@@ -31,11 +31,12 @@ def cli(proxy):
 @cli.command()
 @click.option('--project-path', required=True, help='Path to the Java project')
 @click.option('--model', default='nomic-embed-text', help='Ollama model for embeddings')
-def ingest(project_path, model):
+@click.option('--reset', is_flag=True, help='Clear existing database before ingestion')
+def ingest(project_path, model, reset):
     """Scan and ingest Java codebase."""
     from src.ingest import ingest_codebase
-    ingest_codebase(project_path, embedding_model=model)
-    click.echo(f"✅ Codebase ingestion complete.")
+    ingest_codebase(project_path, embedding_model=model, reset=reset)
+    click.echo(f"✅ Codebase ingestion complete (Reset={reset}).")
 
 @cli.command()
 @click.option('--project-path', required=True, help='Path to the Java project')
@@ -45,6 +46,33 @@ def ingest_deps(project_path, model):
     from src.ingest import ingest_dependencies_javadocs
     ingest_dependencies_javadocs(project_path, embedding_model=model)
     click.echo(f"✅ Library wisdom absorption complete.")
+
+@cli.command()
+@click.option('--project-path', default='.', help='Path to initialize')
+def init(project_path):
+    """[BOOTSTRAP] Initialize the .test-hea-llama environment."""
+    from src.utils.file_utils import get_project_data_dir
+    data_dir = get_project_data_dir(project_path)
+    
+    # 1. Create directory structure
+    for sub in ["config", "rules", "logs"]:
+        os.makedirs(os.path.join(data_dir, sub), exist_ok=True)
+    
+    # 2. Generate default philosophy (The Law)
+    phi_path = os.path.join(data_dir, "rules", "coding_philosophy.md")
+    if not os.path.exists(phi_path):
+        with open(phi_path, "w", encoding="utf-8") as f:
+            f.write("# 🦙 Coding Philosophy\n- Use Fluent Assertions\n- Prefer MethodSource\n- Failure-First (1:N Rule)\n")
+        click.echo(f"📜 [Init] Created philosophy lawbook at {phi_path}")
+
+    # 3. Generate default config
+    cfg_path = os.path.join(data_dir, "config", "engine_config.yml")
+    if not os.path.exists(cfg_path):
+        with open(cfg_path, "w", encoding="utf-8") as f:
+            f.write("llm:\n  model: \"qwen2.5-coder:14b\"\n  temperature: 0.3\npaths:\n  data_root: \".test-hea-llama\"\n")
+        click.echo(f"⚙️ [Init] Created default configuration at {cfg_path}")
+
+    click.echo(f"✅ [Init] Engine environment ready in {data_dir}")
 
 @cli.command()
 @click.option('--target-file', prompt='Target Java File', help='Path to the file to test')

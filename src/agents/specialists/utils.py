@@ -26,12 +26,27 @@ class TechnicalInspector:
             if os.path.exists(tmp_file_path): os.remove(tmp_file_path)
 
 class ScoutAgent(BaseAgent):
-    async def analyze_target(self, method_name, target_code):
-        prompt = f"""[JAVA CODE ANALYSIS]
-Analyze method '{method_name}'. Extract ONLY:
-1. SIGNATURE: [full signature]
-2. MOCKS: [dependencies]
-3. BEHAVIOR: [brief logic]
-If unknown libraries exist, add 'RESEARCH_REQUIRED: [LibraryName]'.
+    async def analyze_target(self, method_name, target_code, strategy):
+        # 💡 [v6.9] Ultra-strict technical fact extraction
+        skeleton = strategy.get_class_skeleton(target_code)
+        
+        prompt = f"""[JAVA CLASS SKELETON]
+{skeleton}
+
+[TASK]
+Analyze method: '{method_name}'
+Extract EXACT facts from SKELETON and code below.
+
+[STRICT OUTPUT FORMAT - NO PROSE, NO EXPLANATION]
+SIGNATURE: [modifiers] [return] [name]([params])
+MOCKS: [field1, field2, ...]
+BEHAVIOR: [one sentence logic]
+
+[SOURCE CODE]
+{target_code[:1000]}
 """
-        return await self._call_llm(prompt, "Technical Scout")
+        response = await self._call_llm(prompt, "Technical Fact Extractor")
+        
+        # 💡 Strong cleaning: remove any conversational noise
+        lines = [l.strip() for l in response.split("\n") if ":" in l and any(k in l for k in ["SIGNATURE", "MOCKS", "BEHAVIOR"])]
+        return "\n".join(lines)
