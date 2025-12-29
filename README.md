@@ -1,28 +1,42 @@
-# 🦙 Test-Hae-Llama: Self-Learning Multi-Agent Alliance (v5.2)
+# 🦙 Test-Hae-Llama: Bureaucratic AI Test Generator (v2.0)
 
-Test-Hae-Llama is an autonomous, AI-powered test generation suite that **learns as it works**. It features a "Bureaucratic Task-Force" of nano-agents and a "Self-Growing Hybrid RAG" system to produce industrial-grade JUnit 5 tests.
+Test-Hae-Llama is an autonomous, AI-powered test generation suite that leverages a **Bureaucratic Multi-Agent System** to produce industrial-grade JUnit 5 tests. It strictly adheres to **TDD, DDD, and SOLID** principles using a Hexagonal Architecture.
 
 ## 🚀 Key Innovations
 
-### 🏛️ Bureaucratic Task-Force (TF)
-Each scenario is a dedicated project handled by a **ScenarioSquad**.
-- **Clerk-Manager-QA Loop**: Every line of code is written by a clerk, audited by a manager, and verified by a **real Java compiler (`javac`/Gradle)**.
-- **Troubleshooter Cycle**: Failures trigger an analyzer and a solution architect to prescribe fixes to the clerk.
+### 🏛️ Bureaucratic Dialogue Loop
+Tests are generated through a strict "Worker-Reviewer" dialogue protocol handled by `CollaborationTeam`.
+- **Worker (Clerk)**: Drafts code based on specific technical directives.
+- **Reviewer (Manager)**: Audits the code against the source context. If it fails, detailed feedback is sent back for a retry.
+- **Result**: Only "APPROVED" code makes it to the final file.
 
-### 🧠 Self-Growing Hybrid RAG (Multi-Index)
-- **Multi-Index Isolation**: Source code, test cases, and library documentation are stored in isolated ChromaDB collections to eliminate hallucinations.
-- **Just-in-Time (JIT) Learning**: If an unknown library is detected, the **Librarian Bureau** automatically scouts the web (DuckDuckGo), fetches the Javadoc, and vectorizes it into a new collection in real-time.
-- **Ensemble Retrieval**: Combines keyword and semantic search for 100% accurate context delivery.
+### 🧩 Smart Code Synthesis (AST-Based)
+Instead of relying on fragile string manipulation, Test-Hae-Llama uses **JavaParser** to:
+- Extract strict AST (Abstract Syntax Tree) nodes from LLM responses.
+- Eliminate Markdown, hallucinations, and conversational chatter.
+- Synthesize clean, compilable Java source files.
 
-### 🛡️ Privacy & Stability
-- **Guardian Agent**: Masks sensitive data before any LLM transmission.
-- **Concurrency Control**: Strict semaphore-based execution to ensure resource stability and clean audit logs.
+### 🛡️ Hexagonal Architecture
+The system is built on a robust, decoupled core:
+- **Domain Layer**: `Scenario`, `Intelligence`, `GeneratedCode` (Value Objects).
+- **Service Layer**: `ScenarioProcessingPipeline` orchestrates the agents.
+- **Infrastructure Layer**: Ports & Adapters for LLM (`LangChain4j`), Code Analysis (`JavaParser`), and I/O.
 
 ## 🏗️ Core Workflow
-1. **Scout & Learn**: Librarian fetches deep intel from RAG or the Web.
-2. **Strategic Plan**: Architect maps boundary and edge cases.
-3. **Manufacture**: Squads produce approved code fragments.
-4. **Self-Heal**: Senior Reviewer patches entire files based on build logs.
+1. **Scout**: `CodeAnalyzer` extracts structural intelligence (fields, methods) from your source code.
+2. **Pipeline**: `ScenarioProcessingPipeline` activates specialized agent teams:
+    - **Data Team**: Generates POJOs and fixtures.
+    - **Mock Team**: Creates Mockito stubs strictly based on dependencies.
+    - **Verify Team**: Writes AssertJ assertions for the target behavior.
+3. **Synthesis**: `CodeSynthesizer` assembles the fragments into a valid `Test` class.
+4. **Persist**: The final result is saved to your project's test directory.
+
+## 🛠️ Tech Stack
+- **Language**: Java 17
+- **Framework**: Spring Boot 3.2.2
+- **AI Engine**: LangChain4j + Ollama (running local models like `qwen2.5-coder`)
+- **Analysis**: JavaParser
+- **Testing**: JUnit 5, AssertJ, Mockito
 
 ---
-*"We don't just generate tests—we build a self-evolving knowledge base for your project."* 🦙✨
+*"Precision is our only Law. Quality is our only Weapon."* 🦙⚔️
