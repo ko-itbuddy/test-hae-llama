@@ -1,14 +1,7 @@
 plugins {
     id 'org.springframework.boot' version '3.2.2'
     id 'io.spring.dependency-management' version '1.1.4'
-    id 'java'
-}
-
-group = 'com.example'
-version = '12.2.0'
-
-repositories {
-    mavenCentral()
+    id 'java-library'
 }
 
 dependencies {
@@ -32,11 +25,27 @@ dependencies {
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
     implementation 'org.yaml:snakeyaml:2.2'
     
-    // 🧪 Testing Support
+    // 🧪 Testing Support (Used in main for Code Generation)
     implementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     implementation 'org.mockito:mockito-junit-jupiter:5.5.0'
 }
 
-test {
+tasks.named('test') {
     useJUnitPlatform()
+}
+
+java {
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
+}
+
+// Enable generation of plain jar for other modules to consume
+jar {
+    enabled = true
+}
+
+// bootJar is still useful if we want to run it as a standalone LSP server
+bootJar {
+    enabled = true
+    archiveClassifier = 'boot'
 }

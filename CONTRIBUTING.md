@@ -5,31 +5,29 @@
 
 ## 🏗️ 프로젝트 아키텍처
 
-- **Core Engine (`src/`):** Python 기반의 RAG 엔진. Ollama와 통신하고 코드를 분석하는 핵심 로직라마.
-- **Languages Strategy (`src/languages/`):** 특정 언어(Java, Python 등)에 특화된 분석 및 프롬프트 로직라마.
+- **Core Engine (`common/`):** Java 17 및 Spring Boot 기반의 RAG 엔진. LangChain4j를 사용하여 LLM과 통신하고 코드를 분석하는 핵심 로직라마.
 - **VS Code Extension (`vscode-extension/`):** TypeScript 기반의 IDE 인터페이스라마.
 - **IntelliJ Plugin (`intellij-plugin/`):** Kotlin 기반의 IDE 인터페이스라마.
 
 ## 🛠️ 개발 환경 구축하기
 
 ### 1. 전제 조건
-- [mise](https://mise.jdx.dev/) (추천) 또는 Python 3.11+, Node.js 20+, Java 17+
+- [mise](https://mise.jdx.dev/) (추천) 또는 Node.js 20+, Java 17+
+- Gradle 8.5
 - [Ollama](https://ollama.com/) (로컬 모델 실행)
 
 ### 2. 초기 세팅
 ```bash
-# 의존성 설치
-pip install -r requirements.txt
+# 의존성 설치 및 빌드
+./gradlew build
 cd vscode-extension && npm install
 ```
 
 ## 🧪 로컬에서 테스트하기
 
-### Python Core 테스트
-`PYTHONPATH`를 설정하고 직접 명령어를 실행해 볼 수 있라마.
+### Java Core 테스트
 ```bash
-export PYTHONPATH=$PYTHONPATH:./src
-python3 src/main.py generate --target-file [파일경로]
+./gradlew :common:test
 ```
 
 ### VS Code 확장 테스트
@@ -37,7 +35,7 @@ python3 src/main.py generate --target-file [파일경로]
 2. `F5`를 눌러 디버깅 세션을 실행합니다.
 
 ## 📝 코드 스타일 및 규칙
-- **Python:** PEP 8을 준수하라마.
+- **Java:** Google Java Style Guide를 지향하며, Lombok을 적극 사용하라마.
 - **TypeScript:** ESLint 기본 설정을 따르라마.
 - **브랜칭:** `feat/`, `fix/`, `docs/` 등의 접두사를 사용하라마.
 

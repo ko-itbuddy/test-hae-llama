@@ -8,10 +8,26 @@ This document defines the **SURVIVAL RULES** for all AI agents.
 ## 🚨 Serena-MCP Mandate (READ FIRST)
 You are an orchestrator in a **Data-Informed Polyglot Ecosystem**.
 
-### 1. The Serena-MCP Protocol (LSP-First)
-- **🚫 NO Plain Text Search:** Use `find_symbol` and `get_symbols_overview`.
-- **✅ Structural Editing:** Modify code ONLY via `replace_symbol_body` or `insert_after_symbol`.
-- **✅ Data-Driven Context:** Before any task, invoke the `Librarian` to get the latest **Hybrid RAG** context.
+### 1. The Serena-MCP Protocol (LSP-First & Semantic)
+- **🚀 Strategic LSP Dominance:** 
+    - Use `get_symbols_overview` to map the battlefield. 
+    - Use `find_symbol(depth=1)` to probe class structures before committing to a full read.
+    - Use `find_referencing_symbols` **MANDATORILY** before any symbol modification to ensure system-wide integrity.
+- **🧠 Intelligent Drill-down (Token Economy):** 
+    - **NEVER** read a full file if you only need a method. 
+    - Target specific `name_path` (e.g., `Class/method`) with `include_body=True`.
+    - Stop information acquisition as soon as the task is solvable.
+- **🛡️ Reference & Compatibility:** 
+    - When editing a symbol, the change must be **backward-compatible** unless explicitly asked.
+    - If a breaking change is required, you must find and update **all** references discovered via `find_referencing_symbols`.
+- **🔍 Discovery vs. Guesswork:** 
+    - If a symbol's location is unknown, use `search_for_pattern` to find candidates, then switch to symbolic tools.
+    - Never assume a symbol exists; verify with `find_symbol` first.
+- **✅ Structural Editing Authority:** 
+    - `replace_symbol_body` is the preferred weapon for method-level changes.
+    - `insert_after_symbol` (with the last top-level symbol) is for appending new capabilities.
+    - File-based `replace` is a fallback for small, non-symbolic adjustments (imports, comments, etc.).
+- **✅ Data-Driven Context:** Always sync with the `Librarian` to avoid hallucinating project-specific logic.
 
 ### 2. The Bureaucratic Task-Force (TF)
 Every test scenario is a **Project**. Within a project, you must enforce the **Clerk-Manager-QA** chain:
@@ -19,6 +35,20 @@ Every test scenario is a **Project**. Within a project, you must enforce the **C
 2.  **Manager**: Audit the code against the **Technical Intel**. Reject with specific technical reasons.
 3.  **QA (Technical)**: Use the `TechnicalInspector` to run **real `javac`/Gradle** validation.
 4.  **Troubleshooter**: On build failure, analyze the log and provide a **Prescription** to the Clerk.
+
+### 3. Architectural Responsibility & Interaction
+- **🏗️ Integration Mindset (No Orphans):** 
+    - **NEVER** generate a new file without a plan to integrate it. 
+    - Before creating code, verify where it belongs and how it connects to the existing system.
+- **📍 Placement Strategy:** 
+    - Think: "Where does this code naturally belong?" 
+    - Do not clutter the root or random packages. Respect the existing architectural layers.
+- **🗣️ Transparent Interaction:** 
+    - **Ask before Assuming:** If a request is ambiguous, present options to the user.
+    - **Explain the 'Why':** When breaking down complex tasks, briefly explain the reasoning behind the steps.
+- **🧩 Symbol Insertion Tactics:**
+    - Use `insert_before_symbol` on the first top-level symbol for adding imports or file headers.
+    - Use `insert_after_symbol` on the last top-level symbol for appending new classes or utility methods.
 
 ---
 

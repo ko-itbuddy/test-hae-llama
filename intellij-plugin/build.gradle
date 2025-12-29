@@ -1,0 +1,43 @@
+plugins {
+    id 'java'
+    id 'org.jetbrains.kotlin.jvm' version '1.9.21'
+    id 'org.jetbrains.intellij' version '1.17.2'
+}
+
+group = 'com.example'
+version = '0.1.1'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation project(':common')
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+}
+
+// Configure Gradle IntelliJ Plugin
+intellij {
+    version = '2023.2.5'
+    type = 'IC'
+    plugins = ['com.intellij.java']
+}
+
+tasks.withType(JavaCompile) {
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
+}
+
+tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+}
+
+patchPluginXml {
+    sinceBuild = '232'
+    untilBuild = '242.*'
+}
+
+// Optional: signing and publishing configuration can be added here if needed
+// based on environment variables, similar to the original KTS file.
