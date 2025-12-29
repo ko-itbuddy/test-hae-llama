@@ -26,7 +26,8 @@ class CollaborationTeamTest {
         // given
         CollaborationTeam team = new CollaborationTeam(worker, reviewer);
         given(worker.act(anyString(), anyString())).willReturn("Good Code");
-        given(reviewer.act(anyString(), anyString())).willReturn("APPROVED");
+        // Reviewer receives formatted prompt, use contains to be safe
+        given(reviewer.act(contains("Audit this code"), anyString())).willReturn("APPROVED");
         given(worker.getRole()).willReturn("Worker");
         given(reviewer.getRole()).willReturn("Reviewer");
 
@@ -44,13 +45,13 @@ class CollaborationTeamTest {
         // given
         CollaborationTeam team = new CollaborationTeam(worker, reviewer);
         
-        // 1st attempt: Bad code -> Reject
+        // 1st attempt
         given(worker.act(contains("Write Code"), anyString())).willReturn("Bad Code");
-        given(reviewer.act(anyString(), contains("Bad Code"))).willReturn("Fix bugs");
+        given(reviewer.act(contains("Bad Code"), anyString())).willReturn("Fix bugs");
         
-        // 2nd attempt: Good code -> Approve
+        // 2nd attempt
         given(worker.act(contains("Fix bugs"), anyString())).willReturn("Fixed Code");
-        given(reviewer.act(anyString(), contains("Fixed Code"))).willReturn("APPROVED");
+        given(reviewer.act(contains("Fixed Code"), anyString())).willReturn("APPROVED");
 
         given(worker.getRole()).willReturn("Worker");
         given(reviewer.getRole()).willReturn("Reviewer");

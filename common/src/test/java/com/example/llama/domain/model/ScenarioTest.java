@@ -1,78 +1,51 @@
 package com.example.llama.domain.model;
 
-
-
-package com.example.llama.domain.model;
-
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.Mockito;
-import org.mockito.junit.jupiter.MockitoExtension;
+
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@ExtendWith(MockitoExtension.class)
-public class ScenarioTest {
+@DisplayName("Scenario Value Object Test")
+class ScenarioTest {
 
-    private String name;
+    @Test
+    @DisplayName("should create a valid scenario")
+    void createValidScenario() {
+        // given
+        String description = "Validate user login with correct credentials";
+        
+        // when
+        Scenario scenario = new Scenario(description);
 
-    private String description;
-
-    // Constructor, getters, and setters
-    public Scenario(String name, String description) {
-        this.name = sanitize(name);
-        this.description = sanitize(description);
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = sanitize(name);
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = sanitize(description);
-    }
-
-    private static String sanitize(String input) {
-        if (input == null) {
-            return "";
-        }
-        // Simple sanitization: trim and remove potentially harmful characters
-        return input.trim().replaceAll("[^a-zA-Z0-9\\s]", "");
-    }
-
-    public static void main(String[] args) {
-        // Create a strict mock of the target class
-        Scenario scenarioMock = Mockito.mock(Scenario.class, Mockito.withSettings().strictness(Mockito.Strictness.STRICT_STUBS));
-        // Mock the private static method sanitize
-        String input = "testInput";
-        String sanitizedOutput = "sanitizedOutput";
-        try {
-            Method sanitizeMethod = Scenario.class.getDeclaredMethod("sanitize", String.class);
-            sanitizeMethod.setAccessible(true);
-            when((String) sanitizeMethod.invoke(scenarioMock, input)).thenReturn(sanitizedOutput);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        // Now you can use scenarioMock in your tests
+        // then
+        assertThat(scenario.description()).isEqualTo(description);
+        assertThat(scenario).isNotNull();
     }
 
     @Test
-    public void testSanitize() {
-        // Given
-        String input = "  Hello, World!  ";
-        String expectedOutput = "Hello, World!";
-        // When
-        String result = Scenario.sanitize(input);
-        // Then
-        assertThat(result).isEqualTo(expectedOutput);
+    @DisplayName("should throw exception for empty description")
+    void throwExceptionForEmptyDescription() {
+        // when & then
+        assertThatThrownBy(() -> new Scenario(""))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Scenario description cannot be empty");
+
+        assertThatThrownBy(() -> new Scenario(null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("Scenario description cannot be empty");
+    }
+
+    @Test
+    @DisplayName("should sanitize description")
+    void sanitizeDescription() {
+        // given
+        String input = "  Test   User   Login  ";
+        
+        // when
+        Scenario scenario = new Scenario(input);
+
+        // then
+        assertThat(scenario.description()).isEqualTo("Test User Login");
     }
 }
