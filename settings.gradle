@@ -1,0 +1,3 @@
+rootProject.name = 'local-test-code-llm'
+include 'engine-java'
+include 'sample-project'

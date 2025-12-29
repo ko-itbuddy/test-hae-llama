@@ -24,24 +24,17 @@ class ContextManager:
 
 async def run_generation_pipeline(target_file_path, target_code, llm_model=None):
     from src.utils.config_loader import config
-    
-    # 💡 [v6.3] Centralized configuration for LLM
     model = llm_model or config.get("llm.model", "qwen2.5-coder:14b")
     temp = config.get("llm.temperature", 0.3)
-    
     llm = ChatOllama(model=model, temperature=temp)
     
     strategy = get_strategy(target_file_path, ".")
     director = DirectorAgent(llm, target_file=target_file_path)
     guardian = GuardianAgent(llm, target_file=target_file_path)
-    critic = CriticAgent(llm, target_file=target_file_path)
     ctx_mgr = ContextManager()
     
-    # 0. Privacy Masking
-    print(f"[STATUS] 🛡️ Privacy Guardian masking sensitive data...")
+    # 0. Privacy & Structure
     masked_target_code = guardian.mask_code(target_code)
-    
-    # 1. Structural Analysis
     try:
         class_name = masked_target_code.split("public class ")[1].split("{")[0].strip().split(" ")[0]
         package_name = masked_target_code.split("package ")[1].split(";")[0].strip()
@@ -50,15 +43,16 @@ async def run_generation_pipeline(target_file_path, target_code, llm_model=None)
         
     dependencies = strategy.get_dependencies(masked_target_code)
     
-    # 2. Test Generation Orchestration
-    generated_methods = await director.orchestrate_test_generation(masked_target_code, dependencies, ctx_mgr, strategy)
-
-    # 3. Final Assembly
+    # 1. 💡 [v10.0] Resolve All Dependency Packages via Librarian
+    dep_classes = [dep[0] for dep in dependencies if dep[0] not in ["String", "int", "Long", "boolean"]]
+    # We ask librarian specifically for the package lines
+    skeletons = await director.librarian.fetch_class_intel(dep_classes)
+    
     builder = JavaClassBuilder(package=package_name, class_name=f"{class_name}Test")
+    
+    # Standard Imports
     builder.add_import("org.junit.jupiter.api.*")
     builder.add_import("org.junit.jupiter.api.extension.ExtendWith")
-    builder.add_import("org.junit.jupiter.params.ParameterizedTest")
-    builder.add_import("org.junit.jupiter.params.provider.*")
     builder.add_import("org.mockito.*")
     builder.add_import("org.mockito.junit.jupiter.MockitoExtension")
     builder.add_import("static org.mockito.Mockito.*")
@@ -66,7 +60,16 @@ async def run_generation_pipeline(target_file_path, target_code, llm_model=None)
     builder.add_import("java.util.*")
     builder.add_import("java.math.BigDecimal")
     builder.add_class_annotation("@ExtendWith(MockitoExtension.class)")
-    
+
+    # 💡 [v10.0] Automatic Package Discovery
+    import re
+    for line in skeletons.split("\n"):
+        if line.startswith("package "):
+            builder.add_import(line.replace("package ", "import ").replace(";", ".*"))
+
+    # 2. Test Generation
+    generated_methods = await director.orchestrate_test_generation(masked_target_code, dependencies, ctx_mgr, strategy)
+
     for dep_type, dep_name in dependencies:
         if dep_type not in ["String", "int", "Long", "boolean", "double"]:
             builder.add_field("@Mock", dep_type, dep_name)

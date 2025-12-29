@@ -3,20 +3,24 @@ from .utils import TechnicalInspector
 
 class MockerClerk(BaseAgent):
     async def task(self, ctx, intel, brief, feedback=""): 
-        prompt = f"""[REFERENCE_MANUAL]
+        prompt = f"""[TECHNICAL INTEL]
 {intel}
-
-[MISSION_DETAILS]
+[MISSION]
 Scenario: {ctx}
-Briefing: {brief}
-Correction Needed: {feedback}
 
 [TASK]
-Write Mockito stubbing (when/thenReturn) for the scenario.
-- Use exact dependency names and methods from the REFERENCE_MANUAL.
-- Multi-line is allowed.
-- Output ONLY the Java code.
+1. Write the Mockito stubbing code.
+2. Provide all REQUIRED IMPORT statements for the classes you used.
+
+[OUTPUT FORMAT]
+IMPORTS:
+import ...;
+import ...;
+
+CODE:
+when(...).thenReturn(...);
 """
+        # 💡 Stronger framing: Ensure 14b provides imports and code separately
         return await self._call_llm(prompt, "Senior Java Developer")
 
 class MockManager(BaseAgent):

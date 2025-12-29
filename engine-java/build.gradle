@@ -1,0 +1,40 @@
+plugins {
+    id 'org.springframework.boot' version '3.2.2'
+    id 'io.spring.dependency-management' version '1.1.4'
+    id 'java'
+}
+
+group = 'com.example'
+version = '11.1.0'
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // 🍃 Spring Boot Core
+    implementation 'org.springframework.boot:spring-boot-starter'
+    
+    // 🧠 AI: LangChain4j Spring Boot Starter
+    implementation 'dev.langchain4j:langchain4j-open-ai-spring-boot-starter:0.35.0'
+    implementation 'dev.langchain4j:langchain4j-ollama:0.35.0'
+    
+    // 🧱 Code Generation: JavaPoet
+    implementation 'com.squareup:javapoet:1.13.0'
+    
+    // 🔍 Analysis: Pure JavaParser Suite
+    implementation 'com.github.javaparser:javaparser-core:3.26.2'
+    implementation 'com.github.javaparser:javaparser-symbol-solver-core:3.26.2'
+    
+    // 🛠 Utils
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    
+    // 🧪 Testing Support (Needed in Main for Code Generation)
+    implementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
+    implementation 'org.mockito:mockito-junit-jupiter:5.5.0'
+}
+
+test {
+    useJUnitPlatform()
+}// Wake up call

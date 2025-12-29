@@ -61,40 +61,33 @@ class DirectorAgent(BaseAgent):
         self.librarian = LibrarianAgent(llm, mcp_conf, target_file=target_file)
 
     async def orchestrate_test_generation(self, target_code, dependencies, context_mgr, strategy):
-        # 💡 [v8.0 PRECISION] High-Efficiency Data Orchestration
         from src.dependency import get_project_classpath
         classpath = get_project_classpath(".")
         
-        # 1. Blueprint Phase
         scenarios = await self.architect.plan_scenarios(target_code)
         
-        # 2. Extract Dependency Skeletons
         dep_classes = [dep[0] for dep in dependencies if dep[0] not in ["String", "int", "Long", "boolean"]]
-        print(f"[Director] 🕵️ Extracting skeletal specs for: {dep_classes}")
-        skeletal_manual = await self.librarian.fetch_class_intel(dep_classes)
+        # 💡 [v9.6] Natural Java Skeletons
+        manual_context = await self.librarian.fetch_class_intel(dep_classes)
         
-        # Get target class summary
-        target_intel = await self.scout.analyze_target("target class", target_code, strategy)
+        target_intel = await self.scout.analyze_target("target", target_code, strategy)
         
         results = []
         semaphore = asyncio.Semaphore(1)
 
         async def run_squad(scenario):
             async with semaphore:
-                print(f"\n{'='*10} 🚀 Launching Elite Team for: {scenario} {'='*10}")
-                
-                # 💡 [PRECISION] Get ONLY the method body under test
                 method_name = scenario.split(" - ")[0].strip()
                 method_body = context_mgr.get_method_context(method_name, target_code, strategy)
                 
-                # 💡 ENRICHED MINIMAL CONTEXT
-                final_intel = f"""[TARGET_METHOD_CODE]
+                # 💡 Natural framing for the 14b model
+                final_intel = f"""[TECHNICAL_REFERENCE_MANUAL]
+{manual_context}
+
+[TARGET_METHOD_TO_TEST]
 {method_body or target_code[:1000]}
 
-[DEPENDENCY_SKELETONS]
-{skeletal_manual}
-
-[OVERALL_SPEC]
+[EXECUTIVE_SUMMARY]
 {target_intel}
 """
                 squad = ScenarioSquad(self.llm, scenario, final_intel, self.librarian, "", target_file=self.target_file)

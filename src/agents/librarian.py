@@ -37,48 +37,30 @@ class LibrarianAgent(BaseAgent):
 
     async def fetch_class_intel(self, class_names):
         """
-        [v9.0 DATA BOMB] Fetches compressed source code for all requested classes.
-        Calculates approximate token usage for the '絨毯爆擊' evaluation.
+        [v10.1 RAW SOURCE] Fetches raw method/field snippets for dependencies.
+        NO TOON. NO weird compression. Just high-fidelity Java context.
         """
-        import glob
-        import os
-        import re
+        import glob, os, re
         
-        print(f"🕵️ [Librarian] Initiating DATA BOMB for classes: {class_names}")
-        
-        found_manuals = []
-        total_chars = 0
-
+        print(f"🕵️ [Librarian] Collecting raw source context for: {class_names}")
         names = class_names if isinstance(class_names, list) else re.findall(r'\b[A-Z][a-zA-Z0-9]+\b', str(class_names))
-
+        
+        snippets = []
         for name in set(names):
-            if name in ["String", "Long", "Integer", "Boolean", "Optional", "List", "Set", "Map", "UUID"]:
-                continue
-                
+            if name in ["String", "Long", "Integer", "Boolean", "Optional", "List", "Set", "Map"]: continue
+            
             pattern = os.path.join(self.project_path, "**", f"{name}.java")
             matches = glob.glob(pattern, recursive=True)
-            
             if matches:
                 try:
                     with open(matches[0], "r", encoding="utf-8") as f:
                         source = f.read()
-                        # 💡 High-density Compression (Remove comments & empty lines)
+                        # 💡 Just remove comments, keep everything else for 14b context
                         source = re.sub(r'//.*', '', source)
                         source = re.sub(r'/\*.*?\*/', '', source, flags=re.DOTALL)
-                        source = "\n".join([l.strip() for l in source.split("\n") if l.strip()])
-                        
-                        manual = f"### [SOURCE: {name}]\n{source}"
-                        found_manuals.append(manual)
-                        total_chars += len(manual)
-                        print(f"      ✅ [LSP] Acquired {len(source)} chars for {name}")
+                        snippets.append(f"// --- SOURCE: {name} ({matches[0]}) ---\n{source}")
                 except: pass
-
-        result = "\n\n".join(found_manuals)
-        # 💡 [v9.0] Log the total data volume for analysis
-        approx_tokens = total_chars // 4
-        print(f"📊 [DATA_REPORT] Total context payload: ~{approx_tokens} tokens ({total_chars} chars)")
-        
-        return result or "No skeletal data available."
+        return "\n\n".join(snippets)
 
     async def get_technical_guide(self, library_name, usage_scenario):
         """Fetches latest library standards from Context7 or Web."""
