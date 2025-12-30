@@ -10,17 +10,22 @@ repositories {
     maven { url 'https://repo.spring.io/snapshot' }
 }
 
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.shell:spring-shell-dependencies:3.2.0"
+    }
+}
+
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+    // 🐚 CLI Power: Lightweight Shell environment instead of Tomcat
+    implementation 'org.springframework.shell:spring-shell-starter'
+    
+    // ⚡ Reactive WebClient is needed for Spring AI, but we don't need the full Web MVC (Tomcat)
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
     
     // 🧠 Pure Ollama Model (Milestone 1.1.0-M4)
     implementation 'org.springframework.ai:spring-ai-starter-model-ollama:1.1.0-M4'
-    
-    // 🧠 LangChain4j (Optional)
-    implementation 'dev.langchain4j:langchain4j:1.10.0'
-    implementation 'dev.langchain4j:langchain4j-ollama:1.10.0'
     
     // 🧱 Tools
     implementation 'com.squareup:javapoet:1.10.0'

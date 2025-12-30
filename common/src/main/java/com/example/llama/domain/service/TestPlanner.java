@@ -33,7 +33,7 @@ public class TestPlanner {
             String methodName = extractMethodName(methodSignature);
             
             if (domain == Intelligence.ComponentType.CONTROLLER) {
-                finalScenarios.add(new Scenario(methodName, "Document successful API integration."));
+                finalScenarios.add(new Scenario(methodName, "Document successful API integration with Spring REST Docs snippets."));
                 continue;
             }
 

@@ -39,6 +39,21 @@ public class AgentFactory {
             case ARBITRATOR -> sb.append("[MISSION] Provide final technical verdict when TF members disagree.");
             default -> sb.append("Execute your specialized task based on the mission.");
         }
+
+        if (domain == Intelligence.ComponentType.CONTROLLER) {
+            sb.append("\n[MANDATORY] You are testing a CONTROLLER. You MUST generate DETAILED Spring REST Docs specifications.\n");
+            sb.append("1. **Snippets**: Use `.andDo(document(\"{method-name}\", ...))`.\n");
+            sb.append("2. **Parameters**: \n");
+            sb.append("   - Use `queryParameters(parameterWithName(\"...\").description(\"...\"))` for `@RequestParam`.\n");
+            sb.append("   - Use `pathParameters(parameterWithName(\"...\").description(\"...\"))` for `@PathVariable`.\n");
+            sb.append("3. **Response**: \n");
+            sb.append("   - Use `responseFields(fieldWithPath(\"...\").description(\"...\"))` for JSON responses.\n");
+            sb.append("4. **Imports**: \n");
+            sb.append("   - `static org.springframework.restdocs.payload.PayloadDocumentation.*`\n");
+            sb.append("   - `static org.springframework.restdocs.request.RequestDocumentation.*`\n");
+            sb.append("   - `static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document`\n");
+            sb.append("5. **Goal**: The generated docs must fully explain the API contract (status codes, fields, constraints) to the consumer.\n");
+        }
         
         sb.append("\n[OUTPUT RULE] Output ONLY Java code or bulleted lists as requested. No Markdown conversational filler.");
         return sb.toString();

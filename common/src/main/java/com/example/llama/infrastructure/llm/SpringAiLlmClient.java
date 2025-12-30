@@ -28,7 +28,8 @@ public class SpringAiLlmClient implements LlmClient {
             StringBuilder responseBuilder = new StringBuilder();
             
             // Stream the response to visualize progress and prevent timeouts from silence
-            chatModel.stream(fullPrompt).forEach(chunk -> {
+            // Convert Flux to blocking Stream to ensure synchronous execution
+            chatModel.stream(fullPrompt).toStream().forEach(chunk -> {
                 System.out.print("."); // Heartbeat
                 responseBuilder.append(chunk);
             });

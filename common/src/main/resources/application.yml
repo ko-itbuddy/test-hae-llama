@@ -1,6 +1,7 @@
 spring:
   main:
     web-application-type: none
+    lazy-initialization: true # ⚡ Speed up startup by creating beans only when needed
   ai:
     ollama:
       base-url: http://127.0.0.1:11434
