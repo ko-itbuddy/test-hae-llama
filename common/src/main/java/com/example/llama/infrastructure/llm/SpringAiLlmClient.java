@@ -22,17 +22,26 @@ public class SpringAiLlmClient implements LlmClient {
         System.out.println("\n" + "=".repeat(40) + " [RAW PROMPT TO OLLAMA] " + "=".repeat(40));
         System.out.println(fullPrompt);
         System.out.println("=".repeat(100) + "\n");
+        System.out.print("[FACT] Streaming Response: ");
 
         try {
-            String response = chatModel.call(fullPrompt);
+            StringBuilder responseBuilder = new StringBuilder();
             
-            System.out.println("\n" + "=".repeat(40) + " [RAW RESPONSE FROM OLLAMA] " + "=".repeat(40));
+            // Stream the response to visualize progress and prevent timeouts from silence
+            chatModel.stream(fullPrompt).forEach(chunk -> {
+                System.out.print("."); // Heartbeat
+                responseBuilder.append(chunk);
+            });
+            
+            String response = responseBuilder.toString();
+            
+            System.out.println("\n\n" + "=".repeat(40) + " [RAW RESPONSE FROM OLLAMA] " + "=".repeat(40));
             System.out.println(response);
             System.out.println("=".repeat(100) + "\n");
             
             return response;
         } catch (Exception e) {
-            System.err.println("[FACT] !!! OLLAMA DIALOGUE FAILED !!!");
+            System.err.println("\n[FACT] !!! OLLAMA DIALOGUE FAILED !!!");
             e.printStackTrace();
             throw new RuntimeException("Ollama communication failure", e);
         }
