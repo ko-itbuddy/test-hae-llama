@@ -19,12 +19,13 @@ class CollaborationTeamTest {
 
     @Mock Agent worker;
     @Mock Agent reviewer;
+    @Mock Agent arbitrator;
 
     @Test
     @DisplayName("should return output immediately if approved first time")
     void successOnFirstTry() {
         // given
-        CollaborationTeam team = new CollaborationTeam(worker, reviewer);
+        CollaborationTeam team = new CollaborationTeam(worker, reviewer, arbitrator);
         given(worker.act(anyString(), anyString())).willReturn("Good Code");
         // Reviewer receives formatted prompt, use contains to be safe
         given(reviewer.act(contains("Audit this code"), anyString())).willReturn("APPROVED");
@@ -43,7 +44,7 @@ class CollaborationTeamTest {
     @DisplayName("should retry upon rejection and eventually succeed")
     void retryAndSucceed() {
         // given
-        CollaborationTeam team = new CollaborationTeam(worker, reviewer);
+        CollaborationTeam team = new CollaborationTeam(worker, reviewer, arbitrator);
         
         // 1st attempt
         given(worker.act(contains("Write Code"), anyString())).willReturn("Bad Code");
@@ -62,5 +63,27 @@ class CollaborationTeamTest {
         // then
         assertThat(result).isEqualTo("Fixed Code");
         verify(worker, times(2)).act(anyString(), anyString());
+    }
+
+    @Test
+    @DisplayName("should summon arbitrator after 3 failed attempts")
+    void summonArbitrator() {
+        // given
+        CollaborationTeam team = new CollaborationTeam(worker, reviewer, arbitrator);
+        given(worker.act(anyString(), anyString())).willReturn("Persistent Bad Code");
+        given(reviewer.act(anyString(), anyString())).willReturn("Reject again");
+        given(arbitrator.act(anyString(), anyString())).willReturn("Arbitrated Final Code");
+        
+        given(worker.getRole()).willReturn("Worker");
+        given(reviewer.getRole()).willReturn("Reviewer");
+
+        // when
+        String result = team.execute("Write Code", "Context");
+
+        // then
+        assertThat(result).isEqualTo("Arbitrated Final Code");
+        verify(worker, times(3)).act(anyString(), anyString());
+        verify(reviewer, times(3)).act(anyString(), anyString());
+        verify(arbitrator, times(1)).act(anyString(), anyString());
     }
 }

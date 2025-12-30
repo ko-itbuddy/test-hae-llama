@@ -11,5 +11,6 @@ public enum AgentType {
     EXEC_MANAGER,
     VERIFY_CLERK,
     VERIFY_MANAGER,
+    ARBITRATOR,
     DIRECTOR
 }

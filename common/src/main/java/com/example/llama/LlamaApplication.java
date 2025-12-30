@@ -44,14 +44,10 @@ public class LlamaApplication implements CommandLineRunner {
         // 1. Read Source Code
         String sourceCode = Files.readString(targetPath);
         
-        // 2. Define Scenario
-        // TODO: In a real app, 'Scenario' should be derived from user input or analysis
-        Scenario scenario = new Scenario("Generate comprehensive unit tests for this class");
+        // 2. Execute Pipeline (Now plans and loops automatically)
+        GeneratedCode result = pipeline.process(sourceCode);
 
-        // 3. Execute Pipeline
-        GeneratedCode result = pipeline.process(scenario, sourceCode);
-
-        // 4. Save Result
+        // 3. Save Result
         // Extract package name from source logic
         String packageName = codeAnalyzer.extractIntelligence(sourceCode).packageName();
         String className = codeAnalyzer.extractIntelligence(sourceCode).className() + "Test";

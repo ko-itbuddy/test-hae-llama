@@ -51,7 +51,23 @@ public class JavaParserCodeAnalyzer implements CodeAnalyzer {
                 .map(MethodDeclaration::getDeclarationAsString)
                 .collect(Collectors.toList());
 
-        return new Intelligence(packageName, className, fields, methods);
+        // Detect Component Type
+        Intelligence.ComponentType type = detectType(cu);
+
+        return new Intelligence(packageName, className, fields, methods, type);
+    }
+
+    private Intelligence.ComponentType detectType(CompilationUnit cu) {
+        if (hasAnnotation(cu, "RestController") || hasAnnotation(cu, "Controller")) return Intelligence.ComponentType.CONTROLLER;
+        if (hasAnnotation(cu, "Service")) return Intelligence.ComponentType.SERVICE;
+        if (hasAnnotation(cu, "Repository")) return Intelligence.ComponentType.REPOSITORY;
+        if (hasAnnotation(cu, "Component")) return Intelligence.ComponentType.COMPONENT;
+        return Intelligence.ComponentType.GENERAL;
+    }
+
+    private boolean hasAnnotation(CompilationUnit cu, String name) {
+        return cu.findAll(com.github.javaparser.ast.expr.AnnotationExpr.class).stream()
+                .anyMatch(a -> a.getNameAsString().contains(name));
     }
 
     @Override

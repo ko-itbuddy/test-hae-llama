@@ -10,11 +10,17 @@ public record Intelligence(
         String packageName,
         String className,
         List<String> fields,
-        List<String> methods
+        List<String> methods,
+        ComponentType type
 ) {
+    public enum ComponentType {
+        CONTROLLER, SERVICE, REPOSITORY, COMPONENT, GENERAL
+    }
+
     public Intelligence {
         fields = List.copyOf(fields);
         methods = List.copyOf(methods);
+        type = (type == null) ? ComponentType.GENERAL : type;
     }
 
     public String fullClassName() {

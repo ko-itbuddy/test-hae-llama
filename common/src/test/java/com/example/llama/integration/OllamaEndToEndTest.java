@@ -37,8 +37,9 @@ class OllamaEndToEndTest {
         CodeAnalyzer codeAnalyzer = new JavaParserCodeAnalyzer();
         CodeSynthesizer codeSynthesizer = new JavaParserCodeSynthesizer(); 
         AgentFactory agentFactory = new AgentFactory(llmClient);
+        TestPlanner testPlanner = new TestPlanner(agentFactory); // New
         
-        this.pipeline = new ScenarioProcessingPipeline(agentFactory, codeAnalyzer, codeSynthesizer);
+        this.pipeline = new ScenarioProcessingPipeline(agentFactory, codeAnalyzer, codeSynthesizer, testPlanner);
         this.codeWriter = new FileSystemCodeWriter();
     }
 
@@ -53,18 +54,17 @@ class OllamaEndToEndTest {
                         return a + b;
                     }
                 }
-                """ ;
+                """;
         
-        Scenario scenario = new Scenario("Verify that add method returns correct sum of two integers");
         Path rootPath = Paths.get("build/generated-integration-tests"); // Use a temp build dir
         
-        log.info("🚀 Starting End-to-End Test for Scenario: {}", scenario.description());
+        log.info("🚀 Starting End-to-End Test");
 
         // 2. When: Run the pipeline
-        GeneratedCode generatedCode = pipeline.process(scenario, sourceCode);
+        GeneratedCode result = pipeline.process(sourceCode);
         
         // 3. And: Save the file
-        Path savedPath = codeWriter.save(generatedCode, rootPath, "com.example.demo", "CalculatorTest");
+        Path savedPath = codeWriter.save(result, rootPath, "com.example.demo", "CalculatorTest");
 
         // 4. Then: Verify file exists and content
         assertThat(savedPath).exists();
