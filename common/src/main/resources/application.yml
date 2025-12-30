@@ -1,11 +1,15 @@
 spring:
   main:
-    web-application-type: none # Disable Tomcat for pure CLI execution
+    web-application-type: none
   ai:
     ollama:
-      base-url: http://localhost:11434
+      base-url: http://127.0.0.1:11434
       chat:
-        model: qwen2.5-coder:14b
         options:
+          model: qwen2.5-coder:14b
           temperature: 0.3
-          timeout: 600s
+        # Explicit timeouts to prevent infinite hangs (Factual fix)
+        connection-timeout: 30s
+        read-timeout: 600s
+    # Recommendation: OpenAI compatible mode for Ollama is often more stable
+    # but we will stick to pure Ollama for now with increased stability.

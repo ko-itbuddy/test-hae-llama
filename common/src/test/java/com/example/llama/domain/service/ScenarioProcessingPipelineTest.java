@@ -21,21 +21,25 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
+import com.example.llama.domain.service.agents.TeamLeader;
+// ... (existing imports)
+
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Scenario Processing Pipeline Test")
 class ScenarioProcessingPipelineTest {
 
-    @Mock AgentFactory agentFactory;
+    @Mock BureaucracyOrchestrator orchestrator;
     @Mock CodeAnalyzer codeAnalyzer;
     @Mock CodeSynthesizer codeSynthesizer;
     @Mock TestPlanner testPlanner;
+    @Mock TeamLeader mockLeader;
     @Mock Agent mockAgent;
 
     ScenarioProcessingPipeline pipeline;
 
     @BeforeEach
     void setUp() {
-        pipeline = new ScenarioProcessingPipeline(agentFactory, codeAnalyzer, codeSynthesizer, testPlanner);
+        pipeline = new ScenarioProcessingPipeline(orchestrator, codeAnalyzer, codeSynthesizer, testPlanner);
     }
 
     @Test
@@ -43,22 +47,24 @@ class ScenarioProcessingPipelineTest {
     void orchestrateAgents() {
         // given
         String sourceCode = "public class LoginService {}";
-        Intelligence intel = new Intelligence("com.test", "LoginService", List.of(), List.of("login()"));
+        Intelligence intel = new Intelligence("com.test", "LoginService", List.of(), List.of("login()"), Intelligence.ComponentType.SERVICE);
         List<Scenario> scenarios = List.of(new Scenario("login", "Scenario 1"));
 
         given(codeAnalyzer.extractIntelligence(anyString())).willReturn(intel);
         given(testPlanner.planScenarios(any(), anyString())).willReturn(scenarios);
         
-        // Mocking factory to return a generic mock agent for all roles
-        given(agentFactory.create(any(AgentType.class))).willReturn(mockAgent);
+        // Mocking orchestrator and leader
+        given(orchestrator.getLeaderFor(any())).willReturn(mockLeader);
+        given(orchestrator.requestSpecialist(any(), any())).willReturn(mockAgent);
+        given(mockLeader.dispatch(any())).willReturn(mockAgent);
         
-        given(mockAgent.act(anyString(), anyString())).willReturn("Code Part", "APPROVED"); // Worker acts, Reviewer approves
+        given(mockAgent.act(anyString(), anyString())).willReturn("Code Part", "APPROVED"); 
         given(mockAgent.getRole()).willReturn("Mock Role");
         
         // Mock CodeSynthesizer
         GeneratedCode mockCode = new GeneratedCode(java.util.Collections.emptySet(), "Code Part");
         given(codeSynthesizer.sanitizeAndExtract(anyString())).willReturn(mockCode);
-        given(codeSynthesizer.assembleTestClass(anyString(), anyString(), any(GeneratedCode[].class)))
+        given(codeSynthesizer.assembleStructuralTestClass(anyString(), anyString(), any(), any(GeneratedCode[].class)))
                 .willReturn("Final Assembled Code");
 
         // when

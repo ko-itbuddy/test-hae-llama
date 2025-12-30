@@ -19,19 +19,20 @@ class IntelligenceTest {
         List<String> methods = List.of("void login(String username, String password)");
 
         // when
-        Intelligence intel = new Intelligence(packageName, className, fields, methods);
+        Intelligence intel = new Intelligence(packageName, className, fields, methods, Intelligence.ComponentType.SERVICE);
 
         // then
         assertThat(intel.packageName()).isEqualTo(packageName);
         assertThat(intel.className()).isEqualTo(className);
         assertThat(intel.fields()).containsAll(fields);
         assertThat(intel.methods()).containsAll(methods);
+        assertThat(intel.type()).isEqualTo(Intelligence.ComponentType.SERVICE);
     }
 
     @Test
     @DisplayName("should provide a full class name")
     void getFullClassName() {
-        Intelligence intel = new Intelligence("com.test", "MyClass", List.of(), List.of());
+        Intelligence intel = new Intelligence("com.test", "MyClass", List.of(), List.of(), Intelligence.ComponentType.GENERAL);
         assertThat(intel.fullClassName()).isEqualTo("com.test.MyClass");
     }
 }

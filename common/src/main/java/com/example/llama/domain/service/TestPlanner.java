@@ -28,45 +28,41 @@ public class TestPlanner {
         List<Scenario> finalScenarios = new ArrayList<>();
         Intelligence.ComponentType domain = intel.type();
 
-        // Summon specialized planners
         Agent logicArchi = agentFactory.create(AgentType.LOGIC_ARCHITECT, domain);
         Agent boundaryArchi = agentFactory.create(AgentType.BOUNDARY_ARCHITECT, domain);
         Agent masterArchi = agentFactory.create(AgentType.MASTER_ARCHITECT, domain);
 
         for (String methodSignature : intel.methods()) {
             String methodName = extractMethodName(methodSignature);
-            log.info("  >> Planning for method: {}", methodName);
+            
+            // Optimization for Controllers as requested: One exhaustive success scenario
+            if (domain == Intelligence.ComponentType.CONTROLLER) {
+                finalScenarios.add(new Scenario(methodName, "Exhaustive API documentation and success validation via RestDocs."));
+                continue;
+            }
 
             String context = String.format("Class: %s\nMethod: %s\nSource:\n%s", 
                     intel.fullClassName(), methodSignature, sourceCode);
 
-            // 1. Propose Logic Scenarios
+            // 1. Logic & Boundary Proposals
             String logicProposals = logicArchi.act("Identify business logic success paths.", context);
-            
-            // 2. Propose Boundary Scenarios
             String boundaryProposals = boundaryArchi.act("Identify edge cases and constraints.", context);
 
-            // 3. Conditional: Concurrency (only if needed or asked)
+            // 2. Concurrency check if relevant
             String extraContext = "";
-            if (sourceCode.contains("synchronized") || sourceCode.contains("volatile") || sourceCode.contains("Thread")) {
+            if (sourceCode.contains("synchronized") || sourceCode.contains("volatile") || sourceCode.contains("Concurrent")) {
                 Agent syncArchi = agentFactory.create(AgentType.CONCURRENCY_ARCHITECT, domain);
-                extraContext = "\n[CONCURRENCY PROPOSALS]\n" + syncArchi.act("Analyze race conditions.", context);
+                extraContext = "\n[CONCURRENCY PROPOSALS]\n" + syncArchi.act("Analyze race conditions and integrity.", context);
             }
 
-            // 4. Master Consolidation
-            String consolidationPrompt = String.format("""
-                [LOGIC PROPOSALS]
-                %s
-                [BOUNDARY PROPOSALS]
-                %s
-                %s
-                [MISSION] Consolidate into 3-5 best scenarios. 
-                [STRICT RULE] Use '[SCENARIO] Description' format for each item.
-                """, logicProposals, boundaryProposals, extraContext);
-
-            String finalPlan = masterArchi.act(consolidationPrompt, context);
+            // 3. Master Consolidation
+            String finalPlan = masterArchi.act(String.format("""
+[LOGIC] %s
+[BOUNDARY] %s
+%s
+[MISSION] Consolidate into 3-5 best scenarios using '[SCENARIO] Description' format.
+""", logicProposals, boundaryProposals, extraContext), context); 
             
-            // 5. Safe Parsing (Minimal Regex)
             finalScenarios.addAll(parseScenarios(methodName, finalPlan));
         }
 
@@ -76,11 +72,8 @@ public class TestPlanner {
     private List<Scenario> parseScenarios(String methodName, String response) {
         return Arrays.stream(response.split("\n"))
                 .map(String::trim)
-                .filter(line -> line.contains("[SCENARIO]"))
-                .map(line -> {
-                    String desc = line.substring(line.indexOf("[SCENARIO]") + 10).replace("-", "").trim();
-                    return new Scenario(methodName, desc);
-                })
+                .filter(line -> line.toUpperCase().contains("[SCENARIO]"))
+                .map(line -> new Scenario(methodName, line.substring(line.toUpperCase().indexOf("[SCENARIO]") + 10).trim()))
                 .collect(Collectors.toList());
     }
 
