@@ -8,8 +8,18 @@ spring:
         options:
           model: qwen2.5-coder:14b
           temperature: 0.3
-        # Explicit timeouts to prevent infinite hangs (Factual fix)
-        connection-timeout: 30s
-        read-timeout: 600s
-    # Recommendation: OpenAI compatible mode for Ollama is often more stable
-    # but we will stick to pure Ollama for now with increased stability.
+      embedding:
+        options:
+          model: nomic-embed-text:latest
+      keep-alive: -1
+
+# 🕵️‍♂️ FULL TRACE LOGGING: No more hidden failures
+logging:
+  level:
+    root: INFO
+    org.springframework.ai.ollama: TRACE
+    org.springframework.ai.chat.model: TRACE
+    org.springframework.web.client.RestClient: TRACE
+    org.springframework.http.client: TRACE
+    org.springframework.web.reactive.function.client.WebClient: TRACE
+    reactor.netty.http.client: DEBUG

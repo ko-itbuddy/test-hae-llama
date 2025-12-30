@@ -5,8 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Facilitates horizontal communication between expert agents.
- * Records every peer-review dialogue.
+ * Enterprise Squad for Peer-to-Peer Dialogue.
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -18,38 +17,33 @@ public class CollaborationTeam {
     public String execute(String mission, String context) {
         String currentOutput = "";
         String feedback = "";
-        int attempts = 3;
+        int maxAttempts = 2; // Tight loop for local resources
 
-        log.info("[COLLABORATION] Starting peer-to-peer dialogue: {} <-> {}", worker.getRole(), reviewer.getRole());
+        System.out.println("[FACT] Squad Assembled: " + worker.getRole() + " and " + reviewer.getRole());
 
-        for (int i = 0; i < attempts; i++) {
-            // 1. Worker's turn
+        for (int i = 0; i < maxAttempts; i++) {
+            // 1. Worker Action
             String workerInstruction = mission + (feedback.isEmpty() ? "" : "\nPeer Feedback: " + feedback);
             currentOutput = worker.act(workerInstruction, context);
-            
-            // Factual Log of Worker's contribution
-            AgentLogger.logInteraction(worker.getRole(), "Turn " + (i+1), currentOutput);
+            AgentLogger.logInteraction(worker.getRole(), "Draft " + (i+1), currentOutput);
 
-            // 2. Reviewer's turn (Horizontal feedback)
-            String reviewPrompt = String.format("[PEER REVIEW] Please review my work against the source context.\n[MY CODE]\n%s", currentOutput);
+            // 2. Reviewer Action (Direct Feedback)
+            String reviewPrompt = "[AUDIT] Review this code snippet:\n" + currentOutput;
             String reviewResult = reviewer.act(reviewPrompt, context);
-            
-            // Factual Log of Reviewer's feedback
-            AgentLogger.logInteraction(reviewer.getRole(), "Review of Turn " + (i+1), reviewResult);
+            AgentLogger.logInteraction(reviewer.getRole(), "Review " + (i+1), reviewResult);
 
             if (reviewResult.toUpperCase().contains("APPROVED")) {
-                System.out.println("[FACT] Consensus reached between " + worker.getRole() + " and " + reviewer.getRole());
+                System.out.println("[FACT] Consensus reached. Mission completed.");
                 return currentOutput;
             }
 
             feedback = reviewResult;
-            System.out.println("[FACT] " + reviewer.getRole() + " requested changes. Retrying...");
         }
 
-        // 3. Arbitration if deadlock
-        System.out.println("[FACT] Deadlock detected. Escalating to Arbitrator.");
-        String verdict = arbitrator.act("[ARBITRATION REQUEST] Resolve dispute between " + worker.getRole() + " and " + reviewer.getRole(), context);
-        AgentLogger.logInteraction(arbitrator.getRole(), "Final Verdict", verdict);
+        // 3. Mandatory Arbitration if consensus fails
+        System.out.println("[FACT] Consensus failed. Supreme Arbitrator intervening.");
+        String verdict = arbitrator.act("[ARBITRATION] Finalize this snippet:\n" + currentOutput + "\nFeedback: " + feedback, context);
+        AgentLogger.logInteraction("SUPREME ARBITRATOR", "Verdict", verdict);
         
         return verdict;
     }

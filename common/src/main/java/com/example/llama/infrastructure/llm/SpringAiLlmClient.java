@@ -6,8 +6,8 @@ import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.stereotype.Component;
 
 /**
- * Enterprise-grade Spring AI Client (v1.1.2).
- * Fully synchronized and optimized for local 14b model.
+ * Transparent Ollama Client.
+ * Logs every word sent and received for factual auditing.
  */
 @Component
 @RequiredArgsConstructor
@@ -19,18 +19,22 @@ public class SpringAiLlmClient implements LlmClient {
     public String generate(String prompt, String systemDirective) {
         String fullPrompt = "[TECHNICAL_DIRECTIVE]\n" + systemDirective + "\n\n[MISSION_SPEC]\n" + prompt;
         
-        System.out.println("[FACT] ---> Spring AI 1.1.2 calling Ollama 14b (Blocking SYNC)");
-        long start = System.currentTimeMillis();
-        
+        System.out.println("\n" + "=".repeat(40) + " [RAW PROMPT TO OLLAMA] " + "=".repeat(40));
+        System.out.println(fullPrompt);
+        System.out.println("=".repeat(100) + "\n");
+
         try {
-            // Spring AI 1.1.2 handles JSON and HTTP safely
             String response = chatModel.call(fullPrompt);
-            long duration = System.currentTimeMillis() - start;
-            System.out.println("[FACT] <--- SUCCESS in " + (duration / 1000) + "s.");
+            
+            System.out.println("\n" + "=".repeat(40) + " [RAW RESPONSE FROM OLLAMA] " + "=".repeat(40));
+            System.out.println(response);
+            System.out.println("=".repeat(100) + "\n");
+            
             return response;
         } catch (Exception e) {
-            System.err.println("[FACT] !!! CALL FAILED: " + e.getMessage());
-            throw new RuntimeException("LLM Communication Error", e);
+            System.err.println("[FACT] !!! OLLAMA DIALOGUE FAILED !!!");
+            e.printStackTrace();
+            throw new RuntimeException("Ollama communication failure", e);
         }
     }
 }

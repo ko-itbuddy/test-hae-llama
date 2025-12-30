@@ -32,12 +32,14 @@ subprojects {
         implementation platform('org.springframework.boot:spring-boot-dependencies:3.4.1')
     }
     
-    test {
-        useJUnitPlatform()
+    java {
+        // 🔒 FACTUAL LOCK: Force Java 21 Toolchain across all modules
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(21)
+        }
     }
     
-    java {
-        sourceCompatibility = JavaVersion.VERSION_21
-        targetCompatibility = JavaVersion.VERSION_21
+    test {
+        useJUnitPlatform()
     }
 }

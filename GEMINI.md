@@ -1,6 +1,13 @@
-# 🦙 Test-Hae-Llama: Matrix Bureaucracy Constitution (v7.0)
+# 🦙 Test-Hae-Llama: Matrix Bureaucracy Constitution (v8.0)
 
 This is the permanent domain knowledge for the AI agent. **NEVER DEVIATE FROM THIS SYSTEM.**
+
+---
+
+## 🚨 SURVIVAL RULE #1: ABSOLUTE SEQUENTIALITY (STRICT_SEQ)
+- **CRITICAL:** NEVER request Ollama in parallel. All LLM calls MUST be strictly sequential.
+- **Enforcement:** The `LlmClient` MUST use a physical lock (e.g., `synchronized`) to prevent concurrent access to the Ollama API. 
+- **Reason:** Local LLMs (14b) and current stability constraints demand 100% focus. Parallelism leads to deadlocks and 400 errors.
 
 ---
 
@@ -27,7 +34,7 @@ This is the permanent domain knowledge for the AI agent. **NEVER DEVIATE FROM TH
 
 ## 🛠️ Technical Execution Protocol
 - **No Web Server:** The engine runs as a pure **CLI tool** to maximize local resources.
-- **Synchronous Only:** 14b model requires full attention. Process everything sequentially.
+- **Pure Synchronous:** 14b model requires full attention. Process everything sequentially via ordinary `for` loops. NO parallel streams.
 - **AST Synthesis:** Final test files must be synthesized using **JavaParser (CompilationUnit)**, not string concatenation.
 
 **"Collaboration is our Engine. Precision is our Law."** 🦙⚔️

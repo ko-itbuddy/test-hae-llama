@@ -5,6 +5,10 @@ import com.example.llama.domain.model.GeneratedCode;
 import com.example.llama.domain.model.Intelligence;
 import com.example.llama.domain.model.Scenario;
 import com.example.llama.domain.service.agents.TeamLeader;
+import com.github.javaparser.StaticJavaParser;
+import com.github.javaparser.ast.CompilationUnit;
+import com.github.javaparser.ast.body.FieldDeclaration;
+import com.github.javaparser.ast.body.MethodDeclaration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -15,26 +19,29 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-/**
- * Matrix Organization Orchestrator.
- * Delegates tasks to Team Leaders who dispatch experts for Horizontal Collaboration.
- */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ScenarioProcessingPipeline {
 
-    private final BureaucracyOrchestrator orchestrator; // Top Management
+    private final BureaucracyOrchestrator orchestrator;
     private final CodeAnalyzer codeAnalyzer;
     private final CodeSynthesizer codeSynthesizer;
     private final TestPlanner testPlanner;
 
     public GeneratedCode process(String sourceCode) {
-        // 1. Plan - Global Strategy
+        // 1. Precise AST Decomposition (No noise)
+        CompilationUnit cu = StaticJavaParser.parse(sourceCode);
+        String className = cu.getType(0).getNameAsString();
+        String fieldsInfo = cu.findAll(FieldDeclaration.class).stream()
+                .map(f -> f.toString().trim())
+                .collect(Collectors.joining("\n"));
+
         Intelligence intel = codeAnalyzer.extractIntelligence(sourceCode);
+        
+        // 🔒 PASS ONLY SOURCE CODE, NO PROJECT INTERNALS
         List<Scenario> scenarios = testPlanner.planScenarios(intel, sourceCode);
 
-        // 2. Organization Setup - Matrix Leaders
         TeamLeader domainLeader = orchestrator.getLeaderFor(intel.type());
         Agent arbitrator = orchestrator.requestSpecialist(AgentType.ARBITRATOR, intel.type());
 
@@ -43,36 +50,48 @@ public class ScenarioProcessingPipeline {
 
         List<GeneratedCode> nestedClasses = new ArrayList<>();
 
-        // 3. Execution - Specialized Task Forces
         for (Map.Entry<String, List<Scenario>> entry : grouped.entrySet()) {
-            String method = entry.getKey();
+            String methodName = entry.getKey();
             List<Scenario> methodScenarios = entry.getValue();
-            log.info("--- Team Leader [{}] focusing on method: {} ---", domainLeader.getDomain(), method);
+            
+            String methodAst = cu.findAll(MethodDeclaration.class).stream()
+                    .filter(m -> m.getNameAsString().equals(methodName))
+                    .map(m -> m.getDeclarationAsString() + " { /* code */ }")
+                    .findFirst().orElse(methodName);
 
             StringBuilder body = new StringBuilder();
-            body.append(String.format("@Nested\n@DisplayName(\"Tests for %s\")\nclass %sTest {\n", method, capitalize(method)));
+            body.append(String.format("@Nested\n@DisplayName(\"Tests for %s\")\nclass %sTest {\n", methodName, capitalize(methodName)));
 
             for (Scenario s : methodScenarios) {
-                // Team Leader dispatches horizontal peers for the mission
+                // 🛡️ REFINED CONTEXT: Strictly target domain fragments
+                String taskContext = String.format("""
+                    [TARGET_CLASS] %s
+                    [DEPENDENCIES]
+                    %s
+                    [TARGET_METHOD] %s
+                    [SCENARIO] %s
+                    """, className, fieldsInfo, methodAst, s.description());
+
                 CollaborationTeam squad = new CollaborationTeam(
                         domainLeader.dispatch(AgentType.DATA_CLERK),
                         domainLeader.dispatch(AgentType.DATA_MANAGER),
                         arbitrator
                 );
 
-                String result = squad.execute("Task: Complete JUnit 5 method for: " + s.description(), sourceCode);
-                body.append(codeSynthesizer.sanitizeAndExtract(result).body()).append("\n");
+                // Use the new Assembly Specialist for final refinement
+                String rawResult = squad.execute("Task: Generate test logic fragment.", taskContext); 
+                
+                // Final Integration Step (Intelligent Synthesis)
+                body.append(codeSynthesizer.sanitizeAndExtract(rawResult).body()).append("\n");
             }
             body.append("}\n");
             nestedClasses.add(new GeneratedCode(Collections.emptySet(), body.toString()));
         }
 
-        // 4. Global Synthesis via AST
-        String fullSource = ((com.example.llama.infrastructure.parser.JavaParserCodeSynthesizer)codeSynthesizer).assembleStructuralTestClass(
+        return new GeneratedCode(Collections.emptySet(), 
+            codeSynthesizer.assembleStructuralTestClass(
                 intel.packageName(), intel.className() + "Test", intel.type(), nestedClasses.toArray(new GeneratedCode[0])
-        );
-
-        return new GeneratedCode(Collections.emptySet(), fullSource);
+            ));
     }
 
     private String capitalize(String str) {

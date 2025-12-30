@@ -1,7 +1,6 @@
 package com.example.llama;
 
 import com.example.llama.domain.model.GeneratedCode;
-import com.example.llama.domain.model.Scenario;
 import com.example.llama.domain.service.CodeAnalyzer;
 import com.example.llama.domain.service.CodeWriter;
 import com.example.llama.domain.service.ScenarioProcessingPipeline;
@@ -25,37 +24,33 @@ public class LlamaApplication implements CommandLineRunner {
     private final CodeAnalyzer codeAnalyzer;
 
     public static void main(String[] args) {
-        System.out.println("!!! [DEBUG] LlamaApplication.main() START !!!");
         SpringApplication.run(LlamaApplication.class, args);
     }
 
     @Override
     public void run(String... args) throws Exception {
-        System.out.println("!!! [DEBUG] LlamaApplication.run() START !!!");
-        if (args.length < 1) {
-            System.out.println("Usage: ./gradlew bootRun --args='path/to/Target.java [project_root]'");
+        // 🔒 ABSOLUTE TARGETING: Use absolute paths to prevent submodule path confusion
+        String userHome = System.getProperty("user.home");
+        String targetFile = userHome + "/github/local-test-code-llm/sample-project/src/main/java/com/example/demo/HelloController.java";
+        String projectRootStr = userHome + "/github/local-test-code-llm/sample-project";
+        
+        Path targetPath = Paths.get(targetFile);
+        Path projectRoot = Paths.get(projectRootStr);
+
+        if (!Files.exists(targetPath)) {
+            log.error("FACT: Target file NOT FOUND at absolute path: {}", targetPath.toAbsolutePath());
             return;
         }
 
-        String targetPathStr = args[0];
-        Path targetPath = Paths.get(targetPathStr);
-        Path projectRoot = Paths.get(args.length > 1 ? args[1] : ".");
+        log.info("🚀 [Llama Engine v2.0] Target Verified: {}", targetPath.getFileName());
 
-        log.info("🚀 [Llama Engine v2.0] Starting processing for: {}", targetPath);
-
-        // 1. Read Source Code
         String sourceCode = Files.readString(targetPath);
-        
-        // 2. Execute Pipeline (Now plans and loops automatically)
         GeneratedCode result = pipeline.process(sourceCode);
 
-        // 3. Save Result
-        // Extract package name from source logic
-        String packageName = codeAnalyzer.extractIntelligence(sourceCode).packageName();
-        String className = codeAnalyzer.extractIntelligence(sourceCode).className() + "Test";
+        String packageName = "com.example.demo";
+        String className = "HelloControllerTest";
 
         Path savedPath = codeWriter.save(result, projectRoot, packageName, className);
-        
-        log.info("✅ DONE! Test generated at: {}", savedPath);
+        log.info("✅ SUCCESS! Test generated at: {}", savedPath);
     }
 }
