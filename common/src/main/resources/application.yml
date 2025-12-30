@@ -1,0 +1,11 @@
+spring:
+  main:
+    web-application-type: none # Disable Tomcat for pure CLI execution
+  ai:
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        model: qwen2.5-coder:14b
+        options:
+          temperature: 0.3
+          timeout: 600s

@@ -1,11 +1,11 @@
 package com.example.llama.domain.service;
 
+import com.example.llama.utils.AgentLogger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * A generic implementation of an Agent that follows the bureaucratic protocol.
- * It acts as a bridge between the domain task and the LLM port.
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -16,12 +16,15 @@ public class BureaucraticAgent implements Agent {
 
     @Override
     public String act(String instruction, String context) {
-        log.info("[Agent: {}] Acting on instruction: {}", role, instruction);
+        log.info("[Agent: {}] Acting on instruction...", role);
         
-        // The prompt engineering logic is encapsulated here.
-        // We can inject a 'PromptStrategy' later if this becomes too complex.
         String fullContext = String.format("CONTEXT:\n%s", context);
-        return llmClient.generate(instruction + "\n" + fullContext, systemDirective);
+        String response = llmClient.generate(instruction + "\n" + fullContext, systemDirective);
+        
+        // Factual Logging
+        AgentLogger.logInteraction(role, instruction, response);
+        
+        return response;
     }
 
     @Override

@@ -1,11 +1,12 @@
 package com.example.llama.domain.service;
 
+import com.example.llama.utils.AgentLogger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Represents a collaborative unit of agents (Worker, Reviewer, Arbitrator).
- * Implements the "Do -> Review -> Refine" loop with a deadlock-breaker.
+ * Facilitates horizontal communication between expert agents.
+ * Records every peer-review dialogue.
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -19,39 +20,37 @@ public class CollaborationTeam {
         String feedback = "";
         int attempts = 3;
 
-        for (int i = 0; i < attempts; i++) {
-            // 1. Worker acts
-            String workerInstruction = mission;
-            if (!feedback.isEmpty()) {
-                workerInstruction += String.format("\n\n[PREVIOUS ATTEMPT REJECTED]\nReason: %s\n\n[INSTRUCTION] Fix the code based on the feedback.", feedback);
-            }
-            currentOutput = worker.act(workerInstruction, context);
+        log.info("[COLLABORATION] Starting peer-to-peer dialogue: {} <-> {}", worker.getRole(), reviewer.getRole());
 
-            // 2. Reviewer audits
-            String reviewPrompt = String.format(
-                "[TASK] Audit this code.\n[CODE]\n%s\n\n[SOURCE CONTEXT]\n%s\n\n[CRITERIA] Reply 'APPROVED' only if it matches the source exactly. Otherwise, list specific errors.",
-                currentOutput, context
-            );
-            String reviewResult = reviewer.act(reviewPrompt, "");
+        for (int i = 0; i < attempts; i++) {
+            // 1. Worker's turn
+            String workerInstruction = mission + (feedback.isEmpty() ? "" : "\nPeer Feedback: " + feedback);
+            currentOutput = worker.act(workerInstruction, context);
+            
+            // Factual Log of Worker's contribution
+            AgentLogger.logInteraction(worker.getRole(), "Turn " + (i+1), currentOutput);
+
+            // 2. Reviewer's turn (Horizontal feedback)
+            String reviewPrompt = String.format("[PEER REVIEW] Please review my work against the source context.\n[MY CODE]\n%s", currentOutput);
+            String reviewResult = reviewer.act(reviewPrompt, context);
+            
+            // Factual Log of Reviewer's feedback
+            AgentLogger.logInteraction(reviewer.getRole(), "Review of Turn " + (i+1), reviewResult);
 
             if (reviewResult.toUpperCase().contains("APPROVED")) {
-                log.info("Team [{}/{}] completed mission in {} attempts.", worker.getRole(), reviewer.getRole(), i + 1);
+                System.out.println("[FACT] Consensus reached between " + worker.getRole() + " and " + reviewer.getRole());
                 return currentOutput;
             }
 
             feedback = reviewResult;
-            log.warn("Team [{}/{}] feedback: {}", worker.getRole(), reviewer.getRole(), feedback);
+            System.out.println("[FACT] " + reviewer.getRole() + " requested changes. Retrying...");
         }
 
-        // 3. DEADLOCK! Summon the Arbitrator
-        log.error("Team [{}/{}] failed to reach consensus. Summoning ARBITRATOR.", worker.getRole(), reviewer.getRole());
-        String arbitrationPrompt = String.format(
-            "[DISPUTE RESOLUTION]\nMission: %s\nWorker's Last Code: %s\nReviewer's Last Feedback: %s\n\n[TASK] Provide the final correct Java code.",
-            mission, currentOutput, feedback
-        );
-        String finalVerdict = arbitrator.act(arbitrationPrompt, context);
-        log.info("ARBITRATOR has issued a final verdict for team [{}/{}]", worker.getRole(), reviewer.getRole());
+        // 3. Arbitration if deadlock
+        System.out.println("[FACT] Deadlock detected. Escalating to Arbitrator.");
+        String verdict = arbitrator.act("[ARBITRATION REQUEST] Resolve dispute between " + worker.getRole() + " and " + reviewer.getRole(), context);
+        AgentLogger.logInteraction(arbitrator.getRole(), "Final Verdict", verdict);
         
-        return finalVerdict;
+        return verdict;
     }
 }

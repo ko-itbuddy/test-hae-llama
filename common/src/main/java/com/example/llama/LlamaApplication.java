@@ -25,11 +25,13 @@ public class LlamaApplication implements CommandLineRunner {
     private final CodeAnalyzer codeAnalyzer;
 
     public static void main(String[] args) {
+        System.out.println("!!! [DEBUG] LlamaApplication.main() START !!!");
         SpringApplication.run(LlamaApplication.class, args);
     }
 
     @Override
     public void run(String... args) throws Exception {
+        System.out.println("!!! [DEBUG] LlamaApplication.run() START !!!");
         if (args.length < 1) {
             System.out.println("Usage: ./gradlew bootRun --args='path/to/Target.java [project_root]'");
             return;

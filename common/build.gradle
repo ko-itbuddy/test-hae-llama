@@ -4,14 +4,22 @@ plugins {
     id 'java-library'
 }
 
+repositories {
+    mavenCentral()
+    maven { url 'https://repo.spring.io/milestone' }
+}
+
 dependencies {
     // 🍃 Spring Boot Core
     implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
     
-    // 🧠 AI: LangChain4j (The Full Suite)
-    implementation 'dev.langchain4j:langchain4j:0.35.0'
-    implementation 'dev.langchain4j:langchain4j-core:0.35.0'
-    implementation 'dev.langchain4j:langchain4j-ollama:0.35.0'
+    // 🧠 AI: Spring AI (Preferred heart)
+    implementation 'org.springframework.ai:spring-ai-ollama-spring-boot-starter:1.0.0-M4'
+    
+    // 🧠 AI: LangChain4j (Legacy Support / High-level Agents)
+    implementation 'dev.langchain4j:langchain4j:1.10.0'
+    implementation 'dev.langchain4j:langchain4j-ollama:1.10.0'
     
     // 🧱 Code Generation: JavaPoet
     implementation 'com.squareup:javapoet:1.13.0'
@@ -26,11 +34,11 @@ dependencies {
     implementation 'org.yaml:snakeyaml:2.2'
     
     // 🧪 Testing Support
-    // Note: Some are kept as 'implementation' because they are used in main for code generation logic
     implementation 'org.junit.jupiter:junit-jupiter-api:5.10.0'
     implementation 'org.mockito:mockito-junit-jupiter:5.5.0'
 
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
 }
 
 tasks.named('test') {

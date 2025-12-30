@@ -4,96 +4,75 @@ import com.example.llama.domain.model.AgentType;
 import com.example.llama.domain.model.GeneratedCode;
 import com.example.llama.domain.model.Intelligence;
 import com.example.llama.domain.model.Scenario;
+import com.example.llama.domain.service.agents.TeamLeader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
- * Orchestrates the full lifecycle of generating a test for a single scenario.
- * Coordinates multiple specialized agent teams.
+ * Matrix Organization Orchestrator.
+ * Delegates tasks to Team Leaders who dispatch experts for Horizontal Collaboration.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class ScenarioProcessingPipeline {
 
-    private final AgentFactory agentFactory;
+    private final BureaucracyOrchestrator orchestrator; // Top Management
     private final CodeAnalyzer codeAnalyzer;
     private final CodeSynthesizer codeSynthesizer;
-    private final TestPlanner testPlanner; // Added dependency
+    private final TestPlanner testPlanner;
 
     public GeneratedCode process(String sourceCode) {
-        // 1. Scout Intelligence
+        // 1. Plan - Global Strategy
         Intelligence intel = codeAnalyzer.extractIntelligence(sourceCode);
-        log.info("Starting processing for class: {}", intel.fullClassName());
-
-        // 2. Plan Scenarios (Architect Phase)
         List<Scenario> scenarios = testPlanner.planScenarios(intel, sourceCode);
-        log.info("Planned {} scenarios.", scenarios.size());
 
-        // 3. Setup Task Forces
-        Agent arbitrator = agentFactory.create(AgentType.ARBITRATOR);
-        
-        CollaborationTeam dataTeam = new CollaborationTeam(
-                agentFactory.create(AgentType.DATA_CLERK),
-                agentFactory.create(AgentType.DATA_MANAGER),
-                arbitrator
-        );
-        CollaborationTeam mockTeam = new CollaborationTeam(
-                agentFactory.create(AgentType.MOCK_CLERK),
-                agentFactory.create(AgentType.MOCK_MANAGER),
-                arbitrator
-        );
-        CollaborationTeam verifyTeam = new CollaborationTeam(
-                agentFactory.create(AgentType.VERIFY_CLERK),
-                agentFactory.create(AgentType.VERIFY_MANAGER),
-                arbitrator
-        );
+        // 2. Organization Setup - Matrix Leaders
+        TeamLeader domainLeader = orchestrator.getLeaderFor(intel.type());
+        Agent arbitrator = orchestrator.requestSpecialist(AgentType.ARBITRATOR, intel.type());
 
-        // 4. Execute Stages for EACH Method (Divide and Conquer)
-        String context = String.format("Target Class: %s\nMethods: %s", intel.fullClassName(), intel.methods());
-        
-        java.util.Map<String, java.util.List<Scenario>> groupedScenarios = scenarios.stream()
-                .collect(java.util.stream.Collectors.groupingBy(Scenario::targetMethodName));
+        Map<String, List<Scenario>> grouped = scenarios.stream()
+                .collect(Collectors.groupingBy(Scenario::targetMethodName));
 
-        java.util.List<GeneratedCode> methodNestedClasses = new java.util.ArrayList<>();
+        List<GeneratedCode> nestedClasses = new ArrayList<>();
 
-        for (java.util.Map.Entry<String, java.util.List<Scenario>> entry : groupedScenarios.entrySet()) {
-            String methodName = entry.getKey();
-            java.util.List<Scenario> methodScenarios = entry.getValue();
-            log.info("Processing method: {} with {} scenarios", methodName, methodScenarios.size());
+        // 3. Execution - Specialized Task Forces
+        for (Map.Entry<String, List<Scenario>> entry : grouped.entrySet()) {
+            String method = entry.getKey();
+            List<Scenario> methodScenarios = entry.getValue();
+            log.info("--- Team Leader [{}] focusing on method: {} ---", domainLeader.getDomain(), method);
 
-            StringBuilder nestedClassBody = new StringBuilder();
-            nestedClassBody.append(String.format("@Nested\n@DisplayName(\"Tests for %s\")\nclass %sTest {\n", methodName, capitalize(methodName)));
+            StringBuilder body = new StringBuilder();
+            body.append(String.format("@Nested\n@DisplayName(\"Tests for %s\")\nclass %sTest {\n", method, capitalize(method)));
 
-            for (Scenario scenario : methodScenarios) {
-                log.info("  Executing scenario: {}", scenario.description());
-                String scenarioMission = String.format("SCENARIO: %s\nTARGET METHOD: %s", scenario.description(), methodName);
+            for (Scenario s : methodScenarios) {
+                // Team Leader dispatches horizontal peers for the mission
+                CollaborationTeam squad = new CollaborationTeam(
+                        domainLeader.dispatch(AgentType.DATA_CLERK),
+                        domainLeader.dispatch(AgentType.DATA_MANAGER),
+                        arbitrator
+                );
 
-                String data = dataTeam.execute(scenarioMission + "\nCreate fixtures. Use @ParameterizedTest if possible.", context);
-                String mocks = mockTeam.execute(scenarioMission + "\nMock dependencies.", context);
-                String verify = verifyTeam.execute(scenarioMission + "\nWrite AssertJ assertions (extracting/tuple for services).", context);
-
-                nestedClassBody.append(codeSynthesizer.sanitizeAndExtract(data).body()).append("\n");
-                nestedClassBody.append(codeSynthesizer.sanitizeAndExtract(mocks).body()).append("\n");
-                nestedClassBody.append(codeSynthesizer.sanitizeAndExtract(verify).body()).append("\n");
+                String result = squad.execute("Task: Complete JUnit 5 method for: " + s.description(), sourceCode);
+                body.append(codeSynthesizer.sanitizeAndExtract(result).body()).append("\n");
             }
-            nestedClassBody.append("}\n");
-            methodNestedClasses.add(new GeneratedCode(java.util.Collections.emptySet(), nestedClassBody.toString()));
+            body.append("}\n");
+            nestedClasses.add(new GeneratedCode(Collections.emptySet(), body.toString()));
         }
 
-        // 5. Assemble all method-groups into one class
+        // 4. Global Synthesis via AST
         String fullSource = ((com.example.llama.infrastructure.parser.JavaParserCodeSynthesizer)codeSynthesizer).assembleStructuralTestClass(
-                intel.packageName(),
-                intel.className() + "Test",
-                intel.type(),
-                methodNestedClasses.toArray(new GeneratedCode[0])
+                intel.packageName(), intel.className() + "Test", intel.type(), nestedClasses.toArray(new GeneratedCode[0])
         );
 
-        return new GeneratedCode(java.util.Collections.emptySet(), fullSource);
+        return new GeneratedCode(Collections.emptySet(), fullSource);
     }
 
     private String capitalize(String str) {
