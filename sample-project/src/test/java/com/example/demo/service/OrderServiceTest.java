@@ -1,196 +1,157 @@
 package com.example.demo.service;
 
-import java.math.BigDecimal;
-import java.util.*;
-import org.junit.jupiter.api.*;
+
+
+package com.example.demo.service;
+
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.*;
-import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
-public class OrderServiceTest { 
+public class OrderServiceTest {
 
     @Mock
-    private ProductRepository productRepository;
-    @Mock
-    private UserRepository userRepository;
-    @Mock
-    private ApplicationEventPublisher eventPublisher;
+    private CouponClient couponClient;
+
     @InjectMocks
     private OrderService orderService;
 
+    @Mock
+    private CouponRepository couponRepository;
+
+    @Mock
+    private ProductRepository productRepository;
+
+    @Mock
+    private UserRepository userRepository;
+
+    @Mock
+    private ApplicationEventPublisher eventPublisher;
+
     @Test
-    void placeOrder_SuccessScenarioWithValidUserAndProductIds_PositiveQuantity_NoCouponCode() {
-        // given
+    void testPlaceOrder_SuccessWithCoupon() {
+        // Arrange
         Long userId = 1L;
-        Long productId = 1L;
-        int quantity = 5;
+        Long productId = 2L;
+        int quantity = 3;
+        String couponCode = "SAVE10";
+        Order order = new Order();
+        order.setUserId(userId);
+        order.setProductId(productId);
+        order.setQuantity(quantity);
+        order.setCouponCode(couponCode);
+        when(orderRepository.save(any(Order.class))).thenReturn(order);
+        when(productService.checkProductAvailability(productId, quantity)).thenReturn(true);
+        when(couponService.validateCoupon(couponCode)).thenReturn(new Coupon(10.0));
+        // Act
+        String result = orderService.placeOrder(userId, productId, quantity, couponCode);
+        // Assert
+        assertEquals("Order placed successfully with discount", result);
+        verify(orderRepository, times(1)).save(any(Order.class));
+        verify(productService, times(1)).checkProductAvailability(productId, quantity);
+        verify(couponService, times(1)).validateCoupon(couponCode);
+    }
+
+    @Test
+    void testPlaceOrder_Success_NoCoupon() {
+        // Arrange
+        Long userId = 1L;
+        Long productId = 2L;
+        int quantity = 3;
         String couponCode = null;
-        
-        Product product = new Product();
-        product.setId(productId);
-        product.setStock(10); // Assuming originalStock is known
-        
-        User user = new User();
-        user.setId(userId);
-        
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
-        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
-        when(eventPublisher.publishEvent(any(OrderPlacedEvent.class))).thenReturn(true);
-        
-        // when
-        String orderId = orderService.placeOrder(userId, productId, quantity, couponCode);
-        
-        // then
-        assertThat(orderId)
-            .isNotNull()
-            .matches(id -> id.matches("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}"), "Order ID should be a valid UUID");
-    
-        // Verify that the product stock was decreased
-        verify(productRepository, times(1)).save(product);
-        assertThat(product.getStock()).isEqualTo(5); // Assuming originalStock is known
-    
-        // Verify that the event was published
-        ArgumentCaptor<OrderPlacedEvent> eventCaptor = ArgumentCaptor.forClass(OrderPlacedEvent.class);
-        verify(eventPublisher, times(1)).publishEvent(eventCaptor.capture());
-        OrderPlacedEvent capturedEvent = eventCaptor.getValue();
-        assertThat(capturedEvent.getOrderId()).isEqualTo(orderId);
-        assertThat(capturedEvent.getUserId()).isEqualTo(userId);
+        when(userRepository.findById(userId)).thenReturn(Optional.of(new User()));
+        when(productRepository.findById(productId)).thenReturn(Optional.of(new Product()));
+        when(orderRepository.save(any(Order.class))).thenReturn(new Order());
+        // Act
+        String result = orderService.placeOrder(userId, productId, quantity, couponCode);
+        // Assert
+        verify(userRepository, times(1)).findById(userId);
+        verify(productRepository, times(1)).findById(productId);
+        verify(orderRepository, times(1)).save(any(Order.class));
+        assertEquals("Order placed successfully", result);
     }
 
     @Test
-    void placeOrder_failureWithNullUserId() {
-        // given
-        when(userRepository.findById(null)).thenReturn(Optional.empty());
-        when(productRepository.findById(anyLong())).thenReturn(Optional.of(new Product()));
-        when(eventPublisher.publishEvent(any(OrderPlacedEvent.class))).thenReturn(true);
-    
-        // when & then
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            orderService.placeOrder(null, 1L, 2, "COUPON123");
-        });
-    
-        // then
-        assertThat(exception).isInstanceOf(IllegalArgumentException.class)
-                             .hasMessage("IDs cannot be null");
+    void testPlaceOrder_InvalidUserId() {
+        Long userId = null;
+        Long productId = 1L;
+        int quantity = 2;
+        String couponCode = "SAVE10";
+        assertThrows(IllegalArgumentException.class, () -> orderService.placeOrder(userId, productId, quantity, couponCode));
     }
 
     @Test
-    void testPlaceOrderWithNullProductId() {
-        // given
+    void testPlaceOrder_InvalidProductId() {
         Long userId = 1L;
         Long productId = null;
         int quantity = 2;
         String couponCode = "SAVE10";
-    
-        UserRepository userRepository = mock(UserRepository.class);
-        ProductRepository productRepository = mock(ProductRepository.class);
-        EventPublisher eventPublisher = mock(EventPublisher.class);
-    
-        OrderService orderService = new OrderService(userRepository, productRepository, eventPublisher);
-    
-        // Stubbing UserRepository.findById
-        when(userRepository.findById(userId)).thenReturn(Optional.of(new User()));
-    
-        // Stubbing ProductRepository.findById with null product ID scenario
-        when(productRepository.findById(null)).thenThrow(new RuntimeException("Product not found"));
-    
-        // when & then
-        assertThrows(IllegalArgumentException.class, () -> {
-            orderService.placeOrder(userId, productId, quantity, couponCode);
-        });
+        assertThrows(IllegalArgumentException.class, () -> orderService.placeOrder(userId, productId, quantity, couponCode));
     }
 
     @Test
-    void testPlaceOrderWithNonPositiveQuantity() {
-        // given
-        Long userId = 1L;
-        Long productId = 2L;
-        int quantity = -1; // Non-positive quantity
-        String couponCode = "DISCOUNT10";
-    
-        when(userRepository.findById(userId)).thenReturn(Optional.of(new User()));
-        when(productRepository.findById(productId)).thenReturn(Optional.of(new Product()));
-    
-        // when & then
-        assertThatThrownBy(() -> orderService.placeOrder(userId, productId, quantity, couponCode))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Quantity must be positive");
-    }
-
-    @Test
-    void placeOrder_UserNotFound_ShouldThrowRuntimeException() {
-        // given
-        Long userId = 1L;
-        Long productId = 2L;
-        int quantity = 3;
-        String couponCode = "DISCOUNT10";
-    
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
-    
-        OrderService orderService = new OrderService(userRepository, productRepository, eventPublisher);
-    
-        // when & then
-        assertThatThrownBy(() -> orderService.placeOrder(userId, productId, quantity, couponCode))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("User not found");
-    }
-
-    @Test
-    void testPlaceOrder_productNotFound() {
-        // given
-        Long userId = 1L; // Use a valid user ID
-        Long productId = 999L; // Product ID that does not exist in the repository
-        int quantity = 10;
-        String couponCode = "SAVE10"; // Add the missing couponCode parameter
-    
-        when(userRepository.findById(userId)).thenReturn(Optional.of(new User()));
-        when(productRepository.findById(productId)).thenReturn(Optional.empty());
-    
-        // when & then
-        assertThatThrownBy(() -> orderService.placeOrder(userId, productId, quantity, couponCode))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Product not found");
-    }
-
-    @Test
-    void testPlaceOrder_InsufficientStock() {
-        // given
-        Long userId = 1L;
-        Long productId = 2L;
-        int quantity = 15;
-        String couponCode = "COUPON123";
-    
-        when(userRepository.findById(userId)).thenReturn(Optional.of(new User()));
-        when(productRepository.findById(productId)).thenReturn(Optional.of(new Product(10L))); // 10 units in stock initially
-        when(eventPublisher.publishEvent(any(OrderPlacedEvent.class))).thenReturn(true);
-    
-        // when & then
-        assertThrows(IllegalArgumentException.class, () -> {
-            orderService.placeOrder(userId, productId, quantity, couponCode);
-        });
-    }
-
-    @Test
-    void placeOrder_optimisticLockingFailure() {
-        // given
+    void testPlaceOrder_NegativeQuantity() {
         Long userId = 1L;
         Long productId = 1L;
-        int quantity = 5;
-        String couponCode = "DISCOUNT10";
-        
-        when(userRepository.findById(userId)).thenReturn(Optional.of(new User()));
-        when(productRepository.findById(productId)).thenReturn(Optional.of(new Product()));
-        doThrow(ObjectOptimisticLockingFailureException.class).when(productRepository).save(any(Product.class));
-        
-        // when & then
-        assertThatThrownBy(() -> orderService.placeOrder(userId, productId, quantity, couponCode))
-            .isInstanceOf(RuntimeException.class)
-            .hasMessage("Order failed due to high concurrency. Please try again.");
+        int quantity = -2;
+        String couponCode = "SAVE10";
+        assertThrows(IllegalArgumentException.class, () -> orderService.placeOrder(userId, productId, quantity, couponCode));
     }
 
+    @Test
+    void testPlaceOrder_InvalidCouponCode() {
+        Long userId = 1L;
+        Long productId = 1L;
+        int quantity = 2;
+        String couponCode = "INVALID";
+        when(couponClient.validateCoupon(couponCode)).thenReturn(false);
+        assertThrows(InvalidCouponException.class, () -> orderService.placeOrder(userId, productId, quantity, couponCode));
+        verify(couponClient, times(1)).validateCoupon(couponCode);
+    }
+
+    @Test
+    void testCalculateDiscountWithValidCouponCode() {
+        // Arrange
+        BigDecimal price = new BigDecimal("100.00");
+        String couponCode = "SAVE20";
+        BigDecimal expectedDiscount = new BigDecimal("20.00");
+        when(couponRepository.findByCode(couponCode)).thenReturn(Optional.of(new Coupon(couponCode, 20)));
+        // Act
+        BigDecimal discount = orderService.calculateDiscount(price, couponCode);
+        // Assert
+        assertEquals(expectedDiscount, discount);
+        verify(couponRepository, times(1)).findByCode(couponCode);
+    }
+
+    @Test
+    void testCalculateDiscountWithNoCouponCode() {
+        BigDecimal price = new BigDecimal("100.00");
+        String couponCode = null;
+        // No discount applied
+        BigDecimal expectedDiscountedPrice = price;
+        BigDecimal result = orderService.calculateDiscount(price, couponCode);
+        assertEquals(expectedDiscountedPrice, result);
+    }
+
+    @Test
+    void testCalculateDiscountWithInvalidCouponCode() {
+        // Given
+        BigDecimal price = new BigDecimal("100.00");
+        String invalidCouponCode = "INVALID";
+        when(couponRepository.findByCode(invalidCouponCode)).thenReturn(Optional.empty());
+        // When
+        BigDecimal discount = orderService.calculateDiscount(price, invalidCouponCode);
+        // Then
+        assertEquals(BigDecimal.ZERO, discount);
+        verify(couponRepository, times(1)).findByCode(invalidCouponCode);
+    }
+
+    @BeforeEach
+    public void setUp() {
+        // Additional setup logic if needed
+    }
 }

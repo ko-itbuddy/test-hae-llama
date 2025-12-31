@@ -25,6 +25,11 @@ public class TestPlanner {
         List<Scenario> finalScenarios = new ArrayList<>();
         Intelligence.ComponentType domain = intel.type();
 
+        // 🏗️ Global Setup Scenario (Crucial for eliminating duplication)
+        if (isMajorComponent(domain)) {
+            finalScenarios.add(new Scenario("Setup", "Configure test infrastructure (Mocks, InjectMocks, BeforeEach). Define all class-level fields here."));
+        }
+
         Agent logicArchi = agentFactory.create(AgentType.LOGIC_ARCHITECT, domain);
         Agent boundaryArchi = agentFactory.create(AgentType.BOUNDARY_ARCHITECT, domain);
         Agent masterArchi = agentFactory.create(AgentType.MASTER_ARCHITECT, domain);
@@ -67,5 +72,11 @@ public class TestPlanner {
         String base = signature.split(java.util.regex.Pattern.quote("("))[0];
         String[] parts = base.trim().split("\\s+");
         return parts[parts.length - 1];
+    }
+
+    private boolean isMajorComponent(Intelligence.ComponentType type) {
+        return type == Intelligence.ComponentType.CONTROLLER || 
+               type == Intelligence.ComponentType.SERVICE || 
+               type == Intelligence.ComponentType.REPOSITORY;
     }
 }

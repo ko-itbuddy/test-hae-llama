@@ -10,6 +10,7 @@ import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.BodyDeclaration;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -35,7 +36,27 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
     public GeneratedCode sanitizeAndExtract(String rawOutput) {
         if (rawOutput == null || rawOutput.isBlank()) return new GeneratedCode(new HashSet<>(), "");
         String code = extractCodeBlock(rawOutput);
-        return new GeneratedCode(new HashSet<>(), code); // Simpler for TF fragments
+        
+        // Intelligent Extraction: If the LLM returned a full class, strip the wrapper.
+        if (code.contains("class ") && code.contains("{")) {
+            try {
+                ParseResult<CompilationUnit> result = parser.parse(code);
+                if (result.isSuccessful() && result.getResult().isPresent()) {
+                    CompilationUnit cu = result.getResult().get();
+                    return cu.findFirst(ClassOrInterfaceDeclaration.class)
+                            .map(c -> {
+                                StringBuilder members = new StringBuilder();
+                                c.getMembers().forEach(m -> members.append(m.toString()).append("\n\n"));
+                                return new GeneratedCode(new HashSet<>(), members.toString());
+                            })
+                            .orElse(new GeneratedCode(new HashSet<>(), code));
+                }
+            } catch (Exception ignored) {
+                // Fallback to raw code if parsing fails
+            }
+        }
+        
+        return new GeneratedCode(new HashSet<>(), code);
     }
 
     private String extractCodeBlock(String raw) {
@@ -65,12 +86,59 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
         testClass.setPublic(true);
 
         injectLayerSpecifics(testClass, type);
-
-        for (GeneratedCode snippet : snippets) {
-            addAsMemberSafely(testClass, snippet.body());
-        }
+        
+        // Intelligent Merging of Fragments
+        mergeComponents(testClass, snippets);
 
         return cu.toString();
+    }
+
+    private void mergeComponents(ClassOrInterfaceDeclaration targetClass, GeneratedCode... snippets) {
+        java.util.Map<String, FieldDeclaration> fields = new java.util.LinkedHashMap<>();
+        java.util.List<MethodDeclaration> methods = new java.util.ArrayList<>();
+        java.util.List<BodyDeclaration<?>> others = new java.util.ArrayList<>();
+
+        for (GeneratedCode snippet : snippets) {
+            String body = snippet.body();
+            if (body == null || body.isBlank()) continue;
+            
+            try {
+                CompilationUnit tempCu;
+                if (body.contains("class ") && body.contains("{")) {
+                    // It's likely a full class, parse directly
+                    tempCu = parser.parse(body).getResult().orElse(null);
+                } else {
+                    // It's a fragment, wrap and parse
+                    tempCu = parser.parse("class Wrapper { " + body + " }").getResult().orElse(null);
+                }
+                
+                if (tempCu != null) {
+                    tempCu.findFirst(ClassOrInterfaceDeclaration.class).ifPresent(c -> {
+                        for (BodyDeclaration<?> member : c.getMembers()) {
+                            if (member.isFieldDeclaration()) {
+                                FieldDeclaration fd = member.asFieldDeclaration();
+                                // Handle multiple variables in one declaration
+                                for (int i = 0; i < fd.getVariables().size(); i++) {
+                                    String varName = fd.getVariable(i).getNameAsString();
+                                    fields.putIfAbsent(varName, fd);
+                                }
+                            } else if (member.isMethodDeclaration()) {
+                                methods.add(member.asMethodDeclaration());
+                            } else {
+                                others.add(member);
+                            }
+                        }
+                    });
+                }
+            } catch (Exception e) {
+                log.warn("Failed to parse snippet for merging: {}", e.getMessage());
+            }
+        }
+
+        // Add to target class: Fields first, then others, then methods
+        fields.values().forEach(targetClass::addMember);
+        others.forEach(targetClass::addMember);
+        methods.forEach(targetClass::addMember);
     }
 
     private void addStandardImports(CompilationUnit cu, Intelligence.ComponentType type) {
@@ -87,7 +155,10 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
             cu.addImport("org.springframework.test.web.servlet.MockMvc");
             cu.addImport("static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get");
             cu.addImport("static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status");
+            cu.addImport("static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content");
             cu.addImport("static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document");
+            cu.addImport("static org.springframework.restdocs.request.RequestDocumentation.*");
+            cu.addImport("static org.springframework.restdocs.payload.PayloadDocumentation.*");
         }
     }
 

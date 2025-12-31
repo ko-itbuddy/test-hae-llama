@@ -49,43 +49,64 @@ public class ScenarioProcessingPipeline {
                 .collect(Collectors.groupingBy(Scenario::targetMethodName));
 
         List<GeneratedCode> nestedClasses = new ArrayList<>();
+        String globalSetupCode = ""; // Store setup code to pass as context
 
         for (Map.Entry<String, List<Scenario>> entry : grouped.entrySet()) {
             String methodName = entry.getKey();
             List<Scenario> methodScenarios = entry.getValue();
             
+            // Prepare AST snippet for the target method
             String methodAst = cu.findAll(MethodDeclaration.class).stream()
                     .filter(m -> m.getNameAsString().equals(methodName))
                     .map(m -> m.getDeclarationAsString() + " { /* code */ }")
                     .findFirst().orElse(methodName);
 
             StringBuilder body = new StringBuilder();
-            body.append(String.format("@Nested\n@DisplayName(\"Tests for %s\")\nclass %sTest {\n", methodName, capitalize(methodName)));
+            if (!"Setup".equals(methodName)) {
+                body.append(String.format("@Nested\n@DisplayName(\"Tests for %s\")\nclass %sTest {\n", methodName, capitalize(methodName)));
+            }
 
             for (Scenario s : methodScenarios) {
-                // 🛡️ REFINED CONTEXT: Strictly target domain fragments
-                String taskContext = String.format("""
-                    [TARGET_CLASS] %s
-                    [DEPENDENCIES]
-                    %s
-                    [TARGET_METHOD] %s
-                    [SCENARIO] %s
-                    """, className, fieldsInfo, methodAst, s.description());
+                // 1. Ask the Leader to form the best squad for this scenario
+                CollaborationTeam squad = domainLeader.formSquad(s, arbitrator);
 
-                CollaborationTeam squad = new CollaborationTeam(
-                        domainLeader.dispatch(AgentType.DATA_CLERK),
-                        domainLeader.dispatch(AgentType.DATA_MANAGER),
-                        arbitrator
-                );
+                // 2. Prepare Context (Setup needs less context, Tests need Setup info)
+                String taskContext;
+                if ("Setup".equals(methodName)) {
+                    taskContext = String.format("""
+                        [TARGET_CLASS] %s
+                        [DEPENDENCIES]
+                        %s
+                        [MISSION] Create the test class structure. Declare all fields (@Mock, @InjectMocks). Add @BeforeEach if needed.
+                        """, className, fieldsInfo);
+                } else {
+                    taskContext = String.format("""
+                        [TARGET_CLASS] %s
+                        [EXISTING_SETUP]
+                        %s
+                        [TARGET_METHOD] %s
+                        [SCENARIO] %s
+                        [CONSTRAINT] Do NOT re-declare mocks. Use the existing fields from [EXISTING_SETUP].
+                        """, className, globalSetupCode, methodAst, s.description());
+                }
 
-                // Use the new Assembly Specialist for final refinement
-                String rawResult = squad.execute("Task: Generate test logic fragment.", taskContext); 
-                
-                // Final Integration Step (Intelligent Synthesis)
-                body.append(codeSynthesizer.sanitizeAndExtract(rawResult).body()).append("\n");
+                // 3. Execute
+                String rawResult = squad.execute("Task: Generate code fragment.", taskContext); 
+                GeneratedCode refined = codeSynthesizer.sanitizeAndExtract(rawResult);
+
+                // 4. Route Output
+                if ("Setup".equals(methodName)) {
+                    globalSetupCode = refined.body(); // Store for context
+                    nestedClasses.add(refined);       // Add to main class members
+                } else {
+                    body.append(refined.body()).append("\n");
+                }
             }
-            body.append("}\n");
-            nestedClasses.add(new GeneratedCode(Collections.emptySet(), body.toString()));
+            
+            if (!"Setup".equals(methodName)) {
+                body.append("}\n");
+                nestedClasses.add(new GeneratedCode(Collections.emptySet(), body.toString()));
+            }
         }
 
         return new GeneratedCode(Collections.emptySet(), 

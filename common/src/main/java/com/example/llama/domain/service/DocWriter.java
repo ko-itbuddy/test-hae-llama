@@ -73,8 +73,42 @@ public class DocWriter {
             Files.writeString(adocFile, sb.toString());
             log.info("📄 Generated AsciiDoc at: {}", adocFile);
 
+            updateIndexAdoc(projectRoot, controllerName);
+
         } catch (IOException e) {
             log.error("Failed to write AsciiDoc", e);
+        }
+    }
+
+    private void updateIndexAdoc(Path projectRoot, String controllerName) {
+        try {
+            Path indexFile = projectRoot.resolve("src/docs/asciidoc/index.adoc");
+            String includeLine = "include::" + controllerName.replace("Controller", "").toLowerCase() + ".adoc[]";
+
+            if (!Files.exists(indexFile)) {
+                StringBuilder sb = new StringBuilder();
+                sb.append("= API Documentation\n");
+                sb.append(":doctype: book\n");
+                sb.append(":icons: font\n");
+                sb.append(":source-highlighter: highlightjs\n");
+                sb.append(":toc: left\n");
+                sb.append(":toclevels: 4\n");
+                sb.append(":sectlinks:\n\n");
+                sb.append("== Introduction\n");
+                sb.append("This is the aggregating document for all APIs.\n\n");
+                sb.append(includeLine).append("\n");
+                
+                Files.writeString(indexFile, sb.toString());
+                log.info("🆕 Created new index.adoc");
+            } else {
+                String content = Files.readString(indexFile);
+                if (!content.contains(includeLine)) {
+                    Files.writeString(indexFile, content + "\n" + includeLine + "\n");
+                    log.info("➕ Updated index.adoc with new include");
+                }
+            }
+        } catch (IOException e) {
+            log.error("Failed to update index.adoc", e);
         }
     }
 

@@ -11,6 +11,7 @@ public enum AgentType {
     MASTER_ARCHITECT,
     
     // Execution TF (Clerks & Managers)
+    SETUP_CLERK,
     DATA_CLERK, DATA_MANAGER,
     MOCK_CLERK, MOCK_MANAGER,
     EXEC_CLERK, EXEC_MANAGER,
