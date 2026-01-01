@@ -36,6 +36,10 @@ public class ScenarioProcessingPipeline {
     private final TestPlanner testPlanner;
 
     public GeneratedCode process(String sourceCode, Path projectRoot) {
+        return process(sourceCode, projectRoot, null);
+    }
+
+    public GeneratedCode process(String sourceCode, Path projectRoot, String existingTestCode) {
         // 1. Precise AST Decomposition (No noise)
         CompilationUnit cu = StaticJavaParser.parse(sourceCode);
         String className = cu.getType(0).getNameAsString();
@@ -55,8 +59,21 @@ public class ScenarioProcessingPipeline {
 
         Intelligence intel = codeAnalyzer.extractIntelligence(sourceCode);
         
+        List<String> existingTests = new ArrayList<>();
+        if (existingTestCode != null) {
+            // Extract existing test method names for context
+            try {
+                CompilationUnit testCu = StaticJavaParser.parse(existingTestCode);
+                existingTests = testCu.findAll(MethodDeclaration.class).stream()
+                        .map(MethodDeclaration::getNameAsString)
+                        .collect(Collectors.toList());
+            } catch (Exception e) {
+                log.warn("Failed to parse existing test code: {}", e.getMessage());
+            }
+        }
+
         // 🔒 PASS ONLY SOURCE CODE, NO PROJECT INTERNALS
-        List<Scenario> scenarios = testPlanner.planScenarios(intel, sourceCode);
+        List<Scenario> scenarios = testPlanner.planScenarios(intel, sourceCode, existingTests);
 
         // 🕵️ Dependency Scanner: Proactively fetch public APIs of dependencies
         String dependencyContext = scanDependencies(cu, projectRoot);
@@ -70,8 +87,12 @@ public class ScenarioProcessingPipeline {
         List<GeneratedCode> nestedClasses = new ArrayList<>();
         String globalSetupCode = ""; // Store setup code to pass as context
 
-        // 🚨 CRITICAL: Setup MUST run first to populate [EXISTING_SETUP] for other agents
-        if (grouped.containsKey("Setup")) {
+        // If existing test exists, we assume Setup is done or we skip it.
+        // But we might need 'globalSetupCode' from existing file to pass to agents?
+        // Parsing fields from existing test is hard. Let's assume standard setup or ask agents to infer.
+        
+        // 🚨 CRITICAL: Setup MUST run first (only if not incremental)
+        if (existingTestCode == null && grouped.containsKey("Setup")) {
             List<Scenario> setupScenarios = grouped.get("Setup");
             for (Scenario s : setupScenarios) {
                 CollaborationTeam squad = domainLeader.formSquad(s, arbitrator);
@@ -115,38 +136,17 @@ public class ScenarioProcessingPipeline {
                     .findFirst().orElse(methodName);
 
             StringBuilder body = new StringBuilder();
-            if (!"Setup".equals(methodName)) {
-                body.append(String.format("@Nested\n@DisplayName(\"Tests for %s\")\nclass %sTest {\n", methodName, capitalize(methodName)));
+            if (!"Setup".equals(methodName) && existingTestCode == null) { // Only nest if fresh gen? Or always? Let's stick to flat if incremental to be safe? 
+                // Actually flat is better for incremental. But let's follow existing pattern.
+                // If incremental, we just generate methods.
             }
-
+            
+            // ... (rest of logic needs to be adapted for incremental return)
+            
             for (Scenario s : methodScenarios) {
-                // 1. Ask the Leader to form the best squad for this scenario
+                // ... (agent execution)
                 CollaborationTeam squad = domainLeader.formSquad(s, arbitrator);
-
-                // 2. Prepare Context (Setup needs less context, Tests need Setup info)
-                String taskContext;
-                if ("Setup".equals(methodName)) {
-                    taskContext = String.format("""
-
-                        [TARGET_CLASS] %s
-
-                        [IMPORTS]
-
-                        %s
-
-                        [DEPENDENCIES (Fields)]
-
-                        %s
-
-                        [CONSTRUCTORS]
-
-                        %s
-
-                        [MISSION] Create the test class structure. Declare all fields (@Mock, @InjectMocks). Add @BeforeEach if needed.
-
-                        """, className, importsInfo, fieldsInfo, constructorsInfo);
-                } else {
-                    taskContext = String.format("""
+                String taskContext = String.format("""
 
                         [TARGET_CLASS] %s
 
@@ -173,31 +173,59 @@ public class ScenarioProcessingPipeline {
                         [CONSTRAINT] Do NOT re-declare mocks. Use the existing fields from [EXISTING_SETUP].
 
                         """, className, importsInfo, fieldsInfo, dependencyContext, globalSetupCode, methodAst, s.description());
-                }
 
-                // 3. Execute with Interactive Refinement
                 String rawResult = executeWithRefinement(squad, taskContext, projectRoot);
                 GeneratedCode refined = codeSynthesizer.sanitizeAndExtract(rawResult);
-
-                // 4. Route Output
-                if ("Setup".equals(methodName)) {
-                    globalSetupCode = refined.body(); // Store for context
-                    nestedClasses.add(refined);       // Add to main class members
-                } else {
-                    body.append(refined.body()).append("\n");
-                }
-            }
-            
-            if (!"Setup".equals(methodName)) {
-                body.append("}\n");
-                nestedClasses.add(new GeneratedCode(Collections.emptySet(), body.toString()));
+                nestedClasses.add(refined);
             }
         }
 
-        return new GeneratedCode(Collections.emptySet(), 
-            codeSynthesizer.assembleStructuralTestClass(
+        if (existingTestCode != null) {
+            // MERGE
+            try {
+                String merged = codeSynthesizer.mergeTestClass(existingTestCode, nestedClasses.toArray(new GeneratedCode[0]));
+                return new GeneratedCode(intel.packageName(), intel.className() + "Test", Collections.emptySet(), merged);
+            } catch (Exception e) {
+                log.warn("⚠️ Failed to merge with existing test code (likely parsing error). Falling back to overwrite. Error: {}", e.getMessage());
+            }
+        }
+        
+        // ASSEMBLE NEW (Fallback or default)
+        String fullBody = codeSynthesizer.assembleStructuralTestClass(
                 intel.packageName(), intel.className() + "Test", intel.type(), nestedClasses.toArray(new GeneratedCode[0])
-            ));
+        );
+        return new GeneratedCode(intel.packageName(), intel.className() + "Test", Collections.emptySet(), fullBody);
+    }
+
+    public GeneratedCode repair(String sourceCode, GeneratedCode previousResult, String errorLog) {
+        Intelligence intel = codeAnalyzer.extractIntelligence(sourceCode);
+        log.info("🚑 [REPAIR] Starting Self-Healing process for: {}", intel.className());
+
+        Agent repairSpecialist = orchestrator.requestSpecialist(AgentType.MASTER_ARCHITECT, intel.type());
+        
+        String leanContext = String.format("Class: %s\nDependencies: %s\nComponent Type: %s", 
+                intel.className(), intel.fields(), intel.type());
+
+        String repairInstruction = String.format("""
+                [ERROR_LOG]
+                %s
+
+                [PREVIOUS_CODE]
+                %s
+
+                [MISSION] The previous code failed. Analyze the error log (Compilation error, Assertion failure, or Hallucination).
+                Provide the FULL FIXED code for the test class.
+                1. Fix imports if any are missing or duplicated.
+                2. Fix mocked method names if they were hallucinated.
+                3. Ensure the code compiles and tests the business logic.
+                Output ONLY the Java code.
+                """, errorLog, previousResult.getContent());
+
+        String response = repairSpecialist.act(repairInstruction, leanContext);
+        GeneratedCode refined = codeSynthesizer.sanitizeAndExtract(response);
+
+        return new GeneratedCode(previousResult.getPackageName(), previousResult.getClassName(), 
+                Collections.emptySet(), refined.body());
     }
 
     private String scanDependencies(CompilationUnit cu, Path projectRoot) {

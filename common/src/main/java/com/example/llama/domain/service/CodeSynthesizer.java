@@ -21,4 +21,9 @@ public interface CodeSynthesizer {
      * Assembles a full test class with structural domain awareness.
      */
     String assembleStructuralTestClass(String packageName, String className, Intelligence.ComponentType type, GeneratedCode... snippets);
+
+    /**
+     * Merges new code snippets into an existing test class source code.
+     */
+    String mergeTestClass(String existingSource, GeneratedCode... newSnippets);
 }

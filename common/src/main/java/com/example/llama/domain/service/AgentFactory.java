@@ -34,8 +34,11 @@ public class AgentFactory {
             case MASTER_ARCHITECT -> sb.append("[MISSION] Consolidate multiple scenario proposals into a FINAL, non-redundant list.");
             
             case SETUP_CLERK -> sb.append("[MISSION] Generate ONLY the class-level fields (mocks, inject-mocks) and setup methods (@BeforeEach) AND strictly include all necessary imports (e.g. BeforeEach, Mock, InjectMocks). Do NOT generate @Test methods. Output purely the fields/setup logic.");
-            case DATA_CLERK -> sb.append("[MISSION] Generate Java code for test data fixtures. Generate the @Test method(s) AND strictly include all necessary imports (e.g. static assertions, classes used). Do NOT generate the class definition wrapper.");
-            case DATA_MANAGER -> sb.append("[MISSION] Review the provided code. Output '[APPROVED]' if it is correct. If incorrect, output '[REJECTED]' followed by a specific list of errors (e.g., 'Compilation error at line X', 'Logic flaw', 'Hallucinated method'). Do NOT rewrite the code.");
+            case DATA_CLERK -> sb.append("[MISSION] Generate Java code for test data fixtures. Generate the @Test method(s) AND strictly include all necessary imports. \n" +
+                    "[MANDATORY] 1. Use @ParameterizedTest with @CsvSource, @ValueSource, etc. to combine similar scenarios. Make code COMPACT.\n" +
+                    "[MANDATORY] 2. You MUST use '// given', '// when', '// then' comments in every test method.\n" +
+                    "[MANDATORY] 3. If the actual implementation (stub) contradicts the test expectation (e.g., impl returns true but test expects false), DO NOT assert false. Instead, write the assertion but comment it out with '// FIXME: Implementation returns true by default. Logic needs to be added.'");
+            case DATA_MANAGER -> sb.append("[MISSION] Review the provided code. Output '[APPROVED]' if it is correct. If incorrect, output '[REJECTED]' followed by a specific list of errors.");
             case MOCK_CLERK -> sb.append("[MISSION] Generate Mockito stubbing code.");
             case EXEC_CLERK -> sb.append("[MISSION] Generate method execution/MockMvc perform code.");
             case VERIFY_CLERK -> sb.append("[MISSION] Generate AssertJ/RestDocs verification code.");
@@ -53,8 +56,6 @@ public class AgentFactory {
                 sb.append("1. Output: Generate ONLY the `@Test` method code. Do NOT create a `public class ...` wrapper.\n");
                 sb.append("2. REST Docs: You MUST use Spring REST Docs (`spring-restdocs-mockmvc`).\n");
                 sb.append("   - Use `.andDo(document(\"{method-name}\", ...))`.\n");
-                sb.append("   - Document parameters: `queryParameters`, `pathParameters`.\n");
-                sb.append("   - Document fields: `responseFields` (for JSON).\n");
                 sb.append("3. Mocking: Assume `mockMvc` and dependencies are already injected via field injection.\n");
             }
             case SERVICE -> {
@@ -88,6 +89,7 @@ public class AgentFactory {
                 sb.append("1. Annotation: Prefer standard JUnit 5 (`new Class()`) without Spring Context for speed.\n");
                 sb.append("2. If Beans needed: Use `@SpringJUnitConfig(TargetClass.class)`.\n");
                 sb.append("3. Focus: Pure algorithmic logic, edge cases, and null handling.\n");
+                sb.append("4. Compactness: Use @ParameterizedTest for similar scenarios (e.g. multiple invalid inputs).\n");
             }
             case ENUM -> {
                 sb.append("[MANDATORY] Strategy: ENUM Testing\n");

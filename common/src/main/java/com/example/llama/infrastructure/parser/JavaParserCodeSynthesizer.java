@@ -36,26 +36,6 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
     public GeneratedCode sanitizeAndExtract(String rawOutput) {
         if (rawOutput == null || rawOutput.isBlank()) return new GeneratedCode(new HashSet<>(), "");
         String code = extractCodeBlock(rawOutput);
-        
-        // Intelligent Extraction: If the LLM returned a full class, strip the wrapper.
-        if (code.contains("class ") && code.contains("{")) {
-            try {
-                ParseResult<CompilationUnit> result = parser.parse(code);
-                if (result.isSuccessful() && result.getResult().isPresent()) {
-                    CompilationUnit cu = result.getResult().get();
-                    return cu.findFirst(ClassOrInterfaceDeclaration.class)
-                            .map(c -> {
-                                StringBuilder members = new StringBuilder();
-                                c.getMembers().forEach(m -> members.append(m.toString()).append("\n\n"));
-                                return new GeneratedCode(new HashSet<>(), members.toString());
-                            })
-                            .orElse(new GeneratedCode(new HashSet<>(), code));
-                }
-            } catch (Exception ignored) {
-                // Fallback to raw code if parsing fails
-            }
-        }
-        
         return new GeneratedCode(new HashSet<>(), code);
     }
 
@@ -91,6 +71,23 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
         mergeComponents(testClass, snippets);
 
         return cu.toString();
+    }
+
+    @Override
+    public String mergeTestClass(String existingSource, GeneratedCode... newSnippets) {
+        try {
+            CompilationUnit cu = StaticJavaParser.parse(existingSource);
+            ClassOrInterfaceDeclaration mainClass = cu.findFirst(ClassOrInterfaceDeclaration.class)
+                    .orElseThrow(() -> new IllegalArgumentException("No class found in existing source."));
+
+            // Use the same merging logic as assembleStructuralTestClass
+            mergeComponents(mainClass, newSnippets);
+
+            return cu.toString();
+        } catch (Exception e) {
+            log.error("Failed to merge test class", e);
+            throw new RuntimeException("Merge failed", e);
+        }
     }
 
     private void mergeComponents(ClassOrInterfaceDeclaration targetClass, GeneratedCode... snippets) {

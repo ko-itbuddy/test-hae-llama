@@ -20,13 +20,18 @@ public class TestPlanner {
     private final AgentFactory agentFactory;
 
     public List<Scenario> planScenarios(Intelligence intel, String sourceCode) {
+        return planScenarios(intel, sourceCode, List.of());
+    }
+
+    public List<Scenario> planScenarios(Intelligence intel, String sourceCode, List<String> existingTests) {
         log.info("[MEETING] Strategic Planning with Lean Context for: {}", intel.className());
         
         List<Scenario> finalScenarios = new ArrayList<>();
         Intelligence.ComponentType domain = intel.type();
 
-        // 🏗️ Global Setup Scenario (Crucial for eliminating duplication)
-        if (isMajorComponent(domain)) {
+        boolean isIncremental = !existingTests.isEmpty();
+
+        if (isMajorComponent(domain) && !isIncremental) {
             finalScenarios.add(new Scenario("Setup", "Configure test infrastructure (Mocks, InjectMocks, BeforeEach). Define all class-level fields here."));
         }
 
@@ -40,6 +45,13 @@ public class TestPlanner {
         Agent boundaryArchi = agentFactory.create(AgentType.BOUNDARY_ARCHITECT, domain);
         Agent masterArchi = agentFactory.create(AgentType.MASTER_ARCHITECT, domain);
 
+        if (intel.methods().isEmpty() && domain == Intelligence.ComponentType.REPOSITORY) {
+             if (!isIncremental) {
+                log.info("📭 [PLANNING] No custom methods found for Repository. Adding ContextLoad test.");
+                finalScenarios.add(new Scenario("ContextLoad", "Verify that the Repository bean loads successfully (validating derived queries)."));
+             }
+        }
+
         for (String methodSignature : intel.methods()) {
             String methodName = extractMethodName(methodSignature);
             
@@ -50,12 +62,17 @@ public class TestPlanner {
 
             String leanContext = String.format("Class: %s\nDependencies: %s\nTarget Method: %s", 
                     intel.className(), intel.fields(), methodSignature);
+            
+            if (isIncremental) {
+                leanContext += "\n\n[EXISTING_TESTS]\n" + String.join(", ", existingTests);
+            }
 
             String logicProposals = logicArchi.act("Propose success scenarios.", leanContext);
             String boundaryProposals = boundaryArchi.act("Propose edge cases.", leanContext);
 
-            String finalPlan = masterArchi.act(String.format("[LOGIC] %s\n[BOUNDARY] %s\nConsolidate into 3 scenarios.", 
-                    logicProposals, boundaryProposals), leanContext);
+            String finalPlan = masterArchi.act(String.format("[LOGIC] %s\n[BOUNDARY] %s\nConsolidate into 3 scenarios.%s", 
+                    logicProposals, boundaryProposals, 
+                    isIncremental ? " EXCLUDE scenarios covered by [EXISTING_TESTS]." : ""), leanContext);
             
             finalScenarios.addAll(parseScenarios(methodName, finalPlan));
         }
