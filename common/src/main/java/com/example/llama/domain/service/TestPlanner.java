@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 public class TestPlanner {
 
     private final AgentFactory agentFactory;
+    private final CodeAnalyzer codeAnalyzer;
 
     public List<Scenario> planScenarios(Intelligence intel, String sourceCode) {
         return planScenarios(intel, sourceCode, List.of());
@@ -54,14 +55,20 @@ public class TestPlanner {
 
         for (String methodSignature : intel.methods()) {
             String methodName = extractMethodName(methodSignature);
+            String methodBody = codeAnalyzer.getMethodBody(sourceCode, methodName);
             
             if (domain == Intelligence.ComponentType.CONTROLLER) {
                 finalScenarios.add(new Scenario(methodName, "Document successful API integration with Spring REST Docs snippets."));
                 continue;
             }
 
-            String leanContext = String.format("Class: %s\nDependencies: %s\nTarget Method: %s", 
-                    intel.className(), intel.fields(), methodSignature);
+            String leanContext = String.format("""
+                    Class: %s
+                    Dependencies: %s
+                    Target Method Signature: %s
+                    [ACTUAL_METHOD_BODY]
+                    %s
+                    """, intel.className(), intel.fields(), methodSignature, methodBody);
             
             if (isIncremental) {
                 leanContext += "\n\n[EXISTING_TESTS]\n" + String.join(", ", existingTests);

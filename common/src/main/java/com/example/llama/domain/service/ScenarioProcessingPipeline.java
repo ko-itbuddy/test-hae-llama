@@ -23,6 +23,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -35,12 +37,12 @@ public class ScenarioProcessingPipeline {
     private final CodeAnalyzer codeAnalyzer;
     private final CodeSynthesizer codeSynthesizer;
     private final TestPlanner testPlanner;
-
-    public GeneratedCode process(String sourceCode, Path projectRoot) {
-        return process(sourceCode, projectRoot, null);
-    }
+    private final ProjectSymbolIndexer symbolIndexer;
 
     public GeneratedCode process(String sourceCode, Path projectRoot, String existingTestCode) {
+        // 0. Index Project for Auto-Import Resolution
+        symbolIndexer.indexProject(projectRoot);
+
         // 1. Precise AST Decomposition (No noise)
         CompilationUnit cu = StaticJavaParser.parse(sourceCode);
         String className = cu.getType(0).getNameAsString();
@@ -82,8 +84,9 @@ public class ScenarioProcessingPipeline {
         // 🔒 PASS ONLY SOURCE CODE, NO PROJECT INTERNALS
         List<Scenario> scenarios = testPlanner.planScenarios(intel, sourceCode, existingTests);
 
-        // 🕵️ Dependency Scanner: Proactively fetch public APIs of dependencies
+        // 🕵️ Dependency & Entity Scanner: Proactively fetch public APIs and Entity details
         String dependencyContext = scanDependencies(cu, projectRoot);
+        String entityContext = scanDomainEntities(cu, projectRoot);
 
         TeamLeader domainLeader = orchestrator.getLeaderFor(intel.type());
         Agent arbitrator = orchestrator.requestSpecialist(AgentType.ARBITRATOR, intel.type());
@@ -131,6 +134,9 @@ public class ScenarioProcessingPipeline {
             if ("Setup".equals(methodName)) continue; // Already processed
 
             List<Scenario> methodScenarios = entry.getValue();
+            String scenariosDescription = methodScenarios.stream()
+                    .map(s -> "- " + s.description())
+                    .collect(Collectors.joining("\n"));
             
             // Prepare AST snippet for the target method
             String methodAst = cu.findAll(MethodDeclaration.class).stream()
@@ -138,40 +144,48 @@ public class ScenarioProcessingPipeline {
                     .map(m -> m.getDeclarationAsString() + " { /* code */ }")
                     .findFirst().orElse(methodName);
 
-            for (Scenario s : methodScenarios) {
-                CollaborationTeam squad = domainLeader.formSquad(s, arbitrator);
-                String taskContext = String.format("""
+            // 🚀 BATCH EXECUTION: Process all scenarios for this method at once
+            CollaborationTeam squad = domainLeader.formSquad(methodScenarios.get(0), arbitrator);
+            String taskContext = String.format("""
 
-                        [TARGET_CLASS] %s
+                    [TARGET_CLASS] %s
 
-                        [IMPORTS]
+                    [IMPORTS]
 
-                        %s
+                    %s
 
-                        [AVAILABLE_FIELDS (from Source)]
+                    [AVAILABLE_FIELDS (from Source)]
 
-                        %s
+                    %s
 
-                        [DEPENDENCY_CONTEXT (Public APIs of Mocks)]
+                    [DEPENDENCY_CONTEXT (Public APIs of Mocks)]
 
-                        %s
+                    %s
 
-                        [EXISTING_SETUP (Test Class Context)]
+                    [ENTITY_DETAILS (Actual Source of Domain Objects)]
 
-                        %s
+                    %s
 
-                        [TARGET_METHOD] %s
+                    [EXISTING_SETUP (Test Class Context)]
 
-                        [SCENARIO] %s
+                    %s
 
-                        [CONSTRAINT] Do NOT re-declare mocks. Use the existing fields from [EXISTING_SETUP].
+                    [TARGET_METHOD] %s
 
-                        """, className, importsInfo, fieldsInfo, dependencyContext, globalSetupCode, methodAst, s.description());
+                    [SCENARIOS TO IMPLEMENT]
+                    %s
 
-                String rawResult = executeWithRefinement(squad, taskContext, projectRoot);
-                GeneratedCode refined = codeSynthesizer.sanitizeAndExtract(rawResult);
-                nestedClasses.add(refined);
-            }
+                    [MISSION] Implement COMPACT JUnit 5 tests covering ALL the scenarios above.
+                    1. Use @ParameterizedTest wherever possible to group similar scenarios.
+                    2. Use @CsvSource or @MethodSource for inputs.
+                    3. Preserve // given/when/then comments.
+                    4. Do NOT re-declare mocks. Use the existing fields from [EXISTING_SETUP].
+
+                    """, className, importsInfo, fieldsInfo, dependencyContext, entityContext, globalSetupCode, methodAst, scenariosDescription);
+
+            String rawResult = executeWithRefinement(squad, taskContext, projectRoot);
+            GeneratedCode refined = codeSynthesizer.sanitizeAndExtract(rawResult);
+            nestedClasses.add(refined);
         }
 
         // ASSEMBLE NEW (Fallback or default)
@@ -186,6 +200,13 @@ public class ScenarioProcessingPipeline {
     public GeneratedCode repair(String sourceCode, GeneratedCode previousResult, String errorLog) {
         Intelligence intel = codeAnalyzer.extractIntelligence(sourceCode);
         log.info("🚑 [REPAIR] Starting Self-Healing process for: {}", intel.className());
+
+        // 🛠️ PRE-REPAIR: Automatic Import Injection (LLM-less)
+        GeneratedCode autoRepaired = attemptAutoImportRepair(previousResult, errorLog);
+        if (autoRepaired != null) {
+            log.info("✅ [AUTO-REPAIR] Injected missing imports based on error log.");
+            return autoRepaired;
+        }
 
         Agent repairSpecialist = orchestrator.requestSpecialist(AgentType.MASTER_ARCHITECT, intel.type());
         
@@ -209,8 +230,30 @@ public class ScenarioProcessingPipeline {
         String response = repairSpecialist.act(repairInstruction, leanContext);
         GeneratedCode refined = codeSynthesizer.sanitizeAndExtract(response);
 
+        // 🛡️ RE-ASSEMBLE: Ensure standard imports are re-injected even after repair
+        String fullBody = codeSynthesizer.assembleStructuralTestClass(
+                previousResult.getPackageName(), previousResult.getClassName(), intel.type(), refined
+        );
+
         return new GeneratedCode(previousResult.getPackageName(), previousResult.getClassName(), 
-                previousResult.sourceImports(), refined.body(), previousResult.sourceImports());
+                previousResult.sourceImports(), fullBody, previousResult.sourceImports());
+    }
+
+    private String scanDomainEntities(CompilationUnit cu, Path projectRoot) {
+        StringBuilder sb = new StringBuilder();
+        Set<String> referencedTypes = cu.findAll(ImportDeclaration.class).stream()
+                .map(ImportDeclaration::getNameAsString)
+                .filter(i -> i.contains(".domain.") || i.contains(".model.") || i.contains(".entity."))
+                .map(i -> i.substring(i.lastIndexOf(".") + 1))
+                .collect(Collectors.toSet());
+
+        for (String type : referencedTypes) {
+            String source = findSourceFile(projectRoot, type);
+            if (source != null) {
+                sb.append(String.format("--- SOURCE OF %s ---\n%s\n", type, source));
+            }
+        }
+        return sb.toString();
     }
 
     private String scanDependencies(CompilationUnit cu, Path projectRoot) {
@@ -292,6 +335,48 @@ public class ScenarioProcessingPipeline {
             log.error("Error searching file: " + className, e);
         }
         return null;
+    }
+
+    private GeneratedCode attemptAutoImportRepair(GeneratedCode previous, String errorLog) {
+        if (!errorLog.contains("cannot find symbol")) return null;
+
+        Set<String> missingSymbols = extractMissingSymbols(errorLog);
+        Set<String> newImports = new java.util.HashSet<>(previous.imports());
+        boolean changed = false;
+
+        for (String symbol : missingSymbols) {
+            String fullPath = symbolIndexer.resolve(symbol);
+            if (fullPath != null && !newImports.contains(fullPath)) {
+                log.info("💉 Auto-injecting import: {}", fullPath);
+                newImports.add(fullPath);
+                changed = true;
+            }
+        }
+
+        if (changed) {
+            // Re-synthesize with new imports
+            return new GeneratedCode(previous.getPackageName(), previous.getClassName(), 
+                    newImports, previous.body(), previous.sourceImports());
+        }
+        return null;
+    }
+
+    private Set<String> extractMissingSymbols(String errorLog) {
+        Set<String> symbols = new java.util.HashSet<>();
+        // Pattern: error: cannot find symbol \n symbol: class <ClassName>
+        Pattern p = Pattern.compile("symbol:\\s+class\\s+(\\w+)");
+        Matcher m = p.matcher(errorLog);
+        while (m.find()) {
+            symbols.add(m.group(1));
+        }
+        
+        // Also catch method level symbols if possible
+        Pattern p2 = Pattern.compile("symbol:\\s+variable\\s+(\\w+)");
+        Matcher m2 = p2.matcher(errorLog);
+        while (m2.find()) {
+            symbols.add(m2.group(1));
+        }
+        return symbols;
     }
 
     private String capitalize(String str) {

@@ -52,6 +52,7 @@ public class JavaParserCodeAnalyzer implements CodeAnalyzer {
                 .collect(Collectors.toList());
 
         List<String> methods = cu.findAll(MethodDeclaration.class).stream()
+                .filter(m -> !m.isPrivate()) // 🚫 Exclude private methods
                 .map(MethodDeclaration::getDeclarationAsString)
                 .collect(Collectors.toList());
 

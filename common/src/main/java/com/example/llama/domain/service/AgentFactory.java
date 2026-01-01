@@ -115,8 +115,14 @@ public class AgentFactory {
         sb.append("\n1. NO INVENTIONS: You MUST NOT invent fields, dependencies, or methods that are not explicitly present in the provided [CONTEXT] or [DEPENDENCIES].");
         sb.append("\n2. NO PLACEHOLDERS: NEVER use generic names like 'DependencyRepository', 'SomeService', 'someMethod', 'mockDependency'. Use ACTUAL class/field names from the source.");
         sb.append("\n3. FACTUAL ONLY: If the target class has NO dependencies, do NOT add @Mock fields. Do NOT add 'verify()' calls for non-existent mocks.");
-        sb.append("\n4. COMPILE-READY: The code must compile against the provided source. Do not assume imports or classes exist if they are not standard Java/Spring/Test libraries.");
-        sb.append("\n5. NO REDEFINITION: Do NOT re-define the target class (e.g., 'public class Target { ... }'). Test files must only contain the test class.");
+        sb.append("\n4. COMPILE-READY: You MUST include all necessary 'import' statements. If you use a class from the project (e.g. User, Product), you MUST import it.");
+        sb.append("\n5. NO REDEFINITION: Test files must only contain the test class. No Markdown filler.");
+        sb.append("\n6. ACCESS CONTROL: Only test 'public' and 'protected' methods. Skip 'private' entirely.");
+        sb.append("\n7. ENTITY CONSTRUCTION: Check the [ENTITY_DETAILS] carefully. If `@Builder` or a `builder()` method exists, use it. Otherwise, use the NO-ARGS constructor and SETTERS. NEVER guess constructor arguments.");
+        sb.append("\n8. STRICT BDD STRUCTURE: You MUST use `// given`, `// when`, and `// then` comments as clear separators. NEVER combine them (e.g., no `// when & then`).");
+        sb.append("\n9. PARAMETERS ARE GIVEN: In `@ParameterizedTest`, use the provided arguments ONLY in the `// given` section to set up the object state or mocks.");
+        sb.append("\n10. CLEAN CSV NULLS: Use `@CsvSource(value = {...}, nullValues = \"null\")` for null handling. This lets you pass the string `\"null\"` in data and receive a real Java `null` in the parameter, avoiding manual `if-else` parsing.");
+        sb.append("\n11. LOGIC PRECISION: Match your Mockito stubs exactly to the [ACTUAL_METHOD_BODY].");
 
         sb.append("\n\n[INTERACTIVE PROTOCOL - ASK FOR DATA]");
         sb.append("\nIf you need the source code of a dependency (e.g., a Repository or Entity) to write correct methods/stubs:");
