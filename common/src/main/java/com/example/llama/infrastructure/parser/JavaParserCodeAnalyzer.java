@@ -21,12 +21,12 @@ import java.util.stream.Collectors;
 @Component
 public class JavaParserCodeAnalyzer implements CodeAnalyzer {
 
-    public JavaParserCodeAnalyzer() {
-        StaticJavaParser.getParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
+    static {
+        StaticJavaParser.getParserConfiguration().setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_21);
     }
 
     @Override
-    public Intelligence extractIntelligence(String sourceCode) {
+    public Intelligence extractIntelligence(String sourceCode, String filePath) {
         CompilationUnit cu = StaticJavaParser.parse(sourceCode);
         
         String packageName = cu.getPackageDeclaration()
@@ -45,8 +45,7 @@ public class JavaParserCodeAnalyzer implements CodeAnalyzer {
                                 .map(EnumDeclaration::getNameAsString)
                                 .orElseThrow(() -> new IllegalArgumentException("No class, record, or enum found in source code"))));
 
-        // Extract fields (Records might need different handling, but basic field extraction works for classes)
-        // For records, we might want to extract parameters as fields if needed, but let's stick to simple logic first.
+        // Extract fields
         List<String> fields = cu.findAll(FieldDeclaration.class).stream()
                 .map(f -> f.toString().trim())
                 .collect(Collectors.toList());
@@ -56,24 +55,35 @@ public class JavaParserCodeAnalyzer implements CodeAnalyzer {
                 .map(MethodDeclaration::getDeclarationAsString)
                 .collect(Collectors.toList());
 
-        // Detect Component Type
-        Intelligence.ComponentType type = detectType(cu);
+        // Detect Component Type using AST and FilePath
+        Intelligence.ComponentType type = detectType(cu, filePath);
 
         return new Intelligence(packageName, className, fields, methods, type);
     }
 
-    private Intelligence.ComponentType detectType(CompilationUnit cu) {
-        if (cu.findAll(EnumDeclaration.class).stream().findFirst().isPresent()) return Intelligence.ComponentType.ENUM;
-        if (hasAnnotation(cu, "RestController") || hasAnnotation(cu, "Controller")) return Intelligence.ComponentType.CONTROLLER;
+    private Intelligence.ComponentType detectType(CompilationUnit cu, String filePath) {
+        if (hasAnnotation(cu, "RestController", "Controller")) return Intelligence.ComponentType.CONTROLLER;
         if (hasAnnotation(cu, "Service")) return Intelligence.ComponentType.SERVICE;
-        if (hasAnnotation(cu, "Repository")) return Intelligence.ComponentType.REPOSITORY;
+        if (hasAnnotation(cu, "Repository") || filePath.contains("Repository")) return Intelligence.ComponentType.REPOSITORY;
+        if (hasAnnotation(cu, "Entity") || hasAnnotation(cu, "MappedSuperclass")) return Intelligence.ComponentType.ENTITY;
+        if (hasAnnotation(cu, "Configuration")) return Intelligence.ComponentType.CONFIGURATION;
         if (hasAnnotation(cu, "Component")) return Intelligence.ComponentType.COMPONENT;
+        
+        if (cu.findAll(EnumDeclaration.class).size() > 0) return Intelligence.ComponentType.ENUM;
+        if (cu.findAll(RecordDeclaration.class).size() > 0) return Intelligence.ComponentType.RECORD;
+        
+        if (filePath.contains("Dto") || filePath.contains("DTO")) return Intelligence.ComponentType.DTO;
+        if (filePath.contains("Util")) return Intelligence.ComponentType.UTIL;
+        
+        // Domain package heuristics if no annotations found
+        if (filePath.contains("/domain/") || filePath.contains("/model/") || filePath.contains("/entity/")) return Intelligence.ComponentType.ENTITY;
+
         return Intelligence.ComponentType.GENERAL;
     }
 
-    private boolean hasAnnotation(CompilationUnit cu, String name) {
+    private boolean hasAnnotation(CompilationUnit cu, String... annotationNames) {
         return cu.findAll(com.github.javaparser.ast.expr.AnnotationExpr.class).stream()
-                .anyMatch(a -> a.getNameAsString().contains(name));
+                .anyMatch(a -> java.util.Arrays.asList(annotationNames).contains(a.getNameAsString()));
     }
 
     @Override

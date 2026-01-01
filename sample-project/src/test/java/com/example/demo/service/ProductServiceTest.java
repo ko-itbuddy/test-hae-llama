@@ -6,26 +6,36 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.*;
 import org.mockito.Mock;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Optional;
 import java.util.List;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.junit.jupiter.params.provider.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import com.example.demo.domain.Product;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.client.ExchangeRateClient;
-import com.example.demo.domain.Product;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class ProductServiceTest {
 
     @Mock
@@ -42,91 +52,114 @@ public class ProductServiceTest {
 
     @BeforeEach
     public void setUp() {
-        // Initialize mocks and inject them into the service if necessary
+        // Initialize mocks if necessary
     }
 
     @ParameterizedTest
-    @CsvSource({ "1, 100.00, 2.0, 45.00", "2, 50.00, 1.5, 26.25" })
-    public void testGetDiscountedPriceInUsd_Success(Long productId, double price, double exchangeRate, BigDecimal expected) {
+    @CsvSource(value = { "1, 100.00, 90.00", "2, 200.00, 180.00" }, nullValues = "null")
+    void testGetDiscountedPriceInUsd_SuccessfulRetrievalAndDiscount(Long productId, Double price, Double expectedDiscountedPrice) {
         // given
-        Product product = new Product(productId, "Product", BigDecimal.valueOf(price), null, null);
-        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
-        when(exchangeRateClient.getExchangeRate()).thenReturn(exchangeRate);
+        Product product = Product.builder().id(productId).price(BigDecimal.valueOf(price)).build();
+        when(productRepository.findByIdWithPessimisticLock(productId)).thenReturn(Optional.of(product));
+        when(exchangeRateClient.getExchangeRate()).thenReturn(1.0);
         // when
         BigDecimal result = productService.getDiscountedPriceInUsd(productId);
         // then
-        assertEquals(expected, result);
+        assertEquals(BigDecimal.valueOf(expectedDiscountedPrice), result);
+        verify(productRepository, times(1)).findByIdWithPessimisticLock(productId);
+        verify(exchangeRateClient, times(1)).getExchangeRate();
     }
 
     @ParameterizedTest
-    @CsvSource({ "1, 0.00", "2, null" })
-    public void testGetDiscountedPriceInUsd_ProductNotFoundOrInvalidData(Long productId, String price) {
+    @NullAndEmptySource
+    void testGetDiscountedPriceInUsd_ProductNotFound(Long productId) {
         // given
-        Product product = new Product(productId, "Product", BigDecimal.valueOf(price != null ? Double.parseDouble(price) : 0), null, null);
-        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
-        when(exchangeRateClient.getExchangeRate()).thenReturn(0.0);
-        // when & then
+        when(productRepository.findByIdWithPessimisticLock(productId)).thenReturn(Optional.empty());
+        // when
         assertThrows(RuntimeException.class, () -> productService.getDiscountedPriceInUsd(productId));
+        // then
+        verify(productRepository, times(1)).findByIdWithPessimisticLock(productId);
     }
 
     @ParameterizedTest
-    @CsvSource({ "1, 100.00, -1.0", "2, 50.00, 0.0" })
-    public void testGetDiscountedPriceInUsd_InvalidExchangeRate(Long productId, double price, double exchangeRate) {
+    @CsvSource(value = { "1, -1.0", "2, 0.0", "3, 1000.0" }, nullValues = "null")
+    void testGetDiscountedPriceInUsd_ExchangeRateFailure(Long productId, Double exchangeRate) {
         // given
-        Product product = new Product(productId, "Product", BigDecimal.valueOf(price), null, null);
-        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
+        Product product = Product.builder().id(productId).price(BigDecimal.valueOf(100)).build();
+        when(productRepository.findByIdWithPessimisticLock(productId)).thenReturn(Optional.of(product));
         when(exchangeRateClient.getExchangeRate()).thenReturn(exchangeRate);
-        // when & then
+        // when
         assertThrows(RuntimeException.class, () -> productService.getDiscountedPriceInUsd(productId));
+        // then
+        verify(productRepository, times(1)).findByIdWithPessimisticLock(productId);
+        verify(exchangeRateClient, times(1)).getExchangeRate();
     }
 
     @Test
-    public void testGetDiscountedPriceInUsd_AiServiceThrowsException() {
+    void testGetDiscountedPriceInUsd_AiServiceFailure() throws Exception {
         // given
         Long productId = 1L;
-        Product product = new Product(productId, "Product", BigDecimal.valueOf(100.00), null, null);
-        when(productRepository.findById(productId)).thenReturn(Optional.of(product));
-        when(exchangeRateClient.getExchangeRate()).thenReturn(2.0);
-        doThrow(new RuntimeException("AI service error")).when(aiService).analyzeProductTrend(anyString());
+        Product product = Product.builder().id(productId).name("Product A").price(BigDecimal.valueOf(100)).build();
+        when(productRepository.findByIdWithPessimisticLock(productId)).thenReturn(Optional.of(product));
+        when(exchangeRateClient.getExchangeRate()).thenReturn(1.0);
+        CompletableFuture<String> future = new CompletableFuture<>();
+        future.completeExceptionally(new RuntimeException("AI service error"));
+        when(aiService.analyzeProductTrend(anyString())).thenReturn(future);
         // when
-        BigDecimal result = productService.getDiscountedPriceInUsd(productId);
+        assertThrows(RuntimeException.class, () -> productService.getDiscountedPriceInUsd(productId));
         // then
-        assertEquals(BigDecimal.valueOf(45.00), result);
+        verify(productRepository, times(1)).findByIdWithPessimisticLock(productId);
+        verify(exchangeRateClient, times(1)).getExchangeRate();
+        verify(aiService, times(1)).analyzeProductTrend("Product A");
     }
 
     @ParameterizedTest
-    @CsvSource({ "null, 0", "0, 0" })
-    public void testGetExpensiveProducts_NullOrZeroPrice(BigDecimal price, int expectedCount) {
+    @CsvSource({ "10, 20, 30", "5, 15, 25" })
+    void testGetExpensiveProducts(BigDecimal price, BigDecimal productPrice1, BigDecimal productPrice2) {
         // given
-        when(productRepository.findAll()).thenReturn(Collections.emptyList());
+        Product product1 = Product.builder().price(productPrice1).build();
+        Product product2 = Product.builder().price(productPrice2).build();
+        List<Product> products = List.of(product1, product2);
+        when(productRepository.findProductsExpensiveThan(price)).thenReturn(products);
         // when
         List<Product> result = productService.getExpensiveProducts(price);
         // then
-        assertEquals(expectedCount, result.size());
+        assertEquals(2, result.size());
+        verify(productRepository, times(1)).findProductsExpensiveThan(price);
     }
 
     @ParameterizedTest
-    @CsvSource({ "-1, 0", "-10, 0" })
-    public void testGetExpensiveProducts_NegativePrice(BigDecimal price, int expectedCount) {
+    @CsvSource(value = { "null", "0", "-5" }, nullValues = "null")
+    void testGetExpensiveProductsForInvalidPrices(BigDecimal price) {
         // given
-        when(productRepository.findAll()).thenReturn(Collections.emptyList());
+        when(productRepository.findProductsExpensiveThan(price)).thenReturn(Collections.emptyList());
         // when
         List<Product> result = productService.getExpensiveProducts(price);
         // then
-        assertEquals(expectedCount, result.size());
+        assertTrue(result.isEmpty());
+        verify(productRepository, times(1)).findProductsExpensiveThan(price);
     }
 
     @ParameterizedTest
-    @CsvSource({ "100, 0", "200, 3" })
-    public void testGetExpensiveProducts_NoOrAllProductsMoreExpensive(BigDecimal price, int expectedCount) {
+    @CsvSource({ "100" })
+    void testGetExpensiveProductsWhenNoProductIsMoreExpensive(BigDecimal price) {
         // given
-        Product product1 = new Product(1L, "Product1", new BigDecimal("50"), null, null);
-        Product product2 = new Product(2L, "Product2", new BigDecimal("150"), null, null);
-        Product product3 = new Product(3L, "Product3", new BigDecimal("250"), null, null);
-        when(productRepository.findAll()).thenReturn(List.of(product1, product2, product3));
+        when(productRepository.findProductsExpensiveThan(price)).thenReturn(Collections.emptyList());
         // when
         List<Product> result = productService.getExpensiveProducts(price);
         // then
-        assertEquals(expectedCount, result.size());
+        assertTrue(result.isEmpty());
+        verify(productRepository, times(1)).findProductsExpensiveThan(price);
+    }
+
+    @ParameterizedTest
+    @CsvSource({ "50" })
+    void testGetExpensiveProductsWhenExceptionIsThrown(BigDecimal price) {
+        // given
+        when(productRepository.findProductsExpensiveThan(price)).thenThrow(new RuntimeException("Database error"));
+        // when
+        assertThrows(RuntimeException.class, () -> productService.getExpensiveProducts(price));
+        // then
+        verify(productRepository, times(1)).findProductsExpensiveThan(price);
     }
 }

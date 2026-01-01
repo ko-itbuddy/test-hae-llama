@@ -3,30 +3,16 @@ package com.example.llama.domain.model;
 import java.util.List;
 
 /**
- * A Value Object containing structural intelligence about a target class.
- * Replaces raw string 'intel' and 'skeleton'.
+ * Domain model representing the analyzed intelligence of a source file.
  */
 public record Intelligence(
-        String packageName,
-        String className,
-        List<String> fields,
-        List<String> methods,
-        ComponentType type
+    String packageName,
+    String className,
+    List<String> fields,
+    List<String> methods,
+    ComponentType type
 ) {
     public enum ComponentType {
-        CONTROLLER, SERVICE, REPOSITORY, COMPONENT, ENTITY, RECORD, DTO, UTIL, ENUM, GENERAL
-    }
-
-    public Intelligence {
-        fields = List.copyOf(fields);
-        methods = List.copyOf(methods);
-        type = (type == null) ? ComponentType.GENERAL : type;
-    }
-
-    public String fullClassName() {
-        if (packageName == null || packageName.isBlank()) {
-            return className;
-        }
-        return packageName + "." + className;
+        CONTROLLER, SERVICE, REPOSITORY, ENTITY, DTO, RECORD, COMPONENT, UTIL, ENUM, CONFIGURATION, GENERAL
     }
 }

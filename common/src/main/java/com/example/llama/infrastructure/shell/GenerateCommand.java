@@ -111,7 +111,7 @@ public class GenerateCommand {
             }
 
             // 1. Initial Process
-            GeneratedCode result = pipeline.process(sourceCode, absProjectRoot, existingTestCode);
+            GeneratedCode result = pipeline.process(sourceCode, absProjectRoot, existingTestCode, absSourcePath);
 
             // 2. Self-Healing Loop
             int maxRetries = 3;
@@ -131,7 +131,7 @@ public class GenerateCommand {
 
                 if (i < maxRetries) {
                     log.warn("🔄 [SELF-HEALING] Attempt {} failed. Feeding back error log to AI...", i + 1);
-                    result = pipeline.repair(sourceCode, result, errorLog);
+                    result = pipeline.repair(sourceCode, result, errorLog, absSourcePath);
                 } else {
                     log.error("🛑 [SELF-HEALING] Maximum retries reached. Code still has errors.");
                 }

@@ -28,7 +28,7 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
 
     public JavaParserCodeSynthesizer() {
         ParserConfiguration config = new ParserConfiguration();
-        config.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_17);
+        config.setLanguageLevel(ParserConfiguration.LanguageLevel.JAVA_21);
         this.parser = new JavaParser(config);
     }
 

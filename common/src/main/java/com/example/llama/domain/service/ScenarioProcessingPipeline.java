@@ -39,7 +39,7 @@ public class ScenarioProcessingPipeline {
     private final TestPlanner testPlanner;
     private final ProjectSymbolIndexer symbolIndexer;
 
-    public GeneratedCode process(String sourceCode, Path projectRoot, String existingTestCode) {
+    public GeneratedCode process(String sourceCode, Path projectRoot, String existingTestCode, Path sourcePath) {
         // 0. Index Project for Auto-Import Resolution
         symbolIndexer.indexProject(projectRoot);
 
@@ -60,7 +60,7 @@ public class ScenarioProcessingPipeline {
                 .map(c -> c.getDeclarationAsString())
                 .collect(Collectors.joining("\n"));
 
-        Intelligence intel = codeAnalyzer.extractIntelligence(sourceCode);
+        Intelligence intel = codeAnalyzer.extractIntelligence(sourceCode, sourcePath.toString());
         
         // 🕵️ Smart Import Extractor: Keep track of source imports to re-inject into test
         Set<String> sourceImports = cu.findAll(ImportDeclaration.class).stream()
@@ -197,8 +197,8 @@ public class ScenarioProcessingPipeline {
         return new GeneratedCode(intel.packageName(), intel.className() + "Test", sourceImports, fullBody, sourceImports);
     }
 
-    public GeneratedCode repair(String sourceCode, GeneratedCode previousResult, String errorLog) {
-        Intelligence intel = codeAnalyzer.extractIntelligence(sourceCode);
+    public GeneratedCode repair(String sourceCode, GeneratedCode previousResult, String errorLog, Path sourcePath) {
+        Intelligence intel = codeAnalyzer.extractIntelligence(sourceCode, sourcePath.toString());
         log.info("🚑 [REPAIR] Starting Self-Healing process for: {}", intel.className());
 
         // 🛠️ PRE-REPAIR: Automatic Import Injection (LLM-less)

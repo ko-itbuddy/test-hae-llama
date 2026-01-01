@@ -121,8 +121,8 @@ public class AgentFactory {
         sb.append("\n7. ENTITY CONSTRUCTION: Check the [ENTITY_DETAILS] carefully. If `@Builder` or a `builder()` method exists, use it. Otherwise, use the NO-ARGS constructor and SETTERS. NEVER guess constructor arguments.");
         sb.append("\n8. STRICT BDD STRUCTURE: You MUST use `// given`, `// when`, and `// then` comments as clear separators. NEVER combine them (e.g., no `// when & then`).");
         sb.append("\n9. PARAMETERS ARE GIVEN: In `@ParameterizedTest`, use the provided arguments ONLY in the `// given` section to set up the object state or mocks.");
-        sb.append("\n10. CLEAN CSV NULLS: Use `@CsvSource(value = {...}, nullValues = \"null\")` for null handling. This lets you pass the string `\"null\"` in data and receive a real Java `null` in the parameter, avoiding manual `if-else` parsing.");
-        sb.append("\n11. LOGIC PRECISION: Match your Mockito stubs exactly to the [ACTUAL_METHOD_BODY].");
+        sb.append("\n10. IDIOMATIC ANNOTATIONS: Use specialized JUnit 5 annotations for boundary tests: `@NullSource`, `@EmptySource`, `@NullAndEmptySource` for null/empty checks, and `@EnumSource` for Enums. Use `@CsvSource(value = {...}, nullValues = \"null\")` only when testing multiple intertwined parameters.");
+        sb.append("\n11. CLEAN CSV NULLS: When using `@CsvSource`, pass the string `\"null\"` in data and set `nullValues = \"null\"` explicitly to receive a real Java `null`.");
 
         sb.append("\n\n[INTERACTIVE PROTOCOL - ASK FOR DATA]");
         sb.append("\nIf you need the source code of a dependency (e.g., a Repository or Entity) to write correct methods/stubs:");

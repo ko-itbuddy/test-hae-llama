@@ -7,13 +7,6 @@ import com.example.llama.domain.model.Intelligence;
  * Decouples the domain from specific libraries like JavaParser.
  */
 public interface CodeAnalyzer {
-    /**
-     * Extracts structural intelligence from source code.
-     */
-    Intelligence extractIntelligence(String sourceCode);
-
-    /**
-     * Extracts the full body of a specific method.
-     */
+    Intelligence extractIntelligence(String sourceCode, String filePath);
     String getMethodBody(String sourceCode, String methodName);
 }
