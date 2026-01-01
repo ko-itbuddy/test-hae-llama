@@ -167,13 +167,16 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
         if (content.contains("Collections") && !content.contains("import java.util.Collections")) cu.addImport("java.util.Collections");
         if (content.contains("CompletableFuture") && !content.contains("import java.util.concurrent.CompletableFuture")) cu.addImport("java.util.concurrent.CompletableFuture");
 
-        // JUnit 5 Essentials
+        // JUnit 5 Essentials (Robust matching)
         if (content.contains("@Test") && !content.contains("org.junit.jupiter.api.Test")) cu.addImport("org.junit.jupiter.api.Test");
         if (content.contains("@BeforeEach") && !content.contains("org.junit.jupiter.api.BeforeEach")) cu.addImport("org.junit.jupiter.api.BeforeEach");
         if (content.contains("@ParameterizedTest") && !content.contains("org.junit.jupiter.params.ParameterizedTest")) cu.addImport("org.junit.jupiter.params.ParameterizedTest");
         if (content.contains("@CsvSource") && !content.contains("org.junit.jupiter.params.provider.CsvSource")) cu.addImport("org.junit.jupiter.params.provider.CsvSource");
         if (content.contains("@ValueSource") && !content.contains("org.junit.jupiter.params.provider.ValueSource")) cu.addImport("org.junit.jupiter.params.provider.ValueSource");
         if (content.contains("@MethodSource") && !content.contains("org.junit.jupiter.params.provider.MethodSource")) cu.addImport("org.junit.jupiter.params.provider.MethodSource");
+        if (content.contains("@EnumSource") && !content.contains("org.junit.jupiter.params.provider.EnumSource")) cu.addImport("org.junit.jupiter.params.provider.EnumSource");
+        if (content.contains("@NullSource") && !content.contains("org.junit.jupiter.params.provider.NullSource")) cu.addImport("org.junit.jupiter.params.provider.NullSource");
+        if (content.contains("@EmptySource") && !content.contains("org.junit.jupiter.params.provider.EmptySource")) cu.addImport("org.junit.jupiter.params.provider.EmptySource");
         if (content.contains("@NullAndEmptySource") && !content.contains("org.junit.jupiter.params.provider.NullAndEmptySource")) cu.addImport("org.junit.jupiter.params.provider.NullAndEmptySource");
 
         // Spring Essentials

@@ -19,7 +19,7 @@ class IntelligenceTest {
         List<String> methods = List.of("void login(String username, String password)");
 
         // when
-        Intelligence intel = new Intelligence(packageName, className, fields, methods, Intelligence.ComponentType.SERVICE);
+        Intelligence intel = new Intelligence(packageName, className, fields, methods, Intelligence.ComponentType.SERVICE, List.of());
 
         // then
         assertThat(intel.packageName()).isEqualTo(packageName);
@@ -31,9 +31,10 @@ class IntelligenceTest {
 
     @Test
     void testIntelligenceCreation() {
-        Intelligence intel = new Intelligence("com.test", "MyClass", List.of("field1"), List.of("method1"), Intelligence.ComponentType.SERVICE);
+        Intelligence intel = new Intelligence("com.test", "MyClass", List.of("field1"), List.of("method1"), Intelligence.ComponentType.SERVICE, List.of("import java.util.List"));
         assertThat(intel.packageName()).isEqualTo("com.test");
         assertThat(intel.className()).isEqualTo("MyClass");
         assertThat(intel.packageName() + "." + intel.className()).isEqualTo("com.test.MyClass");
+        assertThat(intel.imports()).contains("import java.util.List");
     }
 }

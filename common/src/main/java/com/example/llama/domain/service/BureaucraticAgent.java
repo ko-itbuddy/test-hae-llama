@@ -17,14 +17,12 @@ public class BureaucraticAgent implements Agent {
     @Override
     public String act(String instruction, String context) {
         log.info("[Agent: {}] Acting on instruction...", role);
-        
-        String fullContext = String.format("CONTEXT:\n%s", context);
-        String response = llmClient.generate(instruction + "\n" + fullContext, systemDirective);
-        
-        // Factual Logging
-        AgentLogger.logInteraction(role, instruction, response);
-        
-        return response;
+        return llmClient.generate(systemDirective + "\n\n[MISSION_SPEC]\n" + instruction, context);
+    }
+
+    @Override
+    public String getTechnicalDirective() {
+        return systemDirective;
     }
 
     @Override

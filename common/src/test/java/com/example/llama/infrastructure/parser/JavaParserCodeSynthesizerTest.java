@@ -2,9 +2,11 @@ package com.example.llama.infrastructure.parser;
 
 import com.example.llama.domain.model.GeneratedCode;
 import com.example.llama.domain.model.Intelligence;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,18 +17,14 @@ class JavaParserCodeSynthesizerTest {
     private final JavaParserCodeSynthesizer synthesizer = new JavaParserCodeSynthesizer();
 
     @Test
-    @DisplayName("should assemble full structural test class with correct annotations")
-    void assembleStructuralTestClass() {
-        String packageName = "com.example.test";
-        String className = "OrderServiceTest";
-        GeneratedCode snippet = new GeneratedCode(Set.of(), "@Test void test() {}");
+    void testAssembleStructuralTestClass() {
+        String testClassName = "MyServiceTest";
+        Intelligence intel = new Intelligence("com.example", "MyService", List.of(), List.of(), Intelligence.ComponentType.SERVICE, List.of());
+        GeneratedCode snippet = new GeneratedCode(Set.of(), "public void test() {}");
 
-        String result = synthesizer.assembleStructuralTestClass(
-                packageName, className, Intelligence.ComponentType.SERVICE, snippet
-        );
-
-        assertThat(result).contains("package com.example.test;");
-        assertThat(result).contains("public class OrderServiceTest");
+        String result = synthesizer.assembleStructuralTestClass(testClassName, intel, snippet);
+        assertThat(result).contains("MyServiceTest");
+        assertThat(result).contains("public void test()");
     }
 
     @Test

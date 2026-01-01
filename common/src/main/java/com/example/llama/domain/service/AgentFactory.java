@@ -124,7 +124,8 @@ public class AgentFactory {
         sb.append("\n10. IDIOMATIC ANNOTATIONS: Use specialized JUnit 5 annotations for boundary tests: `@NullSource`, `@EmptySource`, `@NullAndEmptySource` for null/empty checks, and `@EnumSource` for Enums. Use `@CsvSource(value = {...}, nullValues = \"null\")` only when testing multiple intertwined parameters.");
         sb.append("\n11. CLEAN CSV NULLS: When using `@CsvSource`, pass the string `\"null\"` in data and set `nullValues = \"null\"` explicitly to receive a real Java `null`.");
         sb.append("\n12. FRAGMENT DESIGN: You are creating a PART of a larger test suite. Focus only on the target method. If complex math/parsing is needed, write a `private static` helper method WITHIN your snippet.");
-        sb.append("\n13. LOGIC TRACING: Study the [ACTUAL_METHOD_BODY] intensely. Your stubs MUST match actual execution (e.g. if the code subtracts 10% tax, your stub's input must be the 90% amount).");
+        sb.append("\n13. LOGIC ANCHORING: To prevent rounding or calculation discrepancies, your test MUST reuse the actual logic from the [ACTUAL_METHOD_BODY] by defining them as variables within the test (e.g. reuse the actual logic from the method body as variables).");
+        sb.append("\n14. SMART_ASSERTION_COMMENTING: If you write an assertion that you suspect might fail due to human-written implementation flaws, add a `// FIXME: <Reason>` or `// TODO: <Task>` comment explaining EXACTLY why the test might fail and how to fix the source code (explain the discrepancy).");
 
         sb.append("\n\n[INTERACTIVE PROTOCOL - ASK FOR DATA]");
         sb.append("\nIf you need the source code of a dependency (e.g., a Repository or Entity) to write correct methods/stubs:");

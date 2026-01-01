@@ -48,11 +48,11 @@ class ScenarioProcessingPipelineTest {
         String sourceCode = "public class MyService {}";
         Path projectRoot = Paths.get(".");
         Path sourcePath = Paths.get("src/main/java/MyService.java");
-        Intelligence intel = new Intelligence("com.example", "MyService", List.of(), List.of(), Intelligence.ComponentType.SERVICE);
+        Intelligence intel = new Intelligence("com.example", "MyService", List.of(), List.of(), Intelligence.ComponentType.SERVICE, List.of());
         
         given(codeAnalyzer.extractIntelligence(anyString(), anyString())).willReturn(intel);
         given(testPlanner.planScenarios(any(), anyString(), any())).willReturn(List.of());
-        given(codeSynthesizer.assembleStructuralTestClass(anyString(), anyString(), any(), any())).willReturn("test code");
+        given(codeSynthesizer.assembleStructuralTestClass(anyString(), any(), any())).willReturn("test code");
 
         GeneratedCode result = pipeline.process(sourceCode, projectRoot, null, sourcePath);
         assertThat(result).isNotNull();
