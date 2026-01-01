@@ -148,12 +148,16 @@ public class GenerateCommand {
         log.info("🧪 [VERIFICATION] Running test: {}", className);
         try {
             ProcessBuilder pb;
-            if (Files.exists(projectRoot.resolve("pom.xml"))) {
-                pb = new ProcessBuilder("mvn", "test", "-Dtest=" + className);
+            if (Files.exists(projectRoot.resolve("mvnw"))) {
+                pb = new ProcessBuilder("./mvnw", "test", "-Dtest=" + className);
             } else if (Files.exists(projectRoot.resolve("gradlew"))) {
                 pb = new ProcessBuilder("./gradlew", "test", "--tests", "*." + className);
+            } else if (Files.exists(projectRoot.resolve("pom.xml"))) {
+                pb = new ProcessBuilder("mvn", "test", "-Dtest=" + className);
+            } else if (Files.exists(projectRoot.resolve("build.gradle"))) {
+                pb = new ProcessBuilder("gradle", "test", "--tests", "*." + className);
             } else {
-                log.warn("⚠️ No build system found (pom.xml/gradlew). Skipping verification.");
+                log.warn("⚠️ No build system found. Skipping verification.");
                 return null;
             }
             

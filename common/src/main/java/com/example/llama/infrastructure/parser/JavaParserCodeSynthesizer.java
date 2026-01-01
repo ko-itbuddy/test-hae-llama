@@ -67,6 +67,11 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
 
         injectLayerSpecifics(testClass, type);
         
+        // Add imports from snippets
+        for (GeneratedCode snippet : snippets) {
+            snippet.imports().forEach(cu::addImport);
+        }
+
         // Intelligent Merging of Fragments
         mergeComponents(testClass, snippets);
 
@@ -79,6 +84,11 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
             CompilationUnit cu = StaticJavaParser.parse(existingSource);
             ClassOrInterfaceDeclaration mainClass = cu.findFirst(ClassOrInterfaceDeclaration.class)
                     .orElseThrow(() -> new IllegalArgumentException("No class found in existing source."));
+
+            // Add imports from new snippets
+            for (GeneratedCode snippet : newSnippets) {
+                snippet.imports().forEach(cu::addImport);
+            }
 
             // Use the same merging logic as assembleStructuralTestClass
             mergeComponents(mainClass, newSnippets);
@@ -206,9 +216,16 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
         cu.addImport("org.junit.jupiter.api.Nested");
         cu.addImport("org.junit.jupiter.api.DisplayName");
         cu.addImport("org.junit.jupiter.api.extension.ExtendWith");
+        cu.addImport("org.junit.jupiter.api.BeforeEach");
+        cu.addImport("org.junit.jupiter.params.ParameterizedTest");
+        cu.addImport("org.junit.jupiter.params.provider.*");
+        cu.addImport("org.mockito.Mock");
+        cu.addImport("org.mockito.InjectMocks");
         cu.addImport("org.mockito.junit.jupiter.MockitoExtension");
         cu.addImport("static org.assertj.core.api.Assertions.assertThat");
         cu.addImport("static org.junit.jupiter.api.Assertions.*");
+        cu.addImport("static org.mockito.BDDMockito.given");
+        cu.addImport("static org.mockito.Mockito.*");
         cu.addImport("java.math.BigDecimal");
         if (type == Intelligence.ComponentType.CONTROLLER) {
             cu.addImport("org.springframework.beans.factory.annotation.Autowired");

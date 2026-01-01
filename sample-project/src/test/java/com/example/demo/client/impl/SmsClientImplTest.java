@@ -38,4 +38,19 @@ public class SmsClientImplTest {
         // then
         assertFalse(result);
     }
+
+    @ParameterizedTest
+    @CsvSource({ 
+        "1234567890, Hello", // Valid phone number
+        "abc123456789, Hello", // Invalid characters
+        "12345678901234567890, Hello", // Exceeding maximum length
+        "123, Hello" }) // Below minimum length
+    void testSendSmsFailure_InvalidPhoneNumberFormat(String phone, String msg) {
+        // given
+        boolean expected = false;
+        // when
+        boolean result = smsClient.sendSms(phone, msg);
+        // then
+        assertEquals(expected, result);
+    }
 }

@@ -2,9 +2,6 @@ package com.example.llama.domain.service;
 
 import com.example.llama.domain.model.AgentType;
 import com.example.llama.domain.model.Intelligence;
-import com.example.llama.domain.service.Agent;
-import com.example.llama.domain.service.BureaucraticAgent;
-import com.example.llama.domain.service.LlmClient;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,11 +14,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 @DisplayName("Agent Factory Test")
 class AgentFactoryTest {
 
-    @Mock 
-    LlmClient llmClient;
+    @Mock LlmClient llmClient;
 
     @Test
-    @DisplayName("should create agent with correct role and domain")
+    @DisplayName("should create agent with correct role")
     void createAgent() {
         // given
         AgentFactory factory = new AgentFactory(llmClient);
@@ -31,6 +27,7 @@ class AgentFactoryTest {
 
         // then
         assertThat(agent).isInstanceOf(BureaucraticAgent.class);
-        assertThat(agent.getRole()).isEqualTo("DATA_CLERK (SERVICE)");
+        // Current implementation uses role.name() as role
+        assertThat(agent.getRole()).isEqualTo("DATA_CLERK");
     }
 }

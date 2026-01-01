@@ -10,32 +10,36 @@ import static org.assertj.core.api.Assertions.assertThat;
 class GeneratedCodeTest {
 
     @Test
-    @DisplayName("should store imports and body separately")
+    @DisplayName("should store metadata and body correctly")
     void createGeneratedCode() {
         // given
-        Set<String> imports = Set.of("import org.junit.jupiter.api.Test;");
-        String body = "@Test void myTest() {}";
+        String packageName = "com.test";
+        String className = "MyTest";
+        Set<String> imports = Set.of("org.junit.jupiter.api.Test");
+        String body = "public class MyTest {}";
 
         // when
-        GeneratedCode code = new GeneratedCode(imports, body);
+        GeneratedCode code = new GeneratedCode(packageName, className, imports, body);
 
         // then
-        assertThat(code.imports()).containsExactlyInAnyOrder("import org.junit.jupiter.api.Test;");
+        assertThat(code.packageName()).isEqualTo(packageName);
+        assertThat(code.className()).isEqualTo(className);
+        assertThat(code.imports()).contains("org.junit.jupiter.api.Test");
         assertThat(code.body()).isEqualTo(body);
     }
 
     @Test
-    @DisplayName("should merge two code snippets")
-    void mergeCode() {
+    @DisplayName("toFullSource should handle existing package declaration intelligently")
+    void toFullSourceHandling() {
         // given
-        GeneratedCode code1 = new GeneratedCode(Set.of("import a;"), "body1");
-        GeneratedCode code2 = new GeneratedCode(Set.of("import b;"), "body2");
+        String bodyWithPackage = "package com.test;\npublic class MyTest {}";
+        GeneratedCode code = new GeneratedCode("com.test", "MyTest", Set.of(), bodyWithPackage);
 
         // when
-        GeneratedCode merged = code1.merge(code2);
+        String result = code.toFullSource();
 
         // then
-        assertThat(merged.imports()).containsExactlyInAnyOrder("import a;", "import b;");
-        assertThat(merged.body()).contains("body1").contains("body2");
+        assertThat(result).isEqualTo(bodyWithPackage);
+        assertThat(result).containsOnlyOnce("package com.test;");
     }
 }

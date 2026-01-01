@@ -2,7 +2,6 @@ package com.example.llama.domain.service;
 
 import com.example.llama.domain.model.AgentType;
 import com.example.llama.domain.model.Intelligence;
-import com.example.llama.domain.service.agents.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,13 +30,19 @@ public class AgentFactory {
             case BOUNDARY_ARCHITECT -> sb.append("[MISSION] Identify ONLY edge cases, nulls, empty strings, and min/max values.");
             case CONCURRENCY_ARCHITECT -> sb.append("[MISSION] Analyze thread safety, race conditions, and shared resource integrity.");
             case INTEGRITY_ARCHITECT -> sb.append("[MISSION] Analyze transaction boundaries, event emissions, and database consistency.");
-            case MASTER_ARCHITECT -> sb.append("[MISSION] Consolidate multiple scenario proposals into a FINAL, non-redundant list.");
+            case MASTER_ARCHITECT -> sb.append("[MISSION] Consolidate multiple scenario proposals into a FINAL, non-redundant list. \n" +
+                    "[MANDATORY] 1. Group similar scenarios into @ParameterizedTest to ensure COMPACTNESS.\n" +
+                    "[MANDATORY] 2. When repairing code, you MUST preserve or add '// given', '// when', '// then' comments.\n" +
+                    "[MANDATORY] 3. Ensure all necessary domain objects (e.g. Product, User) are imported.");
             
             case SETUP_CLERK -> sb.append("[MISSION] Generate ONLY the class-level fields (mocks, inject-mocks) and setup methods (@BeforeEach) AND strictly include all necessary imports (e.g. BeforeEach, Mock, InjectMocks). Do NOT generate @Test methods. Output purely the fields/setup logic.");
             case DATA_CLERK -> sb.append("[MISSION] Generate Java code for test data fixtures. Generate the @Test method(s) AND strictly include all necessary imports. \n" +
-                    "[MANDATORY] 1. Use @ParameterizedTest with @CsvSource, @ValueSource, etc. to combine similar scenarios. Make code COMPACT.\n" +
+                    "[MANDATORY] 1. Group similar test scenarios (Logic and Boundary) into @ParameterizedTest. \n" +
+                    "   - Use @CsvSource for multiple parameters (e.g. input1, input2, expected).\n" +
+                    "   - Use @ValueSource or @NullAndEmptySource for simple boundary checks.\n" +
+                    "   - Only use a single @Test for complex, one-off logic orchestration.\n" +
                     "[MANDATORY] 2. You MUST use '// given', '// when', '// then' comments in every test method.\n" +
-                    "[MANDATORY] 3. If the actual implementation (stub) contradicts the test expectation (e.g., impl returns true but test expects false), DO NOT assert false. Instead, write the assertion but comment it out with '// FIXME: Implementation returns true by default. Logic needs to be added.'");
+                    "[MANDATORY] 3. If the actual implementation (stub) contradicts the test expectation, write the assertion but comment it out with '// FIXME: ...'");
             case DATA_MANAGER -> sb.append("[MISSION] Review the provided code. Output '[APPROVED]' if it is correct. If incorrect, output '[REJECTED]' followed by a specific list of errors.");
             case MOCK_CLERK -> sb.append("[MISSION] Generate Mockito stubbing code.");
             case EXEC_CLERK -> sb.append("[MISSION] Generate method execution/MockMvc perform code.");

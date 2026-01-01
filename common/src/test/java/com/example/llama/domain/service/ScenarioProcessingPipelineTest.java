@@ -4,6 +4,7 @@ import com.example.llama.domain.model.AgentType;
 import com.example.llama.domain.model.GeneratedCode;
 import com.example.llama.domain.model.Intelligence;
 import com.example.llama.domain.model.Scenario;
+import com.example.llama.domain.service.agents.TeamLeader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,31 +12,28 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
-import com.example.llama.domain.service.agents.TeamLeader;
-// ... (existing imports)
-
 @ExtendWith(MockitoExtension.class)
-@DisplayName("Scenario Processing Pipeline Test")
+@DisplayName("Scenario Processing Pipeline Orchestration Test")
 class ScenarioProcessingPipelineTest {
 
-    @Mock BureaucracyOrchestrator orchestrator;
-    @Mock CodeAnalyzer codeAnalyzer;
-    @Mock CodeSynthesizer codeSynthesizer;
-    @Mock TestPlanner testPlanner;
-    @Mock TeamLeader mockLeader;
-    @Mock Agent mockAgent;
+    @Mock private BureaucracyOrchestrator orchestrator;
+    @Mock private CodeAnalyzer codeAnalyzer;
+    @Mock private CodeSynthesizer codeSynthesizer;
+    @Mock private TestPlanner testPlanner;
+    @Mock private TeamLeader teamLeader;
+    @Mock private Agent mockAgent;
 
-    ScenarioProcessingPipeline pipeline;
+    private ScenarioProcessingPipeline pipeline;
 
     @BeforeEach
     void setUp() {
@@ -43,38 +41,35 @@ class ScenarioProcessingPipelineTest {
     }
 
     @Test
-    @DisplayName("should orchestrate agents to produce test code")
-    void orchestrateAgents() {
+    @DisplayName("should orchestrate full generation cycle correctly")
+    void processCycle() {
         // given
-        String sourceCode = "public class LoginService {}";
-        Intelligence intel = new Intelligence("com.test", "LoginService", List.of(), List.of("login()"), Intelligence.ComponentType.SERVICE);
-        List<Scenario> scenarios = List.of(new Scenario("login", "Scenario 1"));
+        String sourceCode = "public class MyService { public void doWork() {} }";
+        Path projectRoot = Paths.get(".");
+        Intelligence intel = new Intelligence("com.test", "MyService", List.of(), List.of("doWork()"), Intelligence.ComponentType.SERVICE);
+        List<Scenario> scenarios = List.of(new Scenario("doWork", "test it"));
 
-        given(codeAnalyzer.extractIntelligence(anyString())).willReturn(intel);
-        given(testPlanner.planScenarios(any(), anyString())).willReturn(scenarios);
-        
-        // Mocking orchestrator and leader
-        given(orchestrator.getLeaderFor(any())).willReturn(mockLeader);
+        given(codeAnalyzer.extractIntelligence(sourceCode)).willReturn(intel);
+        given(testPlanner.planScenarios(any(), anyString(), any())).willReturn(scenarios);
+        given(orchestrator.getLeaderFor(any())).willReturn(teamLeader);
         given(orchestrator.requestSpecialist(any(), any())).willReturn(mockAgent);
-        given(mockLeader.dispatch(any())).willReturn(mockAgent);
         
-        given(mockAgent.act(anyString(), anyString())).willReturn("Code Part", "APPROVED"); 
-        given(mockAgent.getRole()).willReturn("Mock Role");
+        given(teamLeader.formSquad(any(), any())).willReturn(new CollaborationTeam(mockAgent, mockAgent, mockAgent));
         
-        // Mock CodeSynthesizer
-        GeneratedCode mockCode = new GeneratedCode(java.util.Collections.emptySet(), "Code Part");
-        given(codeSynthesizer.sanitizeAndExtract(anyString())).willReturn(mockCode);
-        given(codeSynthesizer.assembleStructuralTestClass(anyString(), anyString(), any(), any(GeneratedCode[].class)))
-                .willReturn("Final Assembled Code");
+        // Mock Agent behavior
+        given(mockAgent.act(anyString(), anyString())).willReturn("Generated Snippet", "APPROVED");
+        given(mockAgent.getRole()).willReturn("TEST_CLERK");
+        
+        // Mock Synthesis (Providing full metadata to avoid NPE)
+        GeneratedCode mockFragment = new GeneratedCode("com.test", "MyServiceTest", Collections.emptySet(), "snippet body");
+        given(codeSynthesizer.sanitizeAndExtract(anyString())).willReturn(mockFragment);
+        given(codeSynthesizer.assembleStructuralTestClass(anyString(), anyString(), any(), any())).willReturn("Full Source");
 
         // when
-        GeneratedCode result = pipeline.process(sourceCode);
+        GeneratedCode result = pipeline.process(sourceCode, projectRoot);
 
         // then
-        assertThat(result).isNotNull();
-        assertThat(result.body()).isEqualTo("Final Assembled Code");
-
-        verify(codeAnalyzer).extractIntelligence(sourceCode);
-        verify(testPlanner).planScenarios(any(), eq(sourceCode));
+        assertThat(result.body()).isEqualTo("Full Source");
+        verify(orchestrator).getLeaderFor(Intelligence.ComponentType.SERVICE);
     }
 }

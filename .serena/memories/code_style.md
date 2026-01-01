@@ -9,6 +9,9 @@ All generated tests MUST follow these structural rules:
     *   Write the assertion but comment it out with `// FIXME: <Reason why implementation fails>`.
 4.  **Flat Class Structure**: Standard unit tests should use a flat method structure unless explicit `@Nested` grouping is required for readability.
 
+## Development Process (Mandatory)
+*   **TDD First**: Always follow the Test-Driven Development cycle for engine features. Write failing unit/integration tests in `common/src/test` before modifying `common/src/main`.
+
 ## Conventions
 *   **Java**: Java 21, Spring Boot 3.4.1 style.
 *   **Lombok**: Use `@Slf4j`, `@Getter`, `@Setter`, etc.

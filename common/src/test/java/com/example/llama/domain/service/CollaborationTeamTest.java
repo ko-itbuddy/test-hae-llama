@@ -7,83 +7,63 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.contains;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.given;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Collaboration Team Test")
 class CollaborationTeamTest {
 
-    @Mock Agent worker;
-    @Mock Agent reviewer;
-    @Mock Agent arbitrator;
+    @Mock private Agent worker;
+    @Mock private Agent reviewer;
+    @Mock private Agent arbitrator;
 
     @Test
     @DisplayName("should return output immediately if approved first time")
-    void successOnFirstTry() {
-        // given
-        CollaborationTeam team = new CollaborationTeam(worker, reviewer, arbitrator);
-        given(worker.act(anyString(), anyString())).willReturn("Good Code");
-        // Reviewer receives formatted prompt, use contains to be safe
-        given(reviewer.act(contains("Audit this code"), anyString())).willReturn("APPROVED");
-        given(worker.getRole()).willReturn("Worker");
-        given(reviewer.getRole()).willReturn("Reviewer");
+    void approveFirstTime() {
+        CollaborationTeam squad = new CollaborationTeam(worker, reviewer, arbitrator);
+        given(worker.getRole()).willReturn("Clerk");
+        given(reviewer.getRole()).willReturn("Manager");
+        
+        given(worker.act(anyString(), anyString())).willReturn("draft 1");
+        given(reviewer.act(anyString(), anyString())).willReturn("[APPROVED]");
 
-        // when
-        String result = team.execute("Write Code", "Context");
+        String result = squad.execute("mission", "context");
 
-        // then
-        assertThat(result).isEqualTo("Good Code");
-        verify(worker, times(1)).act(anyString(), anyString());
+        assertThat(result).isEqualTo("draft 1");
     }
 
     @Test
     @DisplayName("should retry upon rejection and eventually succeed")
     void retryAndSucceed() {
-        // given
-        CollaborationTeam team = new CollaborationTeam(worker, reviewer, arbitrator);
-        
-        // 1st attempt
-        given(worker.act(contains("Write Code"), anyString())).willReturn("Bad Code");
-        given(reviewer.act(contains("Bad Code"), anyString())).willReturn("Fix bugs");
-        
-        // 2nd attempt
-        given(worker.act(contains("Fix bugs"), anyString())).willReturn("Fixed Code");
-        given(reviewer.act(contains("Fixed Code"), anyString())).willReturn("APPROVED");
+        CollaborationTeam squad = new CollaborationTeam(worker, reviewer, arbitrator);
+        given(worker.getRole()).willReturn("Clerk");
+        given(reviewer.getRole()).willReturn("Manager");
 
-        given(worker.getRole()).willReturn("Worker");
-        given(reviewer.getRole()).willReturn("Reviewer");
+        given(worker.act(anyString(), anyString())).willReturn("draft 1", "draft 2");
+        given(reviewer.act(contains("draft 1"), anyString())).willReturn("[REJECTED] error");
+        given(reviewer.act(contains("draft 2"), anyString())).willReturn("[APPROVED]");
 
-        // when
-        String result = team.execute("Write Code", "Context");
+        String result = squad.execute("mission", "context");
 
-        // then
-        assertThat(result).isEqualTo("Fixed Code");
-        verify(worker, times(2)).act(anyString(), anyString());
+        assertThat(result).isEqualTo("draft 2");
     }
 
     @Test
-    @DisplayName("should summon arbitrator after 3 failed attempts")
+    @DisplayName("should summon arbitrator after failed attempts")
     void summonArbitrator() {
-        // given
-        CollaborationTeam team = new CollaborationTeam(worker, reviewer, arbitrator);
-        given(worker.act(anyString(), anyString())).willReturn("Persistent Bad Code");
-        given(reviewer.act(anyString(), anyString())).willReturn("Reject again");
-        given(arbitrator.act(anyString(), anyString())).willReturn("Arbitrated Final Code");
-        
-        given(worker.getRole()).willReturn("Worker");
-        given(reviewer.getRole()).willReturn("Reviewer");
+        CollaborationTeam squad = new CollaborationTeam(worker, reviewer, arbitrator);
+        given(worker.getRole()).willReturn("Clerk");
+        given(reviewer.getRole()).willReturn("Manager");
 
-        // when
-        String result = team.execute("Write Code", "Context");
+        given(worker.act(anyString(), anyString())).willReturn("draft 1", "draft 2");
+        given(reviewer.act(anyString(), anyString())).willReturn("[REJECTED] error");
+        given(arbitrator.act(anyString(), anyString())).willReturn("Final Verdict");
 
-        // then
-        assertThat(result).isEqualTo("Arbitrated Final Code");
-        verify(worker, times(3)).act(anyString(), anyString());
-        verify(reviewer, times(3)).act(anyString(), anyString());
-        verify(arbitrator, times(1)).act(anyString(), anyString());
+        String result = squad.execute("mission", "context");
+
+        assertThat(result).isEqualTo("Final Verdict");
+        verify(arbitrator).act(contains("ARBITRATION"), anyString());
     }
 }

@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -59,6 +60,12 @@ public class ScenarioProcessingPipeline {
 
         Intelligence intel = codeAnalyzer.extractIntelligence(sourceCode);
         
+        // 🕵️ Smart Import Extractor: Keep track of source imports to re-inject into test
+        Set<String> sourceImports = cu.findAll(ImportDeclaration.class).stream()
+                .map(ImportDeclaration::getNameAsString)
+                .filter(i -> i.startsWith("com.example")) // Only our project classes
+                .collect(Collectors.toSet());
+
         List<String> existingTests = new ArrayList<>();
         if (existingTestCode != null) {
             // Extract existing test method names for context
@@ -87,10 +94,6 @@ public class ScenarioProcessingPipeline {
         List<GeneratedCode> nestedClasses = new ArrayList<>();
         String globalSetupCode = ""; // Store setup code to pass as context
 
-        // If existing test exists, we assume Setup is done or we skip it.
-        // But we might need 'globalSetupCode' from existing file to pass to agents?
-        // Parsing fields from existing test is hard. Let's assume standard setup or ask agents to infer.
-        
         // 🚨 CRITICAL: Setup MUST run first (only if not incremental)
         if (existingTestCode == null && grouped.containsKey("Setup")) {
             List<Scenario> setupScenarios = grouped.get("Setup");
@@ -135,16 +138,7 @@ public class ScenarioProcessingPipeline {
                     .map(m -> m.getDeclarationAsString() + " { /* code */ }")
                     .findFirst().orElse(methodName);
 
-            StringBuilder body = new StringBuilder();
-            if (!"Setup".equals(methodName) && existingTestCode == null) { // Only nest if fresh gen? Or always? Let's stick to flat if incremental to be safe? 
-                // Actually flat is better for incremental. But let's follow existing pattern.
-                // If incremental, we just generate methods.
-            }
-            
-            // ... (rest of logic needs to be adapted for incremental return)
-            
             for (Scenario s : methodScenarios) {
-                // ... (agent execution)
                 CollaborationTeam squad = domainLeader.formSquad(s, arbitrator);
                 String taskContext = String.format("""
 
@@ -180,21 +174,13 @@ public class ScenarioProcessingPipeline {
             }
         }
 
-        if (existingTestCode != null) {
-            // MERGE
-            try {
-                String merged = codeSynthesizer.mergeTestClass(existingTestCode, nestedClasses.toArray(new GeneratedCode[0]));
-                return new GeneratedCode(intel.packageName(), intel.className() + "Test", Collections.emptySet(), merged);
-            } catch (Exception e) {
-                log.warn("⚠️ Failed to merge with existing test code (likely parsing error). Falling back to overwrite. Error: {}", e.getMessage());
-            }
-        }
-        
         // ASSEMBLE NEW (Fallback or default)
         String fullBody = codeSynthesizer.assembleStructuralTestClass(
                 intel.packageName(), intel.className() + "Test", intel.type(), nestedClasses.toArray(new GeneratedCode[0])
         );
-        return new GeneratedCode(intel.packageName(), intel.className() + "Test", Collections.emptySet(), fullBody);
+        
+        // Final Merge with Source Imports
+        return new GeneratedCode(intel.packageName(), intel.className() + "Test", sourceImports, fullBody, sourceImports);
     }
 
     public GeneratedCode repair(String sourceCode, GeneratedCode previousResult, String errorLog) {
@@ -203,8 +189,8 @@ public class ScenarioProcessingPipeline {
 
         Agent repairSpecialist = orchestrator.requestSpecialist(AgentType.MASTER_ARCHITECT, intel.type());
         
-        String leanContext = String.format("Class: %s\nDependencies: %s\nComponent Type: %s", 
-                intel.className(), intel.fields(), intel.type());
+        String leanContext = String.format("Class: %s\nDependencies: %s\nComponent Type: %s\n\n[ORIGINAL_IMPORTS]\n%s", 
+                intel.className(), intel.fields(), intel.type(), String.join("\n", previousResult.sourceImports()));
 
         String repairInstruction = String.format("""
                 [ERROR_LOG]
@@ -213,11 +199,10 @@ public class ScenarioProcessingPipeline {
                 [PREVIOUS_CODE]
                 %s
 
-                [MISSION] The previous code failed. Analyze the error log (Compilation error, Assertion failure, or Hallucination).
+                [MISSION] The previous code failed. Analyze the error log.
                 Provide the FULL FIXED code for the test class.
-                1. Fix imports if any are missing or duplicated.
-                2. Fix mocked method names if they were hallucinated.
-                3. Ensure the code compiles and tests the business logic.
+                1. Ensure all necessary domain objects from [ORIGINAL_IMPORTS] are used and correctly imported.
+                2. Fix any missing Given/When/Then comments.
                 Output ONLY the Java code.
                 """, errorLog, previousResult.getContent());
 
@@ -225,7 +210,7 @@ public class ScenarioProcessingPipeline {
         GeneratedCode refined = codeSynthesizer.sanitizeAndExtract(response);
 
         return new GeneratedCode(previousResult.getPackageName(), previousResult.getClassName(), 
-                Collections.emptySet(), refined.body());
+                previousResult.sourceImports(), refined.body(), previousResult.sourceImports());
     }
 
     private String scanDependencies(CompilationUnit cu, Path projectRoot) {

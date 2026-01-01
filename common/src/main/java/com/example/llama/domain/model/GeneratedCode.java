@@ -14,21 +14,27 @@ public record GeneratedCode(
     String className, 
     Set<String> imports, 
     String body,
-    List<CodeSegment> segments
+    List<CodeSegment> segments,
+    Set<String> sourceImports
 ) {
     public GeneratedCode {
         imports = imports != null ? Set.copyOf(imports) : Collections.emptySet();
         segments = segments != null ? List.copyOf(segments) : Collections.emptyList();
+        sourceImports = sourceImports != null ? Set.copyOf(sourceImports) : Collections.emptySet();
     }
 
     // Constructor for simple fragments
     public GeneratedCode(Set<String> imports, String body) {
-        this("", "", imports, body, Collections.emptyList());
+        this("", "", imports, body, Collections.emptyList(), Collections.emptySet());
     }
 
     // Constructor for full class
     public GeneratedCode(String packageName, String className, Set<String> imports, String body) {
-        this(packageName, className, imports, body, Collections.emptyList());
+        this(packageName, className, imports, body, Collections.emptyList(), Collections.emptySet());
+    }
+
+    public GeneratedCode(String packageName, String className, Set<String> imports, String body, Set<String> sourceImports) {
+        this(packageName, className, imports, body, Collections.emptyList(), sourceImports);
     }
 
     public String getContent() {
