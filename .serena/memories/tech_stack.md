@@ -1,23 +1,18 @@
-# Tech Stack
+# Tech Stack (v8.0)
 
-## Core (Backend/Logic)
-*   **Language:** Java 17
-*   **Framework:** Spring Boot 3.2.2
-*   **AI/LLM:** LangChain4j (0.35.0), LangChain4j-Ollama
-*   **Code Generation:** JavaPoet (1.13.0)
-*   **Code Analysis:** JavaParser (3.26.2)
-*   **Build Tool:** Gradle 8.5
-*   **Utilities:** Lombok, SnakeYAML
+## Core Engine
+*   **Runtime:** Java 21 (LTS)
+*   **Framework:** Spring Boot 3.4.1
+*   **AI Integration:** Ollama (Local LLM, 14b recommended)
+*   **AST Analysis:** JavaParser 3.27.1
+*   **Testing:** JUnit 5 (5.10.2), AssertJ 3.25.3, Mockito 5.11.0
+*   **Documentation:** Spring REST Docs (for Controllers)
 
-## VS Code Extension
-*   **Language:** TypeScript (5.3.3)
-*   **Runtime:** Node.js
-*   **Framework:** VS Code Extension API
+## Infrastructure
+*   **Build Tool:** Gradle 9.2.1
+*   **Log Engine:** SLF4J + Logback
+*   **Communication:** Internal TF Bureaucracy (Sequential Processing)
 
-## IntelliJ Plugin
-*   **Language:** Kotlin
-*   **Build Tool:** Gradle (managed via root build)
-
-## Environment
-*   **Local LLM:** Ollama (required)
-*   **System:** Darwin (macOS) - current environment
+## Integration
+*   **IntelliJ:** Kotlin-based plugin
+*   **VS Code:** TypeScript-based extension

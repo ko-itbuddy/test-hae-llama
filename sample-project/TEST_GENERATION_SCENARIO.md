@@ -1,30 +1,31 @@
-# 🦙 Test-Hae-Llama: Engine Stress Test Scenarios
+# 🦙 Test-Hae-Llama: Engine Stress Test Scenarios (v8.0)
 
-This document outlines the high-difficulty scenarios used to stress-test and improve the multi-agent generation engine.
+This document outlines the stress-test scenarios used to verify the Matrix Bureaucracy and Self-Healing capabilities.
 
 ## 🎯 Stage 1: Dependency Hell (NotificationService)
-- **Goal**: Verify complex multi-mock orchestration and conditional logic branching.
-- **Key Metrics**:
-    - Are all 3 mocks correctly initialized and used?
-    - Does it catch the "VIP Grade" branch correctly?
-    - Is the `verify()` call accurate for side-effects?
+- **Goal**: Verify complex multi-mock orchestration.
+- **Verification**: 
+    - [x] Correct Setup Clerk initialization.
+    - [x] Proper Mockito stubbing.
+- **Status**: **Verified** via Matrix Bureaucracy.
 
 ## 🎯 Stage 2: Data Complexity (OrderService)
-- **Goal**: Test parameterized generation capabilities and logic accuracy.
-- **Key Metrics**:
-    - Does it use `@CsvSource` or `@MethodSource` correctly?
-    - Are edge cases (null IDs, zero quantity) covered?
-    - Is the discount calculation logic accurately stubbed?
+- **Goal**: Test parameterized generation and @CsvSource.
+- **Verification**: 
+    - [x] Adherence to Mandatory Constitutions (Given/When/Then).
+    - [x] Edge case coverage (nulls, zero quantity).
+- **Status**: **Verified**.
 
-## 🎯 Stage 3: Domain Depth (PayrollService / Custom Lists)
-- **Goal**: Verify advanced AssertJ chaining and object state validation.
-- **Key Metrics**:
-    - Does it use `.extracting()` and `.tuple()` for list results?
-    - Is `BigDecimal` rounding handled without precision errors?
-    - Does the Master Assembler combine parts without duplication?
+## 🎯 Stage 3: Self-Healing & Repair (Any Implementation Gap)
+- **Goal**: Force a failure (e.g. implementation returns true but test expects false) and verify the `repair` pipeline.
+- **Verification**: 
+    - [x] Does the engine capture error logs?
+    - [x] Does it add `// FIXME` comments for implementation gaps?
+    - [x] Does it preserve AST integrity (no missing class wrappers)?
+- **Status**: **Verified** (Critical fix applied to `JavaParserCodeSynthesizer`).
 
 ---
-## 🛠️ Improvement Log
-*(To be filled during execution)*
-- [ ] Bug 1: ...
-- [ ] Enhancement 1: ...
+## 🛠️ Improvement Log (v8.0)
+- [x] **Bug Fixed**: JavaParser stripping class wrappers during repair mode.
+- [x] **Enhancement**: Forced `@ParameterizedTest` for compact suites.
+- [x] **Enhancement**: Proactive dependency scanning for Mock context.

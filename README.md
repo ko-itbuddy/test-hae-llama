@@ -1,42 +1,41 @@
-# 🦙 Test-Hae-Llama: Bureaucratic AI Test Generator (v2.0)
+# 🦙 Test-Hae-Llama: Matrix Bureaucracy AI Test Generator (v8.0)
 
-Test-Hae-Llama is an autonomous, AI-powered test generation suite that leverages a **Bureaucratic Multi-Agent System** to produce industrial-grade JUnit 5 tests. It strictly adheres to **TDD, DDD, and SOLID** principles using a Hexagonal Architecture.
+Test-Hae-Llama is an autonomous, industrial-grade test generation suite powered by a **Matrix Bureaucracy** multi-agent system and a **Self-Healing Verification Loop**. It produces robust, compilable JUnit 5 tests that strictly adhere to Given/When/Then structures and modern Java patterns.
 
-## 🚀 Key Innovations
+## 🚀 Key Innovations (v8.0+)
 
-### 🏛️ Bureaucratic Dialogue Loop
-Tests are generated through a strict "Worker-Reviewer" dialogue protocol handled by `CollaborationTeam`.
-- **Worker (Clerk)**: Drafts code based on specific technical directives.
-- **Reviewer (Manager)**: Audits the code against the source context. If it fails, detailed feedback is sent back for a retry.
-- **Result**: Only "APPROVED" code makes it to the final file.
+### 🏛️ Matrix Bureaucracy (v8.0)
+Tests are generated through a tiered collaboration of specialized agents:
+- **Orchestrator**: Strategic delegation and synthesis.
+- **Team Leaders**: Domain-specific owners (Controller, Service, Client, etc.).
+- **Specialized Clerks**: Focused writers for Setup, Data, Mocks, Execution, and Verification.
+- **Managers**: Strict auditors who peer-review every code fragment.
+- **Arbitrator**: Provides final technical verdicts for agent deadlocks.
 
-### 🧩 Smart Code Synthesis (AST-Based)
-Instead of relying on fragile string manipulation, Test-Hae-Llama uses **JavaParser** to:
-- Extract strict AST (Abstract Syntax Tree) nodes from LLM responses.
-- Eliminate Markdown, hallucinations, and conversational chatter.
-- Synthesize clean, compilable Java source files.
+### 🚑 Self-Healing Verification Loop
+No more broken tests. Test-Hae-Llama automatically:
+1.  **Generates** the initial test suite.
+2.  **Verifies** the code by running `mvn test` or `./gradlew test`.
+3.  **Repairs** detected compilation errors or assertion failures by feeding logs back to the **Master Architect** (up to 3 retries).
 
-### 🛡️ Hexagonal Architecture
+### 🧩 Structural AST Synthesis (JavaParser)
+Instead of fragile string concatenation, it uses **JavaParser** to:
+- Preserve class wrappers (`public class ... { ... }`) during repair.
+- Intelligently merge new test scenarios into existing files (**Incremental Mode**).
+- Automate import management and structural integrity.
+
+## 🏗️ Technical Architecture (Hexagonal)
 The system is built on a robust, decoupled core:
-- **Domain Layer**: `Scenario`, `Intelligence`, `GeneratedCode` (Value Objects).
-- **Service Layer**: `ScenarioProcessingPipeline` orchestrates the agents.
-- **Infrastructure Layer**: Ports & Adapters for LLM (`LangChain4j`), Code Analysis (`JavaParser`), and I/O.
-
-## 🏗️ Core Workflow
-1. **Scout**: `CodeAnalyzer` extracts structural intelligence (fields, methods) from your source code.
-2. **Pipeline**: `ScenarioProcessingPipeline` activates specialized agent teams:
-    - **Data Team**: Generates POJOs and fixtures.
-    - **Mock Team**: Creates Mockito stubs strictly based on dependencies.
-    - **Verify Team**: Writes AssertJ assertions for the target behavior.
-3. **Synthesis**: `CodeSynthesizer` assembles the fragments into a valid `Test` class.
-4. **Persist**: The final result is saved to your project's test directory.
+- **Domain Layer**: Pure business logic for `Scenario` planning and `CollaborationTeam` orchestration.
+- **Service Layer**: `ScenarioProcessingPipeline` handles the generation lifecycle.
+- **Infrastructure Layer**: Ports & Adapters for `LangChain4j` (Ollama), `JavaParser`, and the **Self-Healing Shell**.
 
 ## 🛠️ Tech Stack
-- **Language**: Java 17
-- **Framework**: Spring Boot 3.2.2
-- **AI Engine**: LangChain4j + Ollama (running local models like `qwen2.5-coder`)
-- **Analysis**: JavaParser
+- **Language**: Java 21 (LTS)
+- **Framework**: Spring Boot 3.4.1 (Spring Shell)
+- **AI Engine**: LangChain4j + Ollama (Local LLM: 14b+ recommended)
+- **Analysis**: JavaParser 3.27.1
 - **Testing**: JUnit 5, AssertJ, Mockito
 
 ---
-*"Precision is our only Law. Quality is our only Weapon."* 🦙⚔️
+*"Collaboration is our Engine. Precision is our Law."* 🦙⚔️

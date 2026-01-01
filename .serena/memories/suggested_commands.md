@@ -1,19 +1,16 @@
 # Suggested Commands
 
-## Build & Test (Root/Common)
-*   **Build All:** `./gradlew build`
-*   **Build Common:** `./gradlew :common:build`
-*   **Run Common Tests:** `./gradlew :common:test`
-*   **Clean:** `./gradlew clean`
+## Test Generation (Llama CLI)
+Run from the root directory:
+*   **Single File:** `./gradlew :common:bootRun --args="generate --input <path_to_java> --output-project <target_project_path>"`
+*   **Batch (Directory):** `./gradlew :common:bootRun --args="generate --input <path_to_dir> --output-project <target_project_path>"`
+*   **Clean & Generate:** `rm -f src/test/java/.../TargetTest.java && ./gradlew :common:bootRun ...`
 
-## VS Code Extension
-*   **Directory:** `vscode-extension/`
-*   **Install Dependencies:** `npm install`
-*   **Compile:** `npm run compile` (uses `node build.js && tsc`)
+## Build & Verify
+*   **Build Engine:** `./gradlew :common:build`
+*   **Run Sandbox Tests (Maven):** `cd sample-project && mvn test`
+*   **Run Sandbox Tests (Gradle):** `./gradlew -p sample-project test`
 
-## IntelliJ Plugin
-*   **Build Plugin:** `./gradlew :intellij-plugin:buildPlugin`
-*   **Run Sandbox:** `./gradlew :intellij-plugin:runIde`
-
-## General
-*   **List Gradle Tasks:** `./gradlew tasks`
+## Environment Setup
+*   **Ollama Check:** `curl http://localhost:11434/api/tags`
+*   **Log Tracking:** `tail -f common/.test-hea-llama/logs/llama_interaction_*.log`

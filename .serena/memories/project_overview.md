@@ -1,15 +1,23 @@
-# Project Overview: Test-Hae-Llama (local-test-code-llm)
+# Project Overview: Test-Hae-Llama (Matrix Bureaucracy)
 
-**Test-Hae-Llama** is an autonomous, AI-powered test generation suite designed to produce industrial-grade JUnit 5 tests. It utilizes a "Bureaucratic Task-Force" of agents and a "Self-Growing Hybrid RAG" system.
+**Test-Hae-Llama** is an industrial-grade, autonomous test generation engine. It transforms raw source code into high-quality JUnit 5 suites using a multi-agent "Matrix Bureaucracy" and a self-healing verification loop.
 
-## Key Components
-1.  **Common Core (`common/`)**: The core logic engine, now implemented in **Java 17 (Spring Boot)** using **LangChain4j**. It handles code analysis (JavaParser), test generation (JavaPoet), and LLM interaction (Ollama).
-    *   The project has transitioned from Python to a Java-centric codebase. All core logic is now in the `common` module.
-2.  **VS Code Extension (`vscode-extension/`)**: A TypeScript-based extension for VS Code to interact with the tool.
-3.  **IntelliJ Plugin (`intellij-plugin/`)**: A Kotlin-based plugin for IntelliJ IDEA.
-4.  **Sample Project (`sample-project/`)**: A sandbox for testing the generation capabilities.
+## Key Evolution: Matrix Bureaucracy (v8.0)
+The system operates through specialized tiered agents:
+*   **Orchestrator**: Controls delegation and big-picture synthesis.
+*   **Team Leaders**: Domain owners (Controller, Service, Client, etc.) who dispatch specialists.
+*   **Horizontal Experts**: 
+    *   **Clerks**: Specialized writers (Setup, Data, Exec, Verify, Mock).
+    *   **Managers**: Auditors who peer-review code fragments.
+    *   **Arbitrator**: Technical verdict provider for deadlocks.
 
-## Philosophy
-*   **Bureaucratic Task-Force**: Clerk (Writer) -> Manager (Auditor) -> QA (Compiler).
-*   **Hybrid RAG**: Isolates source, tests, and docs.
-*   **Serena-MCP Protocol**: Strict adherence to structural editing and data-driven context.
+## Core Capabilities
+1.  **Self-Healing Loop**: Automatically runs `mvn test` or `./gradlew test` after generation. If failed, the `repair` pipeline triggers up to 3 retries with error feedback.
+2.  **Incremental Mode**: Detects existing test files and merges new scenarios instead of overwriting.
+3.  **AST Synthesis**: Uses **JavaParser** for precise structural merging, ensuring no class wrappers are lost and imports are managed.
+4.  **Lean Context**: Proactively scans dependencies to provide agents with actual public APIs of injected mocks.
+
+## Module Structure
+*   **common/**: Core Java 21 / Spring Boot 3.4.1 engine. Handles AST logic, Agent TFs, and Self-Healing.
+*   **sample-project/**: Test sandbox with Maven/Gradle support for verification.
+*   **vscode-extension/** & **intellij-plugin/**: Integration layers.

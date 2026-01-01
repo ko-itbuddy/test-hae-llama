@@ -1,39 +1,33 @@
-# 📉 Project Improvement & Deficiencies Report
+# 📉 Project Improvement & Progress Report (v8.0)
 
-During the test generation and verification process according to `TEST_GENERATION_SCENARIO.md`, several architectural and testability deficiencies were identified.
+During the test generation and verification process, several architectural and testability milestones were achieved, and new goals were identified.
 
-## 1. Testability Issues
+## ✅ Accomplished Improvements (Engine v8.0)
 
-### A. Missing Accessors for Verification
-- **Issue:** The `Product` domain class used Lombok's `@Getter` but `stockQuantity` was added later manually without explicit checks. While Lombok usually handles this, in some test environments (or if the IDE/engine isn't lombok-aware during generation), explicit getters might be assumed.
-- **Impact:** Generated tests referencing `product.getStockQuantity()` might fail if Lombok annotation processing isn't fully recognized by the static analysis tool or if the field is private without a getter.
-- **Fix Applied:** Manually added `getStockQuantity()` to `Product.java`.
+### 1. Matrix Bureaucracy Implementation
+- **Status:** Done.
+- **Impact:** Agents now specialize in Setup, Logic, and Verification separately, reducing "hallucination noise" and ensuring strict Given/When/Then structures.
 
-### B. Event Listener Unit Testing
-- **Issue:** `OrderEventListener` and `UserEventListener` use `@TransactionalEventListener`.
-- **Deficiency:** Unit testing these classes (`@InjectMocks` style) does **not** verify the transactional phase behavior (i.e., that it *waits* for commit). It only tests the logic inside the method.
-- **Improvement:** Need **Integration Tests** (`@SpringBootTest`) to verify the event wiring and transactional boundaries. Unit tests are insufficient for EDD architecture.
+### 2. Self-Healing Verification Loop
+- **Status:** Done.
+- **Impact:** The engine now runs real tests (Maven/Gradle) and repairs compilation errors/assertion failures automatically. The `class wrapper missing` bug has been permanently fixed.
 
-### C. Async Mocking Complexity
-- **Issue:** `ProductService` depends on `AiService` which returns `CompletableFuture`.
-- **Deficiency:** Mocking `CompletableFuture` requires boilerplate (`CompletableFuture.completedFuture(...)`). If the service logic didn't return a Future but just fired an async void task, it would be extremely hard to verify completion or exception handling in a unit test.
-- **Improvement:** Encourage returning `CompletableFuture` or `Future` from async methods (as done in `AiService`) to improve testability, rather than `void`.
+### 3. Incremental Merge Mode
+- **Status:** Done.
+- **Impact:** Existing test files are no longer overwritten. New scenarios are intelligently merged using JavaParser AST synthesis.
 
-## 2. Architectural Deficiencies
+## 🚀 Future Roadmap & Deficiencies
 
-### A. Tight Coupling of Notifications
-- **Issue:** `NotificationService` has logic for "VIP" vs "General" hardcoded.
-- **Improvement:** Use the **Strategy Pattern**. Create a `NotificationStrategy` interface with implementations `VipNotificationStrategy` and `GeneralNotificationStrategy`. This would make testing easier and the code more Open-Closed Principle (OCP) compliant.
+### 1. Integration Testing Capability
+- **Current Issue:** `OrderEventListener` and `UserEventListener` use `@TransactionalEventListener`, which unit tests cannot verify accurately.
+- **Goal:** Enable the engine to switch to `@SpringBootTest` + Testcontainers for event-driven and transactional logic.
 
-### B. Hardcoded Business Logic (Discount)
-- **Issue:** `OrderService` has hardcoded "FIXED_1000" and "PERCENT_10" logic.
-- **Improvement:** Move discount logic to a **Policy** or **Strategy** pattern (e.g., `DiscountPolicy`). This allows adding new coupon types without modifying the core `OrderService` (OCP).
+### 2. Strategy Pattern Suggestion
+- **Current Issue:** notification and discount logic are still hardcoded in Services.
+- **Goal:** The engine should detect OCP violations and suggest refactoring to Strategy Patterns during the "Planning" phase.
 
-### C. Anemic Domain Model vs Rich Domain Model
-- **Issue:** `OrderService` handles calculation logic (`basePrice`, `discount`, `finalPrice`).
-- **Improvement:** Move this calculation logic into the domain objects (e.g., `Order` object or `Product` object methods) to promote a **Rich Domain Model**. `OrderService` should only orchestrate the process.
+### 3. Deep Domain Model Calculations
+- **Goal:** Move orchestration logic from `OrderService` into a Rich Domain Model (`Order.java`). The generator should prefer testing domain business methods over service orchestrators.
 
-## 3. Recommended Actions for "Engine"
-1.  **Generate Integration Tests:** The engine should effectively distinguish when to use Unit Tests vs Integration Tests. For Listeners and Repositories (QueryDSL), integration tests are mandatory.
-2.  **Lombok Awareness:** Ensure the engine parses Lombok annotations correctly to avoid generating getters/setters that already exist (or assuming them when they don't).
-3.  **Pattern Refactoring:** The engine should suggest refactoring hardcoded `if-else` business logic into Strategies before generating tests, or at least flag it as "Low Maintainability".
+---
+*"Continuous healing is the path to industrial-grade quality."* 🦙

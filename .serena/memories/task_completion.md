@@ -1,18 +1,19 @@
-# Task Completion Checklist
+# Task Completion & Verification Loop
 
-When finishing a task:
+Every task MUST finish with these verification steps:
 
-1.  **Verify Compilation:**
-    *   Run `./gradlew build` to ensure the Java/Kotlin code compiles and tests pass.
-    *   If working on VS Code extension, run `npm run compile` in its directory.
+1.  **Syntactic Integrity**:
+    *   Confirm the generated file has `package`, `imports`, and `public class` wrapper.
+    *   Verify `JavaParserCodeSynthesizer` didn't strip wrappers during repair.
 
-2.  **Verify Tests:**
-    *   Run `./gradlew test` for backend changes.
-    *   Ensure new tests follow the `// given`, `// when`, `// then` structure and AssertJ patterns.
+2.  **Self-Healing Loop Verification**:
+    *   Confirm the tool executed `verifyTest` (mvn/gradle test).
+    *   If retries occurred, check if the final code is actually fixed.
 
-3.  **Documentation:**
-    *   Ensure all documentation reflects the Java/TypeScript/Kotlin stack.
+3.  **Adherence to Constitutions**:
+    *   Check for `// given/when/then` comments.
+    *   Check for `@ParameterizedTest` usage.
+    *   Verify `// FIXME` is present for logic gaps.
 
-4.  **Serena Protocol:**
-    *   Ensure no plain text searches were used for code modification.
-    *   Confirm structural integrity.
+4.  **Environment Cleaning**:
+    *   Delete any broken legacy test files that prevent the project build from passing.
