@@ -119,10 +119,12 @@ public class AgentFactory {
         sb.append("\n5. NO REDEFINITION: Test files must only contain the test class. No Markdown filler.");
         sb.append("\n6. ACCESS CONTROL: Only test 'public' and 'protected' methods. Skip 'private' entirely.");
         sb.append("\n7. ENTITY CONSTRUCTION: Check the [ENTITY_DETAILS] carefully. If `@Builder` or a `builder()` method exists, use it. Otherwise, use the NO-ARGS constructor and SETTERS. NEVER guess constructor arguments.");
-        sb.append("\n8. STRICT BDD STRUCTURE: You MUST use `// given`, `// when`, and `// then` comments as clear separators. NEVER combine them (e.g., no `// when & then`).");
+        sb.append("\n8. STRICT BDD STRUCTURE: Use `// given`, `// when`, and `// then` comments as clear separators. NEVER combine them (e.g. no `// when & then`).");
         sb.append("\n9. PARAMETERS ARE GIVEN: In `@ParameterizedTest`, use the provided arguments ONLY in the `// given` section to set up the object state or mocks.");
         sb.append("\n10. IDIOMATIC ANNOTATIONS: Use specialized JUnit 5 annotations for boundary tests: `@NullSource`, `@EmptySource`, `@NullAndEmptySource` for null/empty checks, and `@EnumSource` for Enums. Use `@CsvSource(value = {...}, nullValues = \"null\")` only when testing multiple intertwined parameters.");
         sb.append("\n11. CLEAN CSV NULLS: When using `@CsvSource`, pass the string `\"null\"` in data and set `nullValues = \"null\"` explicitly to receive a real Java `null`.");
+        sb.append("\n12. FRAGMENT DESIGN: You are creating a PART of a larger test suite. Focus only on the target method. If complex math/parsing is needed, write a `private static` helper method WITHIN your snippet.");
+        sb.append("\n13. LOGIC TRACING: Study the [ACTUAL_METHOD_BODY] intensely. Your stubs MUST match actual execution (e.g. if the code subtracts 10% tax, your stub's input must be the 90% amount).");
 
         sb.append("\n\n[INTERACTIVE PROTOCOL - ASK FOR DATA]");
         sb.append("\nIf you need the source code of a dependency (e.g., a Repository or Entity) to write correct methods/stubs:");

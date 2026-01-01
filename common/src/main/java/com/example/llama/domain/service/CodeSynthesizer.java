@@ -4,26 +4,27 @@ import com.example.llama.domain.model.GeneratedCode;
 import com.example.llama.domain.model.Intelligence;
 
 /**
- * Port for parsing, sanitizing, and synthesizing Java code.
+ * Strategy for assembling generated fragments into a final Java class.
  */
 public interface CodeSynthesizer {
+
     /**
-     * Sanitizes raw LLM output and extracts valid Java code components.
+     * Extracts the code block from the raw LLM output.
      */
     GeneratedCode sanitizeAndExtract(String rawOutput);
 
     /**
-     * Assembles a full test class.
+     * Assembles multiple fragments into a final test class.
      */
-    String assembleTestClass(String packageName, String className, GeneratedCode... snippets);
+    String assembleStructuralTestClass(String testClassName, Intelligence intel, GeneratedCode... snippets);
 
     /**
-     * Assembles a full test class with structural domain awareness.
-     */
-    String assembleStructuralTestClass(String packageName, String className, Intelligence.ComponentType type, GeneratedCode... snippets);
-
-    /**
-     * Merges new code snippets into an existing test class source code.
+     * Merges new fragments into an existing test class.
      */
     String mergeTestClass(String existingSource, GeneratedCode... newSnippets);
+    
+    /**
+     * Legacy support or general assembly.
+     */
+    String assembleTestClass(String packageName, String className, GeneratedCode... snippets);
 }

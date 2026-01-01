@@ -44,9 +44,10 @@ class OllamaEndToEndTest {
         CodeSynthesizer codeSynthesizer = new JavaParserCodeSynthesizer(); 
         AgentFactory agentFactory = new AgentFactory(llmClient);
         BureaucracyOrchestrator orchestrator = new BureaucracyOrchestrator(agentFactory);
-        TestPlanner testPlanner = new TestPlanner(agentFactory);
+        ProjectSymbolIndexer symbolIndexer = new ProjectSymbolIndexer();
+        TestPlanner testPlanner = new TestPlanner(agentFactory, codeAnalyzer);
         
-        this.pipeline = new ScenarioProcessingPipeline(orchestrator, codeAnalyzer, codeSynthesizer, testPlanner);
+        this.pipeline = new ScenarioProcessingPipeline(orchestrator, codeAnalyzer, codeSynthesizer, testPlanner, symbolIndexer);
         this.codeWriter = new FileSystemCodeWriter();
     }
 
@@ -63,7 +64,7 @@ class OllamaEndToEndTest {
                 """;
         
         Path rootPath = Paths.get("build/generated-integration-tests");
-        GeneratedCode result = pipeline.process(sourceCode, Paths.get("."));
+        GeneratedCode result = pipeline.process(sourceCode, Paths.get("."), null, Paths.get("Calculator.java"));
         Path savedPath = codeWriter.save(result, rootPath, "com.example.demo", "CalculatorTest");
 
         assertThat(savedPath).exists();

@@ -30,9 +30,10 @@ class IntelligenceTest {
     }
 
     @Test
-    @DisplayName("should provide a full class name")
-    void getFullClassName() {
-        Intelligence intel = new Intelligence("com.test", "MyClass", List.of(), List.of(), Intelligence.ComponentType.GENERAL);
-        assertThat(intel.fullClassName()).isEqualTo("com.test.MyClass");
+    void testIntelligenceCreation() {
+        Intelligence intel = new Intelligence("com.test", "MyClass", List.of("field1"), List.of("method1"), Intelligence.ComponentType.SERVICE);
+        assertThat(intel.packageName()).isEqualTo("com.test");
+        assertThat(intel.className()).isEqualTo("MyClass");
+        assertThat(intel.packageName() + "." + intel.className()).isEqualTo("com.test.MyClass");
     }
 }

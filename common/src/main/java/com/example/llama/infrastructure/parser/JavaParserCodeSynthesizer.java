@@ -48,32 +48,40 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
 
     @Override
     public String assembleTestClass(String packageName, String className, GeneratedCode... snippets) {
-        return assembleStructuralTestClass(packageName, className, Intelligence.ComponentType.GENERAL, snippets);
+        // Legacy bridge: Create a minimal Intelligence record
+        Intelligence dummyIntel = new Intelligence(packageName, className, java.util.List.of(), java.util.List.of(), Intelligence.ComponentType.GENERAL, java.util.List.of());
+        return assembleStructuralTestClass(className + "Test", dummyIntel, snippets);
     }
 
-    public String assembleStructuralTestClass(String packageName, String className, Intelligence.ComponentType type, GeneratedCode... snippets) {
+    public String assembleStructuralTestClass(String testClassName, Intelligence intel, GeneratedCode... snippets) {
         CompilationUnit cu = new CompilationUnit();
-        cu.setPackageDeclaration(packageName);
+        cu.setPackageDeclaration(intel.packageName());
 
-        addStandardImports(cu, type);
+        // 1. Copy original imports from source class (THE GOLDEN RULE)
+        intel.imports().forEach(imp -> {
+            String cleanName = imp.replace("import ", "").replace(";", "").trim();
+            if (cleanName.startsWith("static ")) {
+                cu.addImport(cleanName.replace("static ", ""), true, false);
+            } else {
+                cu.addImport(cleanName);
+            }
+        });
 
-        ClassOrInterfaceDeclaration testClass = cu.addClass(className);
+        // 2. Add Standard Test Imports
+        addStandardImports(cu, intel.type());
+
+        ClassOrInterfaceDeclaration testClass = cu.addClass(testClassName);
         testClass.addSingleMemberAnnotation("ExtendWith", "MockitoExtension.class");
         testClass.addSingleMemberAnnotation("MockitoSettings", "strictness = Strictness.LENIENT");
-        if (type == Intelligence.ComponentType.CONTROLLER) {
+        if (intel.type() == Intelligence.ComponentType.CONTROLLER) {
             testClass.addAnnotation("AutoConfigureRestDocs");
-            testClass.addSingleMemberAnnotation("WebMvcTest", className.replace("Test", "") + ".class");
+            testClass.addSingleMemberAnnotation("WebMvcTest", intel.className() + ".class");
         }
         testClass.setPublic(true);
 
-        injectLayerSpecifics(testClass, type);
-        
-        // Add imports from snippets
-        for (GeneratedCode snippet : snippets) {
-            snippet.imports().forEach(cu::addImport);
-        }
+        injectLayerSpecifics(testClass, intel.type());
 
-        // Intelligent Merging of Fragments
+        // 3. Intelligent Merging of Fragments
         mergeComponents(testClass, snippets);
 
         return cu.toString();
@@ -149,19 +157,34 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
 
     private void resolveEssentials(CompilationUnit cu) {
         String content = cu.toString();
-        // 🚀 SMART RESOLUTION: Only inject if used in code AND not already imported
+        // 🚀 ULTIMATE RESOLUTION: Inject based on presence in code
+        // JDK Essentials
         if (content.contains("BigDecimal") && !content.contains("import java.math.BigDecimal")) cu.addImport("java.math.BigDecimal");
         if (content.contains("RoundingMode") && !content.contains("import java.math.RoundingMode")) cu.addImport("java.math.RoundingMode");
         if (content.contains("List") && !content.contains("import java.util.List")) cu.addImport("java.util.List");
-        if (content.contains("ArrayList") && !content.contains("import java.util.ArrayList")) cu.addImport("java.util.ArrayList");
-        if (content.contains("Arrays") && !content.contains("import java.util.Arrays")) cu.addImport("java.util.Arrays");
         if (content.contains("Optional") && !content.contains("import java.util.Optional")) cu.addImport("java.util.Optional");
+        if (content.contains("Arrays") && !content.contains("import java.util.Arrays")) cu.addImport("java.util.Arrays");
         if (content.contains("Collections") && !content.contains("import java.util.Collections")) cu.addImport("java.util.Collections");
         if (content.contains("CompletableFuture") && !content.contains("import java.util.concurrent.CompletableFuture")) cu.addImport("java.util.concurrent.CompletableFuture");
-        
-        // Ensure Spring and Mockito essentials are never lost
+
+        // JUnit 5 Essentials
+        if (content.contains("@Test") && !content.contains("org.junit.jupiter.api.Test")) cu.addImport("org.junit.jupiter.api.Test");
+        if (content.contains("@BeforeEach") && !content.contains("org.junit.jupiter.api.BeforeEach")) cu.addImport("org.junit.jupiter.api.BeforeEach");
+        if (content.contains("@ParameterizedTest") && !content.contains("org.junit.jupiter.params.ParameterizedTest")) cu.addImport("org.junit.jupiter.params.ParameterizedTest");
+        if (content.contains("@CsvSource") && !content.contains("org.junit.jupiter.params.provider.CsvSource")) cu.addImport("org.junit.jupiter.params.provider.CsvSource");
+        if (content.contains("@ValueSource") && !content.contains("org.junit.jupiter.params.provider.ValueSource")) cu.addImport("org.junit.jupiter.params.provider.ValueSource");
+        if (content.contains("@MethodSource") && !content.contains("org.junit.jupiter.params.provider.MethodSource")) cu.addImport("org.junit.jupiter.params.provider.MethodSource");
+        if (content.contains("@NullAndEmptySource") && !content.contains("org.junit.jupiter.params.provider.NullAndEmptySource")) cu.addImport("org.junit.jupiter.params.provider.NullAndEmptySource");
+
+        // Spring Essentials
+        if (content.contains("ApplicationEventPublisher") && !content.contains("org.springframework.context.ApplicationEventPublisher")) cu.addImport("org.springframework.context.ApplicationEventPublisher");
+        if (content.contains("@Transactional") && !content.contains("org.springframework.transaction.annotation.Transactional")) cu.addImport("org.springframework.transaction.annotation.Transactional");
+        if (content.contains("ResponseEntity") && !content.contains("org.springframework.http.ResponseEntity")) cu.addImport("org.springframework.http.ResponseEntity");
+
+        // Mockito Essentials
         if (content.contains("@Mock") && !content.contains("org.mockito.Mock")) cu.addImport("org.mockito.Mock");
         if (content.contains("@InjectMocks") && !content.contains("org.mockito.InjectMocks")) cu.addImport("org.mockito.InjectMocks");
+        if (content.contains("MockitoExtension") && !content.contains("org.mockito.junit.jupiter.MockitoExtension")) cu.addImport("org.mockito.junit.jupiter.MockitoExtension");
     }
 
     private void extractMembersToMaps(ClassOrInterfaceDeclaration source, 

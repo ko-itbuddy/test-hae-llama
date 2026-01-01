@@ -10,9 +10,10 @@ public record Intelligence(
     String className,
     List<String> fields,
     List<String> methods,
-    ComponentType type
+    ComponentType type,
+    List<String> imports
 ) {
     public enum ComponentType {
-        CONTROLLER, SERVICE, REPOSITORY, ENTITY, DTO, RECORD, COMPONENT, UTIL, ENUM, CONFIGURATION, GENERAL
+        CONTROLLER, SERVICE, REPOSITORY, ENTITY, DTO, UTIL, CONFIGURATION, COMPONENT, ENUM, RECORD, GENERAL
     }
 }

@@ -58,14 +58,25 @@ public class JavaParserCodeAnalyzer implements CodeAnalyzer {
         // Detect Component Type using AST and FilePath
         Intelligence.ComponentType type = detectType(cu, filePath);
 
-        return new Intelligence(packageName, className, fields, methods, type);
+        List<String> imports = cu.getImports().stream()
+                .map(i -> i.toString().trim())
+                .toList();
+
+        return new Intelligence(
+            packageName,
+            className,
+            fields,
+            methods,
+            detectType(cu, filePath),
+            imports
+        );
     }
 
     private Intelligence.ComponentType detectType(CompilationUnit cu, String filePath) {
         if (hasAnnotation(cu, "RestController", "Controller")) return Intelligence.ComponentType.CONTROLLER;
         if (hasAnnotation(cu, "Service")) return Intelligence.ComponentType.SERVICE;
-        if (hasAnnotation(cu, "Repository") || filePath.contains("Repository")) return Intelligence.ComponentType.REPOSITORY;
-        if (hasAnnotation(cu, "Entity") || hasAnnotation(cu, "MappedSuperclass")) return Intelligence.ComponentType.ENTITY;
+        if (hasAnnotation(cu, "Repository") || filePath.endsWith("Repository.java")) return Intelligence.ComponentType.REPOSITORY;
+        if (hasAnnotation(cu, "Entity", "MappedSuperclass")) return Intelligence.ComponentType.ENTITY;
         if (hasAnnotation(cu, "Configuration")) return Intelligence.ComponentType.CONFIGURATION;
         if (hasAnnotation(cu, "Component")) return Intelligence.ComponentType.COMPONENT;
         
@@ -83,7 +94,13 @@ public class JavaParserCodeAnalyzer implements CodeAnalyzer {
 
     private boolean hasAnnotation(CompilationUnit cu, String... annotationNames) {
         return cu.findAll(com.github.javaparser.ast.expr.AnnotationExpr.class).stream()
-                .anyMatch(a -> java.util.Arrays.asList(annotationNames).contains(a.getNameAsString()));
+                .map(a -> a.getNameAsString())
+                .anyMatch(name -> {
+                    for (String target : annotationNames) {
+                        if (name.equals(target) || name.endsWith("." + target)) return true;
+                    }
+                    return false;
+                });
     }
 
     @Override
