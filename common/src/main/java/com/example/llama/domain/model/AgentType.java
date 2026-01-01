@@ -6,6 +6,7 @@ public enum AgentType {
     // Planning TF (Architects)
     LOGIC_ARCHITECT,
     BOUNDARY_ARCHITECT,
+    ENUM_ARCHITECT,
     CONCURRENCY_ARCHITECT,
     INTEGRITY_ARCHITECT,
     MASTER_ARCHITECT,

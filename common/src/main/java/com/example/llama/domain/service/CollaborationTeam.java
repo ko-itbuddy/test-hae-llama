@@ -32,12 +32,13 @@ public class CollaborationTeam {
             String reviewResult = reviewer.act(reviewPrompt, context);
             AgentLogger.logInteraction(reviewer.getRole(), "Review " + (i+1), reviewResult);
 
-            if (reviewResult.toUpperCase().contains("APPROVED")) {
+            if (reviewResult.toUpperCase().contains("[APPROVED]")) {
                 System.out.println("[FACT] Consensus reached. Mission completed.");
                 return currentOutput;
             }
 
-            feedback = reviewResult;
+            feedback = reviewResult.replace("[REJECTED]", "").trim();
+            System.out.println("[FACT] Feedback received: " + (feedback.length() > 50 ? feedback.substring(0, 50) + "..." : feedback));
         }
 
         // 3. Mandatory Arbitration if consensus fails

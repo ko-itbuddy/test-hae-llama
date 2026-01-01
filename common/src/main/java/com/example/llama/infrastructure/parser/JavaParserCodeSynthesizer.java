@@ -97,41 +97,90 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
         java.util.Map<String, FieldDeclaration> fields = new java.util.LinkedHashMap<>();
         java.util.List<MethodDeclaration> methods = new java.util.ArrayList<>();
         java.util.List<BodyDeclaration<?>> others = new java.util.ArrayList<>();
+        CompilationUnit rootCu = targetClass.findCompilationUnit().orElse(null);
 
         for (GeneratedCode snippet : snippets) {
             String body = snippet.body();
             if (body == null || body.isBlank()) continue;
             
+            // Extract and remove imports first to ensure clean parsing
+            if (rootCu != null) {
+                extractImports(body).forEach(rootCu::addImport);
+                body = removeImports(body);
+            }
+            
             try {
-                CompilationUnit tempCu;
-                if (body.contains("class ") && body.contains("{")) {
-                    // It's likely a full class, parse directly
-                    tempCu = parser.parse(body).getResult().orElse(null);
+                CompilationUnit tempCu = null;
+                // Try parsing as a Compilation Unit (for full classes or nested classes acting as top-level in snippet)
+                ParseResult<CompilationUnit> result = parser.parse(body);
+                if (result.isSuccessful() && result.getResult().isPresent()) {
+                    tempCu = result.getResult().get();
                 } else {
-                    // It's a fragment, wrap and parse
-                    tempCu = parser.parse("class Wrapper { " + body + " }").getResult().orElse(null);
+                    // Fallback: Try parsing as a BodyDeclaration (for inner classes, methods, fields)
+                    ParseResult<BodyDeclaration<?>> bodyResult = parser.parseBodyDeclaration(body);
+                    if (bodyResult.isSuccessful() && bodyResult.getResult().isPresent()) {
+                        others.add(bodyResult.getResult().get());
+                        continue; // Successfully added as a member
+                    }
+                    
+                    // Fallback 2: Wrap in class
+                    ParseResult<CompilationUnit> wrappedResult = parser.parse("class Wrapper { " + body + " }");
+                    if (wrappedResult.isSuccessful() && wrappedResult.getResult().isPresent()) {
+                        tempCu = wrappedResult.getResult().get();
+                    } else {
+                        System.out.println("❌ Parse Failure for snippet:\n" + body);
+                        result.getProblems().forEach(p -> System.out.println("   -> " + p.getMessage()));
+                    }
                 }
                 
                 if (tempCu != null) {
                     tempCu.findFirst(ClassOrInterfaceDeclaration.class).ifPresent(c -> {
-                        for (BodyDeclaration<?> member : c.getMembers()) {
-                            if (member.isFieldDeclaration()) {
-                                FieldDeclaration fd = member.asFieldDeclaration();
-                                // Handle multiple variables in one declaration
-                                for (int i = 0; i < fd.getVariables().size(); i++) {
-                                    String varName = fd.getVariable(i).getNameAsString();
-                                    fields.putIfAbsent(varName, fd);
+                        // If it's a wrapper, take its members
+                        if ("Wrapper".equals(c.getNameAsString())) {
+                             for (BodyDeclaration<?> member : c.getMembers()) {
+                                if (member.isFieldDeclaration()) {
+                                    FieldDeclaration fd = member.asFieldDeclaration();
+                                    for (int i = 0; i < fd.getVariables().size(); i++) {
+                                        fields.putIfAbsent(fd.getVariable(i).getNameAsString(), fd);
+                                    }
+                                } else if (member.isMethodDeclaration()) {
+                                    methods.add(member.asMethodDeclaration());
+                                } else {
+                                    others.add(member);
                                 }
-                            } else if (member.isMethodDeclaration()) {
-                                methods.add(member.asMethodDeclaration());
+                            }
+                        } else {
+                            // If it's a named class (e.g. Nested class), treat it as a member (Other)
+                            // But wait, if it was parsed as CU, 'c' is the top level class.
+                            // If we want to include this 'c' as a member of TargetClass, we must add 'c' itself.
+                            // However, 'mergeComponents' logic previously extracted members OF 'c'.
+                            // If 'c' IS the Nested class we built in Pipeline, we want to add 'c' to 'others'.
+                            
+                            // Check if this class is the one we constructed in Pipeline (e.g. ends with Test)
+                            if (c.getNameAsString().endsWith("Test") && !c.getNameAsString().equals(targetClass.getNameAsString())) {
+                                others.add(c);
                             } else {
-                                others.add(member);
+                                // It's likely a wrapper or the main class itself from DATA_CLERK (if sanitize failed)
+                                // Extract members
+                                for (BodyDeclaration<?> member : c.getMembers()) {
+                                    if (member.isFieldDeclaration()) {
+                                        FieldDeclaration fd = member.asFieldDeclaration();
+                                        for (int i = 0; i < fd.getVariables().size(); i++) {
+                                            fields.putIfAbsent(fd.getVariable(i).getNameAsString(), fd);
+                                        }
+                                    } else if (member.isMethodDeclaration()) {
+                                        methods.add(member.asMethodDeclaration());
+                                    } else {
+                                        others.add(member);
+                                    }
+                                }
                             }
                         }
                     });
                 }
             } catch (Exception e) {
                 log.warn("Failed to parse snippet for merging: {}", e.getMessage());
+                e.printStackTrace();
             }
         }
 
@@ -141,6 +190,20 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
         methods.forEach(targetClass::addMember);
     }
 
+    private java.util.List<String> extractImports(String code) {
+        java.util.List<String> imports = new java.util.ArrayList<>();
+        Pattern p = Pattern.compile("import\\s+(?:static\\s+)?([\\w\\.]+)(?:\\.\\*)?;");
+        Matcher m = p.matcher(code);
+        while (m.find()) {
+            imports.add(m.group(0).replace("import ", "").replace(";", "").trim()); // Keep 'static' if present
+        }
+        return imports;
+    }
+
+    private String removeImports(String code) {
+        return code.replaceAll("import\\s+.*?;", "").trim();
+    }
+
     private void addStandardImports(CompilationUnit cu, Intelligence.ComponentType type) {
         cu.addImport("org.junit.jupiter.api.Test");
         cu.addImport("org.junit.jupiter.api.Nested");
@@ -148,6 +211,8 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
         cu.addImport("org.junit.jupiter.api.extension.ExtendWith");
         cu.addImport("org.mockito.junit.jupiter.MockitoExtension");
         cu.addImport("static org.assertj.core.api.Assertions.assertThat");
+        cu.addImport("static org.junit.jupiter.api.Assertions.*");
+        cu.addImport("java.math.BigDecimal");
         if (type == Intelligence.ComponentType.CONTROLLER) {
             cu.addImport("org.springframework.beans.factory.annotation.Autowired");
             cu.addImport("org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest");

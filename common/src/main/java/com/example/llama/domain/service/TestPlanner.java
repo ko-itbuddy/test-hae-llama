@@ -30,6 +30,12 @@ public class TestPlanner {
             finalScenarios.add(new Scenario("Setup", "Configure test infrastructure (Mocks, InjectMocks, BeforeEach). Define all class-level fields here."));
         }
 
+        if (domain == Intelligence.ComponentType.ENUM) {
+            log.info("🎯 [ENUM STRATEGY] Planning parameterized tests for Enum: {}", intel.className());
+            finalScenarios.add(new Scenario("EnumTest", "Verify all enum constants, properties, and methods using @ParameterizedTest, @EnumSource, and @CsvSource."));
+            return finalScenarios;
+        }
+
         Agent logicArchi = agentFactory.create(AgentType.LOGIC_ARCHITECT, domain);
         Agent boundaryArchi = agentFactory.create(AgentType.BOUNDARY_ARCHITECT, domain);
         Agent masterArchi = agentFactory.create(AgentType.MASTER_ARCHITECT, domain);
@@ -77,6 +83,7 @@ public class TestPlanner {
     private boolean isMajorComponent(Intelligence.ComponentType type) {
         return type == Intelligence.ComponentType.CONTROLLER || 
                type == Intelligence.ComponentType.SERVICE || 
-               type == Intelligence.ComponentType.REPOSITORY;
+               type == Intelligence.ComponentType.REPOSITORY ||
+               type == Intelligence.ComponentType.COMPONENT;
     }
 }

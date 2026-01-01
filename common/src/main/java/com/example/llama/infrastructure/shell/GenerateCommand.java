@@ -4,6 +4,7 @@ import com.example.llama.domain.model.GeneratedCode;
 import com.example.llama.domain.service.CodeWriter;
 import com.example.llama.domain.service.DocWriter;
 import com.example.llama.domain.service.ScenarioProcessingPipeline;
+import com.example.llama.infrastructure.io.InteractionLogger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.shell.standard.ShellComponent;
@@ -15,6 +16,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 @Slf4j
@@ -25,6 +27,7 @@ public class GenerateCommand {
     private final ScenarioProcessingPipeline pipeline;
     private final CodeWriter codeWriter;
     private final DocWriter docWriter;
+    private final InteractionLogger logger;
 
     @ShellMethod(key = "generate", value = "Generate test code for a specific source file.")
     public void generate(
@@ -50,42 +53,52 @@ public class GenerateCommand {
         try (Stream<Path> stream = Files.walk(startPath)) {
             List<Path> targets = stream
                     .filter(p -> !Files.isDirectory(p))
-                    .filter(p -> {
-                        String name = p.getFileName().toString();
-                        return name.endsWith("Controller.java") || 
-                               name.endsWith("Service.java") || 
-                               name.endsWith("Repository.java");
-                    })
+                    .filter(p -> p.toString().endsWith(".java"))
+                    .filter(p -> !p.toString().endsWith("Application.java")) // Skip Main App
+                    .filter(p -> !p.toString().endsWith("Test.java"))        // Skip Existing Tests
+                    .filter(p -> !p.toString().contains("/test/"))           // Skip Test Directory
+                    .filter(p -> !p.toString().endsWith("Exception.java"))   // Skip Exceptions (usually no logic)
+                    .filter(p -> !p.toString().endsWith("Config.java"))      // Skip Configs (usually framework wiring)
+                    .filter(p -> !p.toString().endsWith("Configuration.java"))
                     .toList();
 
             log.info("🔎 Found {} target files. Starting batch processing...", targets.size());
+            logger.logTree(targets, startPath);
+
+            AtomicInteger successCount = new AtomicInteger(0);
+            AtomicInteger failCount = new AtomicInteger(0);
 
             for (Path target : targets) {
-                processFile(target, projectRoot);
+                if (processFile(target, projectRoot)) {
+                    successCount.incrementAndGet();
+                } else {
+                    failCount.incrementAndGet();
+                }
             }
             
-            log.info("🏁 Batch processing complete.");
+            logger.logSummary(targets.size(), successCount.get(), failCount.get());
+            log.info("🏁 Batch processing complete. Success: {}, Failed: {}", successCount.get(), failCount.get());
 
         } catch (IOException e) {
             log.error("💥 Error scanning directory", e);
         }
     }
 
-    private void processFile(Path sourcePath, Path projectRoot) {
+    private boolean processFile(Path sourcePath, Path projectRoot) {
         try {
             Path absSourcePath = sourcePath.toAbsolutePath().normalize();
             Path absProjectRoot = projectRoot.toAbsolutePath().normalize();
 
             if (!Files.exists(absSourcePath)) {
                 log.error("❌ Source file NOT FOUND: {}", absSourcePath);
-                return;
+                return false;
             }
 
             log.info("🚀 [Llama Shell] Processing: {}", absSourcePath.getFileName());
 
             // 3. Process
             String sourceCode = Files.readString(absSourcePath);
-            GeneratedCode result = pipeline.process(sourceCode);
+            GeneratedCode result = pipeline.process(sourceCode, absProjectRoot);
 
             // 4. Save Test Code
             String packageName = extractPackageName(sourceCode);
@@ -97,9 +110,11 @@ public class GenerateCommand {
             // 5. Generate AsciiDoc
             String fileName = absSourcePath.getFileName().toString().replace(".java", "");
             docWriter.writeAsciidoc(result, absProjectRoot, fileName);
+            return true;
 
         } catch (Exception e) {
             log.error("💥 Error processing file: " + sourcePath, e);
+            return false;
         }
     }
 

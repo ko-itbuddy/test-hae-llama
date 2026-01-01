@@ -1,8 +1,8 @@
-package com.example.demo.repository;
+package com.example.demo.repository.impl;
 
 
 
-package com.example.demo.repository;
+package com.example.demo.repository.impl;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Nested;
@@ -12,24 +12,24 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
-public class UserRepositoryTest {
+public class NotificationHistoryRepositoryImplTest {
 
     @Autowired()
-    private UserRepository userRepository;
+    private NotificationHistoryRepositoryImpl notificationHistoryRepositoryImpl;
 
     @org.junit.jupiter.api.AfterEach()
     public void tearDown() {
-        userRepository.deleteAll();
+        notificationHistoryRepositoryImpl.deleteAll();
     }
 
-    @Autowired
+    @MockBean
     private TestEntityManager testEntityManager;
 
-    @Autowired
-    private UserRepository userRepository;
+    @SpyBean
+    private NotificationHistoryRepository notificationHistoryRepository;
 
     @BeforeEach
     public void setUp() {
-        // Setup any necessary data using testEntityManager if required
+        openMocks(this);
     }
 }

@@ -6,6 +6,7 @@ import com.github.javaparser.ParserConfiguration;
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
+import com.github.javaparser.ast.body.EnumDeclaration;
 import com.github.javaparser.ast.body.FieldDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.RecordDeclaration; // Add support for Records
@@ -32,14 +33,17 @@ public class JavaParserCodeAnalyzer implements CodeAnalyzer {
                 .map(pd -> pd.getNameAsString())
                 .orElse("");
 
-        // Support both Class and Record
+        // Support Class, Record, and Enum
         String className = cu.findAll(ClassOrInterfaceDeclaration.class).stream()
                 .findFirst()
                 .map(ClassOrInterfaceDeclaration::getNameAsString)
                 .orElseGet(() -> cu.findAll(RecordDeclaration.class).stream()
                         .findFirst()
                         .map(RecordDeclaration::getNameAsString)
-                        .orElseThrow(() -> new IllegalArgumentException("No class or record found in source code")));
+                        .orElseGet(() -> cu.findAll(EnumDeclaration.class).stream()
+                                .findFirst()
+                                .map(EnumDeclaration::getNameAsString)
+                                .orElseThrow(() -> new IllegalArgumentException("No class, record, or enum found in source code"))));
 
         // Extract fields (Records might need different handling, but basic field extraction works for classes)
         // For records, we might want to extract parameters as fields if needed, but let's stick to simple logic first.
@@ -58,6 +62,7 @@ public class JavaParserCodeAnalyzer implements CodeAnalyzer {
     }
 
     private Intelligence.ComponentType detectType(CompilationUnit cu) {
+        if (cu.findAll(EnumDeclaration.class).stream().findFirst().isPresent()) return Intelligence.ComponentType.ENUM;
         if (hasAnnotation(cu, "RestController") || hasAnnotation(cu, "Controller")) return Intelligence.ComponentType.CONTROLLER;
         if (hasAnnotation(cu, "Service")) return Intelligence.ComponentType.SERVICE;
         if (hasAnnotation(cu, "Repository")) return Intelligence.ComponentType.REPOSITORY;

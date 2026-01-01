@@ -1,6 +1,7 @@
 package com.example.llama.infrastructure.llm;
 
 import com.example.llama.domain.service.LlmClient;
+import com.example.llama.infrastructure.io.InteractionLogger;
 import lombok.RequiredArgsConstructor;
 import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Component;
 public class SpringAiLlmClient implements LlmClient {
 
     private final OllamaChatModel chatModel;
+    private final InteractionLogger logger;
 
     @Override
     public String generate(String prompt, String systemDirective) {
@@ -40,6 +42,9 @@ public class SpringAiLlmClient implements LlmClient {
             System.out.println(response);
             System.out.println("=".repeat(100) + "\n");
             
+            // 📝 Log to file
+            logger.logInteraction("Ollama", fullPrompt, response);
+
             return response;
         } catch (Exception e) {
             System.err.println("\n[FACT] !!! OLLAMA DIALOGUE FAILED !!!");

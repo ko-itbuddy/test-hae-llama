@@ -14,7 +14,7 @@ public record Intelligence(
         ComponentType type
 ) {
     public enum ComponentType {
-        CONTROLLER, SERVICE, REPOSITORY, COMPONENT, ENTITY, RECORD, DTO, UTIL, GENERAL
+        CONTROLLER, SERVICE, REPOSITORY, COMPONENT, ENTITY, RECORD, DTO, UTIL, ENUM, GENERAL
     }
 
     public Intelligence {

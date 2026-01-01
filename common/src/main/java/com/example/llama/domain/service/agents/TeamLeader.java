@@ -31,6 +31,9 @@ public class TeamLeader {
         if (isSetupScenario(scenario)) {
             strategy = "INFRASTRUCTURE_SETUP";
             specialist = factory.create(AgentType.SETUP_CLERK, domain);
+        } else if (domain == Intelligence.ComponentType.ENUM) {
+            strategy = "ENUM_PARAMETERIZED_TESTING";
+            specialist = factory.create(AgentType.DATA_CLERK, domain);
         } else {
             strategy = "LOGIC_VERIFICATION";
             specialist = factory.create(AgentType.DATA_CLERK, domain); // Renamed mentally to TEST_CLERK

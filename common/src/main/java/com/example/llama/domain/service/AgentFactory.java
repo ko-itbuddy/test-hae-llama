@@ -27,13 +27,15 @@ public class AgentFactory {
         // 1. Role-based Base Mission
         switch (role) {
             case LOGIC_ARCHITECT -> sb.append("[MISSION] Identify primary business logic and success paths.");
+            case ENUM_ARCHITECT -> sb.append("[MISSION] Identify all enum constants, properties, and methods for parameterized testing.");
             case BOUNDARY_ARCHITECT -> sb.append("[MISSION] Identify ONLY edge cases, nulls, empty strings, and min/max values.");
             case CONCURRENCY_ARCHITECT -> sb.append("[MISSION] Analyze thread safety, race conditions, and shared resource integrity.");
             case INTEGRITY_ARCHITECT -> sb.append("[MISSION] Analyze transaction boundaries, event emissions, and database consistency.");
             case MASTER_ARCHITECT -> sb.append("[MISSION] Consolidate multiple scenario proposals into a FINAL, non-redundant list.");
             
-            case SETUP_CLERK -> sb.append("[MISSION] Generate ONLY the class-level fields (mocks, inject-mocks) and setup methods (@BeforeEach). Do NOT generate @Test methods. Output purely the fields/setup logic.");
-            case DATA_CLERK -> sb.append("[MISSION] Generate Java code for test data fixtures. Do NOT generate the class definition. Generate ONLY the @Test method(s).");
+            case SETUP_CLERK -> sb.append("[MISSION] Generate ONLY the class-level fields (mocks, inject-mocks) and setup methods (@BeforeEach) AND strictly include all necessary imports (e.g. BeforeEach, Mock, InjectMocks). Do NOT generate @Test methods. Output purely the fields/setup logic.");
+            case DATA_CLERK -> sb.append("[MISSION] Generate Java code for test data fixtures. Generate the @Test method(s) AND strictly include all necessary imports (e.g. static assertions, classes used). Do NOT generate the class definition wrapper.");
+            case DATA_MANAGER -> sb.append("[MISSION] Review the provided code. Output '[APPROVED]' if it is correct. If incorrect, output '[REJECTED]' followed by a specific list of errors (e.g., 'Compilation error at line X', 'Logic flaw', 'Hallucinated method'). Do NOT rewrite the code.");
             case MOCK_CLERK -> sb.append("[MISSION] Generate Mockito stubbing code.");
             case EXEC_CLERK -> sb.append("[MISSION] Generate method execution/MockMvc perform code.");
             case VERIFY_CLERK -> sb.append("[MISSION] Generate AssertJ/RestDocs verification code.");
@@ -45,6 +47,7 @@ public class AgentFactory {
         // 2. Domain-based Strategic Directives
         sb.append("\n");
         switch (domain) {
+            // ... (keep existing strategies) ...
             case CONTROLLER -> {
                 sb.append("[MANDATORY] Strategy: CONTROLLER Layer Testing\n");
                 sb.append("1. Output: Generate ONLY the `@Test` method code. Do NOT create a `public class ...` wrapper.\n");
@@ -86,13 +89,43 @@ public class AgentFactory {
                 sb.append("2. If Beans needed: Use `@SpringJUnitConfig(TargetClass.class)`.\n");
                 sb.append("3. Focus: Pure algorithmic logic, edge cases, and null handling.\n");
             }
+            case ENUM -> {
+                sb.append("[MANDATORY] Strategy: ENUM Testing\n");
+                sb.append("1. Annotation: Use `@ParameterizedTest` extensively.\n");
+                sb.append("2. Sources: Use `@EnumSource`, `@CsvSource`, `@MethodSource`.\n");
+                sb.append("3. Coverage: Verify that ALL constants defined in the enum are tested.\n");
+                sb.append("4. Logic: Verify property mapping (e.g. `Code` -> `Description`) and business methods.\n");
+                sb.append("5. Compactness: Do NOT write separate methods for each constant. Use parameterized tests to cover all of them in 1-2 methods.\n");
+            }
             default -> {
                 sb.append("[MANDATORY] Strategy: General Unit Testing\n");
                 sb.append("1. Use standard JUnit 5 and AssertJ.\n");
             }
         }
         
-        sb.append("\n[OUTPUT RULE] Output ONLY Java code or bulleted lists as requested. No Markdown conversational filler.");
+        // 3. GLOBAL ANTI-HALLUCINATION PROTOCOL
+        sb.append("\n\n[STRICT REALITY CHECK - CRITICAL]");
+        sb.append("\n1. NO INVENTIONS: You MUST NOT invent fields, dependencies, or methods that are not explicitly present in the provided [CONTEXT] or [DEPENDENCIES].");
+        sb.append("\n2. NO PLACEHOLDERS: NEVER use generic names like 'DependencyRepository', 'SomeService', 'someMethod', 'mockDependency'. Use ACTUAL class/field names from the source.");
+        sb.append("\n3. FACTUAL ONLY: If the target class has NO dependencies, do NOT add @Mock fields. Do NOT add 'verify()' calls for non-existent mocks.");
+        sb.append("\n4. COMPILE-READY: The code must compile against the provided source. Do not assume imports or classes exist if they are not standard Java/Spring/Test libraries.");
+        sb.append("\n5. NO REDEFINITION: Do NOT re-define the target class (e.g., 'public class Target { ... }'). Test files must only contain the test class.");
+
+        sb.append("\n\n[INTERACTIVE PROTOCOL - ASK FOR DATA]");
+        sb.append("\nIf you need the source code of a dependency (e.g., a Repository or Entity) to write correct methods/stubs:");
+        sb.append("\n1. STOP generating code immediately.");
+        sb.append("\n2. OUTPUT ONLY: `[REQUEST_CONTEXT] <SimpleClassName>` (e.g., `[REQUEST_CONTEXT] ProductRepository`).");
+        sb.append("\n3. The system will fetch the file content and call you again. Do NOT guess method signatures.");
+        
+        // Distinct Output Rules
+        if (role.name().contains("ARCHITECT")) {
+            sb.append("\n[OUTPUT RULE] Output a BULLETED LIST of scenarios (strings). Do NOT output Java code.");
+        } else if (role == AgentType.DATA_MANAGER) {
+            sb.append("\n[OUTPUT RULE] Output '[APPROVED]' or '[REJECTED] <Feedback>'. Do NOT output Java code unless providing a small example.");
+        } else {
+            sb.append("\n[OUTPUT RULE] Output ONLY Java code. No Markdown conversational filler.");
+        }
+        
         return sb.toString();
     }
 }

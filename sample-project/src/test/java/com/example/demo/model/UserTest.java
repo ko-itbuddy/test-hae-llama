@@ -1,8 +1,8 @@
-package com.example.demo;
+package com.example.demo.model;
 
 
 
-package com.example.demo;
+package com.example.demo.model;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Nested;
@@ -12,14 +12,5 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
-public class HelloServiceTest {
-
-    @InjectMocks
-    private HelloService helloService;
-
-    // Add @Mock fields for dependencies here if any
-    @BeforeEach
-    public void setUp() {
-        // Initialization logic if needed
-    }
+public class UserTest {
 }

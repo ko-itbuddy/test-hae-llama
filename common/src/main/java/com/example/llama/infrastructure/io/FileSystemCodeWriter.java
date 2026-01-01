@@ -23,7 +23,7 @@ public class FileSystemCodeWriter implements CodeWriter {
 
             Path filePath = packageDir.resolve(className + ".java");
             
-            String content = "package " + packageName + ";\n\n" + code.toFullSource();
+            String content = code.toFullSource();
             Files.writeString(filePath, content);
 
             log.info("💾 Saved generated test to: {}", filePath.toAbsolutePath());

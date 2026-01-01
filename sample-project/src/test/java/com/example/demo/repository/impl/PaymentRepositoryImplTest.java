@@ -1,8 +1,8 @@
-package com.example.demo.repository;
+package com.example.demo.repository.impl;
 
 
 
-package com.example.demo.repository;
+package com.example.demo.repository.impl;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Nested;
@@ -12,24 +12,24 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @ExtendWith(MockitoExtension.class)
-public class UserRepositoryTest {
+public class PaymentRepositoryImplTest {
 
     @Autowired()
-    private UserRepository userRepository;
+    private PaymentRepositoryImpl paymentRepositoryImpl;
 
     @org.junit.jupiter.api.AfterEach()
     public void tearDown() {
-        userRepository.deleteAll();
+        paymentRepositoryImpl.deleteAll();
     }
 
     @Autowired
     private TestEntityManager testEntityManager;
 
     @Autowired
-    private UserRepository userRepository;
+    private PaymentRepository paymentRepository;
 
     @BeforeEach
     public void setUp() {
-        // Setup any necessary data using testEntityManager if required
+        // Setup logic if needed using testEntityManager
     }
 }
