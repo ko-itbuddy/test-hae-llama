@@ -60,6 +60,7 @@ public class JavaParserCodeAnalyzer implements CodeAnalyzer {
 
         List<String> imports = cu.getImports().stream()
                 .map(i -> i.toString().trim())
+                .filter(i -> !i.isBlank() && i.startsWith("import "))
                 .toList();
 
         return new Intelligence(

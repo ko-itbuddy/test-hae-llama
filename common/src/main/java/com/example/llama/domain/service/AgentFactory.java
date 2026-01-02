@@ -126,6 +126,8 @@ public class AgentFactory {
         sb.append("\n12. FRAGMENT DESIGN: You are creating a PART of a larger test suite. Focus only on the target method. If complex math/parsing is needed, write a `private static` helper method WITHIN your snippet.");
         sb.append("\n13. LOGIC ANCHORING: To prevent rounding or calculation discrepancies, your test MUST reuse the actual logic from the [ACTUAL_METHOD_BODY] by defining them as variables within the test (e.g. reuse the actual logic from the method body as variables).");
         sb.append("\n14. SMART_ASSERTION_COMMENTING: If you write an assertion that you suspect might fail due to human-written implementation flaws, add a `// FIXME: <Reason>` or `// TODO: <Task>` comment explaining EXACTLY why the test might fail and how to fix the source code (explain the discrepancy).");
+        sb.append("\n15. NESTED STRUCTURE: To ensure clarity, you MUST group tests for each target method within a `@Nested` class. Name the nested class after the target method (e.g., `class Describe_processPayroll`).");
+        sb.append("\n16. DISPLAY NAME: Every test class (including `@Nested`) and every `@Test` method MUST have a human-readable `@DisplayName` explaining the intent in plain language.");
 
         sb.append("\n\n[INTERACTIVE PROTOCOL - ASK FOR DATA]");
         sb.append("\nIf you need the source code of a dependency (e.g., a Repository or Entity) to write correct methods/stubs:");

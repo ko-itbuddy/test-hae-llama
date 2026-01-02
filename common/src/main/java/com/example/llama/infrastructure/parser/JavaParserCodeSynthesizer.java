@@ -58,12 +58,21 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
         cu.setPackageDeclaration(intel.packageName());
 
         // 1. Copy original imports from source class (THE GOLDEN RULE)
+        Pattern importPattern = Pattern.compile("import\\s+(?:static\\s+)?([\\w\\.\\*]+);");
         intel.imports().forEach(imp -> {
-            String cleanName = imp.replace("import ", "").replace(";", "").trim();
-            if (cleanName.startsWith("static ")) {
-                cu.addImport(cleanName.replace("static ", ""), true, false);
-            } else {
-                cu.addImport(cleanName);
+            try {
+                Matcher m = importPattern.matcher(imp.trim());
+                if (m.find()) {
+                    String fullPath = m.group(1);
+                    boolean isStatic = imp.contains("static ");
+                    if (isStatic) {
+                        cu.addImport(fullPath, true, false);
+                    } else {
+                        cu.addImport(fullPath);
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to clone import: {}. Skipping.", imp);
             }
         });
 

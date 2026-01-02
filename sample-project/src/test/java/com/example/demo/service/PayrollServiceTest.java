@@ -12,7 +12,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.*;
 import org.mockito.Mock;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -29,8 +28,23 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.CompletableFuture;
 import org.springframework.test.util.ReflectionTestUtils;
+import org.junit.jupiter.params.provider.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 public class PayrollServiceTest {
+
+    @InjectMocks
+    private PayrollService payrollService;
+
+    @Mock
+    private BankClient bankClient;
+
+    @Mock
+    private PaymentRepository paymentRepository;
 }
