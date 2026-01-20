@@ -17,7 +17,13 @@ public class OpencodeLlmClient implements LlmClient {
 
     @Override
     public String generate(String prompt, String systemDirective) {
-        String fullPrompt = systemDirective + "\n\n" + prompt;
+        String fullPrompt = String.format("""
+                <prompt>
+                %s
+
+                %s
+                </prompt>
+                """, systemDirective, prompt);
 
         System.out.println("\n" + "=".repeat(40) + " [EXECUTING OPENCODE CLI] " + "=".repeat(40));
         System.out.println("SYSTEM DIRECTIVE: " + systemDirective.length() + " chars");

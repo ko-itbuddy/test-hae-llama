@@ -37,22 +37,22 @@ public class LlmSystemDirective {
                   <persona>
                     <role>%s Specialist</role>
                     <domain>%s</domain>
-                    <mission>
+                    <mission><![CDATA[
                 %s
-                    </mission>
-                    <domain_strategy>
+                    ]]></mission>
+                    <domain_strategy><![CDATA[
                 %s
-                    </domain_strategy>
-                    <critical_policy>
+                    ]]></domain_strategy>
+                    <critical_policy><![CDATA[
                 %s
-                    </critical_policy>
-                    <repair_protocol>
+                    ]]></critical_policy>
+                    <repair_protocol><![CDATA[
                 %s
-                    </repair_protocol>
+                    ]]></repair_protocol>
                   </persona>
-                  <format_standard>
+                  <format_standard><![CDATA[
                 %s
-                  </format_standard>
+                  ]]></format_standard>
                 </system_instructions>
                 """,
                 role,
