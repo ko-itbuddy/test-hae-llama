@@ -95,11 +95,20 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
             JavaSourceSplitter.SplitResult methodSplit = javaSourceSplitter.split(maskedSourceCode, methodName);
             log.info("      Extracted Source Size: {} characters", methodSplit.targetMethodSource().length());
 
-            // Add existing setup code as a special reference for context
+            // Add existing setup summary (optimized for token efficiency)
             List<LlmCollaborator> fullContext = new ArrayList<>(collaborators);
+            String setupSummary = String.format("""
+                    Test class setup already configured:
+                    - @ExtendWith(MockitoExtension.class)
+                    - @InjectMocks: %s
+                    - @Mock dependencies detected from constructor
+                    - @Nested Describe_{MethodName} structure ready
+                    - Do NOT repeat class-level setup
+                    """, intelligence.className());
+
             fullContext.add(LlmCollaborator.builder()
-                    .name("EXISTING_TEST_SKELETON")
-                    .methods(setupCode)
+                    .name("EXISTING_SETUP")
+                    .methods(setupSummary)
                     .build());
 
             LlmClassContext methodClassContext = LlmClassContext.builder()
@@ -164,13 +173,54 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
     }
 
     private String mergeSetupAndTests(String setupCode, String testMethods) {
-        // Naive merge: specific implementation depends on how setupCode is returned.
-        // If setupCode ends with "}", we strip it and append tests + "}".
-        String trimmedSetup = setupCode.trim();
-        if (trimmedSetup.endsWith("}")) {
-            return trimmedSetup.substring(0, trimmedSetup.lastIndexOf("}")) + "\n" + testMethods + "\n}";
+        try {
+            // Parse setup code (skeleton with empty @Nested classes)
+            com.github.javaparser.ast.CompilationUnit setupCu = com.github.javaparser.StaticJavaParser.parse(setupCode);
+            com.github.javaparser.ast.body.ClassOrInterfaceDeclaration testClass = setupCu
+                    .findFirst(com.github.javaparser.ast.body.ClassOrInterfaceDeclaration.class)
+                    .orElseThrow(() -> new RuntimeException("No test class found in setup code"));
+
+            // Parse test methods (contains @Nested classes with actual @Test methods)
+            String wrappedTests = "class Wrapper { " + testMethods + " }";
+            com.github.javaparser.ast.CompilationUnit testsCu = com.github.javaparser.StaticJavaParser
+                    .parse(wrappedTests);
+            com.github.javaparser.ast.body.ClassOrInterfaceDeclaration wrapperClass = testsCu
+                    .findFirst(com.github.javaparser.ast.body.ClassOrInterfaceDeclaration.class)
+                    .orElseThrow(() -> new RuntimeException("No wrapper class found"));
+
+            // Merge: Replace empty @Nested classes with filled ones
+            for (com.github.javaparser.ast.body.BodyDeclaration<?> newMember : wrapperClass.getMembers()) {
+                if (newMember instanceof com.github.javaparser.ast.body.ClassOrInterfaceDeclaration newNestedClass) {
+                    String nestedClassName = newNestedClass.getNameAsString();
+
+                    // Find and replace the empty @Nested class in setup
+                    java.util.Optional<com.github.javaparser.ast.body.ClassOrInterfaceDeclaration> existingNested = testClass
+                            .findFirst(com.github.javaparser.ast.body.ClassOrInterfaceDeclaration.class,
+                                    c -> c.getNameAsString().equals(nestedClassName));
+
+                    if (existingNested.isPresent()) {
+                        // Replace empty @Nested class with filled one
+                        testClass.getMembers().remove(existingNested.get());
+                        testClass.addMember(newNestedClass);
+                        log.debug("Merged @Nested class: {}", nestedClassName);
+                    } else {
+                        // Add new @Nested class if not found
+                        testClass.addMember(newNestedClass);
+                        log.debug("Added new @Nested class: {}", nestedClassName);
+                    }
+                }
+            }
+
+            return setupCu.toString();
+        } catch (Exception e) {
+            log.error("JavaParser merge failed, falling back to naive merge: {}", e.getMessage());
+            // Fallback to naive merge
+            String trimmedSetup = setupCode.trim();
+            if (trimmedSetup.endsWith("}")) {
+                return trimmedSetup.substring(0, trimmedSetup.lastIndexOf("}")) + "\n" + testMethods + "\n}";
+            }
+            return setupCode + "\n" + testMethods;
         }
-        return setupCode + "\n" + testMethods;
     }
 
     private Path findProjectRoot(Path sourcePath) {

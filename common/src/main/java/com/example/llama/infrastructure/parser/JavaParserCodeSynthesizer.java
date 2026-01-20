@@ -47,11 +47,24 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
         String[] tags = { "code", "content", "java_class", "java_code", "java_members", "java_header" };
 
         for (String tag : tags) {
+            // Pattern 1: <tag><![CDATA[...]]></tag>
+            java.util.regex.Pattern cdataPattern = java.util.regex.Pattern.compile(
+                    "<" + tag + ">\\s*<!\\[CDATA\\[\\s*(.*?)\\s*\\]\\]>\\s*</" + tag + ">",
+                    java.util.regex.Pattern.DOTALL);
+            java.util.regex.Matcher cdataMatcher = cdataPattern.matcher(rawOutput);
+            if (cdataMatcher.find()) {
+                clean = cdataMatcher.group(1).trim();
+                log.debug("Extracted from <{}> with CDATA: {} chars", tag, clean.length());
+                break;
+            }
+
+            // Pattern 2: <tag>...</tag> (without CDATA)
             java.util.regex.Pattern p = java.util.regex.Pattern.compile("<" + tag + ">\\s*(.*?)\\s*</" + tag + ">",
                     java.util.regex.Pattern.DOTALL);
             java.util.regex.Matcher m = p.matcher(rawOutput);
             if (m.find()) {
                 clean = m.group(1).trim();
+                log.debug("Extracted from <{}>: {} chars", tag, clean.length());
                 break;
             }
         }
@@ -63,6 +76,7 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
             java.util.regex.Matcher mdMatcher = mdPattern.matcher(rawOutput);
             if (mdMatcher.find()) {
                 clean = mdMatcher.group(1).trim();
+                log.debug("Extracted from Markdown block: {} chars", clean.length());
             }
         }
 

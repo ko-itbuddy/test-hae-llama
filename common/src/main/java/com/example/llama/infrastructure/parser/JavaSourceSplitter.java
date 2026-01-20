@@ -37,15 +37,35 @@ public class JavaSourceSplitter {
                 String targetMethodSource = targetMethod.map(Node::toString)
                                 .orElse("// [ERROR] Method '" + targetMethodName + "' not found in source AST.");
 
-                // 2. Create Class Structure Skeleton (All methods present but bodies empty)
-                CompilationUnit skeletonCu = cu.clone();
-                skeletonCu.setPackageDeclaration((com.github.javaparser.ast.PackageDeclaration) null);
-                skeletonCu.getImports().clear();
-                skeletonCu.getAllContainedComments().forEach(Node::remove);
+                // 2. Create Compact Class Structure (signatures only, optimized for tokens)
+                StringBuilder compactStructure = new StringBuilder();
+                cu.findAll(ClassOrInterfaceDeclaration.class).forEach(decl -> {
+                        compactStructure.append("class ").append(decl.getNameAsString()).append(" {\n");
 
-                skeletonCu.findAll(MethodDeclaration.class).forEach(m -> m.setBody(new BlockStmt()));
+                        // Extract constructor parameters to show dependencies
+                        decl.getConstructors().forEach(constructor -> {
+                                if (!constructor.getParameters().isEmpty()) {
+                                        compactStructure.append("    // Dependencies: ");
+                                        constructor.getParameters().forEach(param -> {
+                                                compactStructure.append(param.getType().asString()).append(", ");
+                                        });
+                                        compactStructure.setLength(compactStructure.length() - 2); // Remove last ", "
+                                        compactStructure.append("\n");
+                                }
+                        });
 
-                return new SplitResult(packageName, imports, skeletonCu.toString().trim(), targetMethodSource.trim());
+                        // Extract method signatures only
+                        decl.getMethods().forEach(method -> {
+                                compactStructure.append("    ")
+                                                .append(method.getDeclarationAsString())
+                                                .append(";\n");
+                        });
+
+                        compactStructure.append("}\n");
+                });
+
+                return new SplitResult(packageName, imports, compactStructure.toString().trim(),
+                                targetMethodSource.trim());
         }
 
         public SplitResult createSkeletonOnly(String sourceCode) {
@@ -62,35 +82,53 @@ public class JavaSourceSplitter {
                 skeletonCu.getAllContainedComments().forEach(Node::remove);
                 skeletonCu.findAll(MethodDeclaration.class).forEach(m -> m.setBody(new BlockStmt()));
 
-                // 2. All Members Source = Fields, Constructors, and Methods with full
-                // implementation
-                StringBuilder membersSource = new StringBuilder();
-                cu.findAll(ClassOrInterfaceDeclaration.class).forEach(decl -> {
-                        decl.getMembers().forEach(member -> {
-                                membersSource.append(member.toString()).append("\n\n");
-                        });
-                });
-
-                return new SplitResult(packageName, imports, skeletonCu.toString().trim(),
-                                membersSource.toString().trim());
+                // 2. targetMethodSource is empty for skeleton phase
+                return new SplitResult(packageName, imports, skeletonCu.toString().trim(), "");
         }
 
         public SplitResult createReferenceContext(String sourceCode) {
                 CompilationUnit cu = StaticJavaParser.parse(sourceCode);
 
-                // 1. ref_class_structure = Identity + Fields + Constructors
-                CompilationUnit structCu = cu.clone();
-                structCu.setPackageDeclaration((com.github.javaparser.ast.PackageDeclaration) null);
-                structCu.getImports().clear();
-                structCu.getAllContainedComments().forEach(Node::remove);
-                structCu.findAll(MethodDeclaration.class).forEach(Node::remove);
+                // 1. ref_class_structure = Simplified: class name + fields only (no
+                // annotations)
+                StringBuilder simpleStruct = new StringBuilder();
+                cu.findAll(ClassOrInterfaceDeclaration.class).forEach(decl -> {
+                        simpleStruct.append("class ").append(decl.getNameAsString()).append(" {\n");
 
-                // 2. ref_methods = Full implementation of all methods
-                StringBuilder methodsSource = new StringBuilder();
-                cu.findAll(MethodDeclaration.class).forEach(m -> {
-                        methodsSource.append(m.toString()).append("\n\n");
+                        // Extract only fields (no annotations, no modifiers)
+                        decl.getFields().forEach(field -> {
+                                field.getVariables().forEach(var -> {
+                                        simpleStruct.append("    ")
+                                                        .append(var.getType().asString())
+                                                        .append(" ")
+                                                        .append(var.getNameAsString())
+                                                        .append(";\n");
+                                });
+                        });
+                        simpleStruct.append("}\n");
                 });
 
-                return new SplitResult("", "", structCu.toString().trim(), methodsSource.toString().trim());
+                // 2. ref_methods = Method signatures only (no implementation)
+                StringBuilder methodSignatures = new StringBuilder();
+                cu.findAll(MethodDeclaration.class).forEach(m -> {
+                        // Skip getters/setters/toString/hashCode/equals
+                        String methodName = m.getNameAsString();
+                        if (methodName.startsWith("get") || methodName.startsWith("set")
+                                        || methodName.equals("toString") || methodName.equals("hashCode")
+                                        || methodName.equals("equals")) {
+                                return;
+                        }
+
+                        methodSignatures.append(m.getDeclarationAsString()).append(";\n");
+                });
+
+                // Add note about builder pattern if @Builder annotation exists
+                boolean hasBuilder = cu.toString().contains("@Builder");
+                if (hasBuilder) {
+                        methodSignatures.append("// Builder pattern available\n");
+                }
+
+                return new SplitResult("", "", simpleStruct.toString().trim(), methodSignatures.toString().trim());
         }
+
 }
