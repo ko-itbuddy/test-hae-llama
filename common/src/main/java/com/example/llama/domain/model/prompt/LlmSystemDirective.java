@@ -10,62 +10,27 @@ import lombok.NonNull;
 @Builder
 public class LlmSystemDirective {
 
-    @NonNull
-    private final String role;
+  @NonNull
+  private final LlmPersona persona;
 
-    @NonNull
-    private final String domain;
+  @NonNull
+  private final String formatStandard;
 
-    @NonNull
-    private final String mission;
+  public String toXml() {
+    return String.format("""
+        <system_instructions>
+        %s
+          <format_standard><![CDATA[
+        %s
+          ]]></format_standard>
+        </system_instructions>
+        """,
+        persona.toXml().indent(2).trim(),
+        formatStandard.indent(4).trim()).trim();
+  }
 
-    @NonNull
-    private final String domainStrategy;
-
-    @NonNull
-    private final String criticalPolicy;
-
-    @NonNull
-    private final String repairProtocol;
-
-    @NonNull
-    private final String formatStandard;
-
-    public String toXml() {
-        return String.format("""
-                <system_instructions>
-                  <persona>
-                    <role>%s Specialist</role>
-                    <domain>%s</domain>
-                    <mission><![CDATA[
-                %s
-                    ]]></mission>
-                    <domain_strategy><![CDATA[
-                %s
-                    ]]></domain_strategy>
-                    <critical_policy><![CDATA[
-                %s
-                    ]]></critical_policy>
-                    <repair_protocol><![CDATA[
-                %s
-                    ]]></repair_protocol>
-                  </persona>
-                  <format_standard><![CDATA[
-                %s
-                  ]]></format_standard>
-                </system_instructions>
-                """,
-                role,
-                domain,
-                mission.indent(6).trim(),
-                domainStrategy.indent(6).trim(),
-                criticalPolicy.indent(6).trim(),
-                repairProtocol.indent(6).trim(),
-                formatStandard.indent(4).trim()).trim();
-    }
-
-    @Override
-    public String toString() {
-        return toXml();
-    }
+  @Override
+  public String toString() {
+    return toXml();
+  }
 }

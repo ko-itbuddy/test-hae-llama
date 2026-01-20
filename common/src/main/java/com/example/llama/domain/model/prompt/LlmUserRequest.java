@@ -19,24 +19,7 @@ public class LlmUserRequest {
     private final String libraryInfo = "No library info provided.";
 
     @NonNull
-    @Builder.Default
-    private final String references = "";
-
-    @NonNull
-    @Builder.Default
-    private final String packageName = "";
-
-    @NonNull
-    @Builder.Default
-    private final String imports = "";
-
-    @NonNull
-    @Builder.Default
-    private final String classStructure = "";
-
-    @NonNull
-    @Builder.Default
-    private final String targetMethodSource = "";
+    private final LlmClassContext classContext;
 
     public String toXml() {
         return String.format("""
@@ -47,30 +30,12 @@ public class LlmUserRequest {
                     <lib>
                 %s
                     </lib>
-                    <package><![CDATA[
                 %s
-                    ]]></package>
-                    <imports><![CDATA[
-                %s
-                    ]]></imports>
-                    <references>
-                %s
-                    </references>
-                    <class_structure><![CDATA[
-                %s
-                    ]]></class_structure>
-                    <target_method><![CDATA[
-                %s
-                    ]]></target_method>
                 </request>
                 """,
                 task.indent(8).trim(),
                 libraryInfo.indent(8).trim(),
-                packageName.indent(8).trim(),
-                imports.indent(8).trim(),
-                references.indent(8).trim(),
-                classStructure.indent(8).trim(),
-                targetMethodSource.indent(8).trim()).trim();
+                classContext.toXml()).trim();
     }
 
     @Override

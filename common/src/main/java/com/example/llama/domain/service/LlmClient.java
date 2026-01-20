@@ -1,16 +1,24 @@
 package com.example.llama.domain.service;
 
+import com.example.llama.domain.model.prompt.LlmPrompt;
+
 /**
- * Port for LLM communication. 
+ * Port for LLM communication.
  * Decouples the domain from specific libraries like LangChain4j.
  */
 public interface LlmClient {
     /**
      * Generates a response from the LLM.
      * 
-     * @param prompt The user prompt
-     * @param systemDirective The technical or system directive
+     * @param prompt The aggregate prompt context containing system and user parts.
      * @return The LLM's response text
      */
-    String generate(String prompt, String systemDirective);
+    String generate(LlmPrompt prompt);
+
+    /**
+     * Backward compatibility method.
+     */
+    default String generate(String userPromptXml, String systemDirectiveXml) {
+        throw new UnsupportedOperationException("Use generate(LlmPrompt instead)");
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.llama.domain.service;
 
+import com.example.llama.domain.model.prompt.LlmClassContext;
 import com.example.llama.domain.model.prompt.LlmUserRequest;
 
 /**
@@ -13,9 +14,13 @@ public interface Agent {
      * Maps the context string to the classStructure field of the XML request.
      */
     default String act(String task, String context) {
+        LlmClassContext classContext = LlmClassContext.builder()
+                .classStructure(context)
+                .build();
+
         return act(LlmUserRequest.builder()
                 .task(task)
-                .classStructure(context)
+                .classContext(classContext)
                 .build());
     }
 

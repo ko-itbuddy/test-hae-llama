@@ -3,6 +3,8 @@ package com.example.llama.application.orchestrator;
 import com.example.llama.domain.model.AgentType;
 import com.example.llama.domain.model.GeneratedCode;
 import com.example.llama.domain.model.Intelligence;
+import com.example.llama.domain.model.prompt.LlmClassContext;
+import com.example.llama.domain.model.prompt.LlmCollaborator;
 import com.example.llama.domain.model.prompt.LlmUserRequest;
 import com.example.llama.domain.service.Agent;
 import com.example.llama.domain.service.AgentFactory;
@@ -13,6 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Base implementation of the Standard Test Generation Pipeline.
@@ -52,22 +56,25 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
         String libInfo = String.join("\n", deps);
 
         // 1.2 Related Context Retrieval (DTOs, Models)
-        String relatedContext = fetchRelatedContext(intelligence, projectRoot);
+        List<LlmCollaborator> collaborators = fetchRelatedContext(intelligence, projectRoot);
 
         // 2. Global Setup Phase (Class Skeleton & Mocks)
         log.info("🏗️ [Phase 2] Generating Global Test Setup...");
         Agent setupAgent = agentFactory.create(getCoderRole(), getDomain());
 
         JavaSourceSplitter.SplitResult setupSplit = javaSourceSplitter.createSkeletonOnly(maskedSourceCode);
+        LlmClassContext setupClassContext = LlmClassContext.builder()
+                .packageName(setupSplit.packageName())
+                .imports(setupSplit.imports())
+                .references(collaborators)
+                .classStructure(setupSplit.classStructure())
+                .targetMethodSource(setupSplit.targetMethodSource())
+                .build();
 
         LlmUserRequest setupReq = LlmUserRequest.builder()
                 .task("Generate the Test Class Skeleton with @ExtendWith, Mocks, and @BeforeEach setup. DO NOT generate @Test methods yet.")
                 .libraryInfo(libInfo)
-                .packageName(setupSplit.packageName())
-                .imports(setupSplit.imports())
-                .references(relatedContext)
-                .classStructure(setupSplit.classStructure())
-                .targetMethodSource(setupSplit.targetMethodSource())
+                .classContext(setupClassContext)
                 .build();
 
         String setupCode = setupAgent.act(setupReq);
@@ -88,16 +95,27 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
             JavaSourceSplitter.SplitResult methodSplit = javaSourceSplitter.split(maskedSourceCode, methodName);
             log.info("      Extracted Source Size: {} characters", methodSplit.targetMethodSource().length());
 
+            // Add existing setup code as a special reference for context
+            List<LlmCollaborator> fullContext = new ArrayList<>(collaborators);
+            fullContext.add(LlmCollaborator.builder()
+                    .name("EXISTING_TEST_SKELETON")
+                    .methods(setupCode)
+                    .build());
+
+            LlmClassContext methodClassContext = LlmClassContext.builder()
+                    .packageName(methodSplit.packageName())
+                    .imports(methodSplit.imports())
+                    .references(fullContext)
+                    .classStructure(methodSplit.classStructure())
+                    .targetMethodSource(methodSplit.targetMethodSource())
+                    .build();
+
             LlmUserRequest methodReq = LlmUserRequest.builder()
                     .task("Generate @Test methods ONLY for the target method: " + methodName
                             + ". Use @Nested Describe_" + methodName
                             + " if appropriate. Do NOT repeat the class setup.")
                     .libraryInfo(libInfo)
-                    .packageName(methodSplit.packageName())
-                    .imports(methodSplit.imports())
-                    .references(relatedContext + "\n\nEXISTING_TEST_SKELETON:\n" + setupCode)
-                    .classStructure(methodSplit.classStructure())
-                    .targetMethodSource(methodSplit.targetMethodSource())
+                    .classContext(methodClassContext)
                     .build();
 
             String testMethods = methodCoder.act(methodReq);
@@ -168,8 +186,8 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
         return sourcePath; // Fallback
     }
 
-    private String fetchRelatedContext(Intelligence intelligence, Path projectRoot) {
-        StringBuilder related = new StringBuilder();
+    private List<LlmCollaborator> fetchRelatedContext(Intelligence intelligence, Path projectRoot) {
+        List<LlmCollaborator> collaborators = new ArrayList<>();
         int count = 0;
         for (String imp : intelligence.imports()) {
             if (count > 10)
@@ -190,13 +208,11 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
                     JavaSourceSplitter.SplitResult refSplit = javaSourceSplitter.createReferenceContext(masked);
                     String shortName = cleanImp.substring(cleanImp.lastIndexOf('.') + 1);
 
-                    related.append("    <reference>\n");
-                    related.append("        <name>").append(shortName).append("</name>\n");
-                    related.append("        <ref_class_structure><![CDATA[\n").append(refSplit.classStructure())
-                            .append("\n        ]]></ref_class_structure>\n");
-                    related.append("        <ref_methods><![CDATA[\n").append(refSplit.targetMethodSource())
-                            .append("\n        ]]></ref_methods>\n");
-                    related.append("    </reference>\n");
+                    collaborators.add(LlmCollaborator.builder()
+                            .name(shortName)
+                            .structure(refSplit.classStructure())
+                            .methods(refSplit.targetMethodSource())
+                            .build());
 
                     count++;
                 } catch (Exception e) {
@@ -204,7 +220,7 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
                 }
             }
         }
-        return related.toString().trim();
+        return collaborators;
     }
 
     @Override
@@ -219,13 +235,19 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
         java.util.List<String> deps = dependencyAnalyzer.analyze(projectRoot);
         String libInfo = String.join("\n", deps);
 
+        LlmClassContext repairClassContext = LlmClassContext.builder()
+                .reference(LlmCollaborator.builder()
+                        .name("BROKEN_TEST_CODE_AND_ERROR_LOG")
+                        .methods("BROKEN_TEST_CODE:\n" + brokenCode.toFullSource() + "\n\nERROR_LOG:\n" + errorLog)
+                        .build())
+                .classStructure(maskedSourceCode)
+                .targetMethodSource("")
+                .build();
+
         LlmUserRequest repairReq = LlmUserRequest.builder()
                 .task("Fix the compilation or runtime errors in the Test Code.")
                 .libraryInfo(libInfo)
-                .references("BROKEN_TEST_CODE:\n" + brokenCode.toFullSource() +
-                        "\n\nERROR_LOG:\n" + errorLog)
-                .classStructure(maskedSourceCode)
-                .targetMethodSource("")
+                .classContext(repairClassContext)
                 .build();
 
         String fixedCode = repairAgent.act(repairReq);

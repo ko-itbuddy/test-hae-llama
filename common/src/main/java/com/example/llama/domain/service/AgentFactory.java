@@ -19,15 +19,12 @@ import com.example.llama.domain.expert.RepositoryExpert;
 import com.example.llama.domain.expert.ServiceExpert;
 import com.example.llama.domain.expert.StaticMethodExpert;
 import com.example.llama.domain.expert.VoExpert;
+import com.example.llama.domain.model.prompt.LlmPersona;
 import com.example.llama.domain.model.prompt.LlmResponseSchema;
 import com.example.llama.domain.model.prompt.LlmResponseTag;
 import com.example.llama.domain.model.prompt.LlmSystemDirective;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Intelligent Factory that merges Global Artisan Defaults with Specialized
@@ -65,15 +62,16 @@ public class AgentFactory {
             specificExpert = repairExpert;
         }
 
-        String persona = constructArtisanPersona(role, domainType, specificExpert);
-        return new BureaucraticAgent(role.name(), persona, llmClient);
+        LlmSystemDirective directive = constructArtisanPersona(role, domainType, specificExpert);
+        return new BureaucraticAgent(role.name(), directive, llmClient);
     }
 
     /**
      * The heart of the system: Merges Default Artisan Intelligence with Specific
      * Domain Knowledge.
      */
-    private String constructArtisanPersona(AgentType role, Intelligence.ComponentType domain, DomainExpert expert) {
+    private LlmSystemDirective constructArtisanPersona(AgentType role, Intelligence.ComponentType domain,
+            DomainExpert expert) {
         // [DEFAULT] Get rich base instructions
         String baseMission = generalExpert.getDomainMission(role);
 
@@ -102,16 +100,19 @@ public class AgentFactory {
         String generation = baseGeneration + "\nGENERATION TOOLKIT: " + expert.getGenerationDirective();
         String parameterized = baseParameterized + "\nSPECIFIC RULE: " + expert.getSpecificParameterizedRule();
 
-        return LlmSystemDirective.builder()
+        LlmPersona persona = LlmPersona.builder()
                 .role(role.name())
                 .domain(domain.name())
                 .mission(mission)
                 .domainStrategy(strategy)
                 .criticalPolicy(planning + "\n" + generation + "\n" + parameterized)
                 .repairProtocol("Repair using strict " + domain + " standards and valid Java syntax.")
+                .build();
+
+        return LlmSystemDirective.builder()
+                .persona(persona)
                 .formatStandard(getExpectedSchema(role).getFormatInstruction())
-                .build()
-                .toXml();
+                .build();
     }
 
     public DomainExpert getExpert(Intelligence.ComponentType domain) {
