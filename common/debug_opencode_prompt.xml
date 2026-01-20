@@ -80,24 +80,24 @@ org.springframework.boot:spring-boot-dependencies:3.4.1
         com.github.javaparser:javaparser-symbol-solver-core:3.27.1
         org.yaml:snakeyaml:2.3
     </lib>
-    <package>
+    <package><![CDATA[
 package com.example.llama.utils;
-    </package>
-    <imports>
+    ]]></package>
+    <imports><![CDATA[
 import lombok.extern.slf4j.Slf4j;
-    </imports>
+    ]]></imports>
     <references>
 
     </references>
-    <class_structure>
+    <class_structure><![CDATA[
 @Slf4j
         public class AgentLogger {
         
             public static void logInteraction(String role, String mission, String response) {
             }
         }
-    </class_structure>
-    <target_method>
+    ]]></class_structure>
+    <target_method><![CDATA[
 public static void logInteraction(String role, String mission, String response) {
             // 💎 Pure Console Logging to eliminate any potential File I/O locks
             System.out.println("\n" + "=".repeat(30) + " [AUDIT LOG: " + role + "] " + "=".repeat(30));
@@ -105,5 +105,5 @@ public static void logInteraction(String role, String mission, String response) 
             System.out.println("[RESPONSE]\n" + (response != null && response.length() > 500 ? response.substring(0, 500) + "...(truncated)" : response));
             System.out.println("=".repeat(80) + "\n");
         }
-    </target_method>
+    ]]></target_method>
 </request>

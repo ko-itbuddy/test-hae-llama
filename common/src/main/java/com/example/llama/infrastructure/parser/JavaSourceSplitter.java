@@ -74,4 +74,23 @@ public class JavaSourceSplitter {
                 return new SplitResult(packageName, imports, skeletonCu.toString().trim(),
                                 membersSource.toString().trim());
         }
+
+        public SplitResult createReferenceContext(String sourceCode) {
+                CompilationUnit cu = StaticJavaParser.parse(sourceCode);
+
+                // 1. ref_class_structure = Identity + Fields + Constructors
+                CompilationUnit structCu = cu.clone();
+                structCu.setPackageDeclaration((com.github.javaparser.ast.PackageDeclaration) null);
+                structCu.getImports().clear();
+                structCu.getAllContainedComments().forEach(Node::remove);
+                structCu.findAll(MethodDeclaration.class).forEach(Node::remove);
+
+                // 2. ref_methods = Full implementation of all methods
+                StringBuilder methodsSource = new StringBuilder();
+                cu.findAll(MethodDeclaration.class).forEach(m -> {
+                        methodsSource.append(m.toString()).append("\n\n");
+                });
+
+                return new SplitResult("", "", structCu.toString().trim(), methodsSource.toString().trim());
+        }
 }

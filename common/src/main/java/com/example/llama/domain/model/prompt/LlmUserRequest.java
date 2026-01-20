@@ -47,21 +47,21 @@ public class LlmUserRequest {
                     <lib>
                 %s
                     </lib>
-                    <package>
+                    <package><![CDATA[
                 %s
-                    </package>
-                    <imports>
+                    ]]></package>
+                    <imports><![CDATA[
                 %s
-                    </imports>
+                    ]]></imports>
                     <references>
                 %s
                     </references>
-                    <class_structure>
+                    <class_structure><![CDATA[
                 %s
-                    </class_structure>
-                    <target_method>
+                    ]]></class_structure>
+                    <target_method><![CDATA[
                 %s
-                    </target_method>
+                    ]]></target_method>
                 </request>
                 """,
                 task.indent(8).trim(),

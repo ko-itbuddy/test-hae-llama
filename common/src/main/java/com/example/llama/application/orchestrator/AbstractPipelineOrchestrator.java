@@ -170,11 +170,10 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
 
     private String fetchRelatedContext(Intelligence intelligence, Path projectRoot) {
         StringBuilder related = new StringBuilder();
-        // Limit to prevent context explosion
         int count = 0;
         for (String imp : intelligence.imports()) {
             if (count > 10)
-                break; // Hard limit
+                break;
             String cleanImp = imp.replace("import ", "").replace(";", "").trim();
             if (cleanImp.startsWith("java.") || cleanImp.startsWith("javax.") || cleanImp.startsWith("jakarta.")
                     || cleanImp.startsWith("org.springframework."))
@@ -182,22 +181,30 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
 
             String relativePath = "src/main/java/" + cleanImp.replace(".", "/") + ".java";
             Path candidate = projectRoot.resolve(relativePath);
-            log.info("🔎 Checking Related Context: Imp={}, Path={}", cleanImp, candidate);
 
             if (java.nio.file.Files.exists(candidate)) {
                 try {
                     String content = java.nio.file.Files.readString(candidate);
-                    // Basic masking for related files too
                     String masked = securityMasker.mask(content);
-                    related.append("\n--- REFERENCE CLASS: ").append(cleanImp).append(" ---\n");
-                    related.append(masked).append("\n");
+
+                    JavaSourceSplitter.SplitResult refSplit = javaSourceSplitter.createReferenceContext(masked);
+                    String shortName = cleanImp.substring(cleanImp.lastIndexOf('.') + 1);
+
+                    related.append("    <reference>\n");
+                    related.append("        <name>").append(shortName).append("</name>\n");
+                    related.append("        <ref_class_structure><![CDATA[\n").append(refSplit.classStructure())
+                            .append("\n        ]]></ref_class_structure>\n");
+                    related.append("        <ref_methods><![CDATA[\n").append(refSplit.targetMethodSource())
+                            .append("\n        ]]></ref_methods>\n");
+                    related.append("    </reference>\n");
+
                     count++;
                 } catch (Exception e) {
                     log.warn("Failed to read related file: {}", candidate);
                 }
             }
         }
-        return related.toString();
+        return related.toString().trim();
     }
 
     @Override
