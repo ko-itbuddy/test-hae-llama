@@ -10,10 +10,10 @@ import java.util.stream.Collectors;
  * Refactored to avoid Markdown examples that confuse LLMs.
  */
 @Builder
-public class PtcfResponseSchema {
+public class LlmResponseSchema {
 
     @Singular
-    private final List<PtcfResponseTag> requiredTags;
+    private final List<LlmResponseTag> requiredTags;
 
     public String getFormatInstruction() {
         String structure = requiredTags.stream()
@@ -26,15 +26,15 @@ public class PtcfResponseSchema {
                 1. Use ONLY the tags listed below.
                 2. DO NOT use plural tags (e.g., use <thought>, not <thoughts>).
                 3. DO NOT use unauthorized tags like <actions>, <plan>, <scenario>, <given>, <when>, or <then>.
-                4. If using <java_class>, provide ONLY PURE JAVA CODE. No XML inside.
+                4. If using <code>, provide ONLY PURE JAVA CODE using CDATA for safety. No Markdown inside.
 
                 STRUCTURE:
                 %s
                 %s
                 %s
                 """,
-                PtcfResponseTag.RESPONSE.open(),
+                LlmResponseTag.RESPONSE.open(),
                 structure,
-                PtcfResponseTag.RESPONSE.close());
+                LlmResponseTag.RESPONSE.close());
     }
 }

@@ -17,7 +17,8 @@ import static org.mockito.Mockito.verify;
 @DisplayName("Bureaucratic Agent Test")
 class BureaucraticAgentTest {
 
-    @Mock LlmClient llmClient;
+    @Mock
+    LlmClient llmClient;
 
     @Test
     @DisplayName("should format prompt correctly and call llm")
@@ -26,10 +27,10 @@ class BureaucraticAgentTest {
         String role = "TEST_ROLE";
         String directive = "You are a tester.";
         BureaucraticAgent agent = new BureaucraticAgent(role, directive, llmClient);
-        
+
         String instruction = "Do something";
         String context = "Some context";
-        
+
         // Use anyString() because the exact formatting is XML-based now
         given(llmClient.generate(anyString(), eq(directive))).willReturn("Result");
 
@@ -38,17 +39,17 @@ class BureaucraticAgentTest {
 
         // then
         assertThat(result).isEqualTo("Result");
-        
+
         // Verify that context and instruction are wrapped in XML tags
         ArgumentCaptor<String> promptCaptor = ArgumentCaptor.forClass(String.class);
         verify(llmClient).generate(promptCaptor.capture(), eq(directive));
-        
+
         String capturedPrompt = promptCaptor.getValue();
-        // PTCF Standards
-        assertThat(capturedPrompt).contains("<context>");
+        // LLM Standards
+        assertThat(capturedPrompt).contains("<class_structure>");
         assertThat(capturedPrompt).contains(context);
         assertThat(capturedPrompt).contains("<task>");
         assertThat(capturedPrompt).contains(instruction);
-        assertThat(capturedPrompt).contains("<ptcf_task_context>");
+        assertThat(capturedPrompt).contains("<request>");
     }
 }

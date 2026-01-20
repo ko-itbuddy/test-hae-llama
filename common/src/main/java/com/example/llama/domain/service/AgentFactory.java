@@ -19,9 +19,9 @@ import com.example.llama.domain.expert.RepositoryExpert;
 import com.example.llama.domain.expert.ServiceExpert;
 import com.example.llama.domain.expert.StaticMethodExpert;
 import com.example.llama.domain.expert.VoExpert;
-import com.example.llama.domain.model.prompt.PtcfResponseSchema;
-import com.example.llama.domain.model.prompt.PtcfResponseTag;
-import com.example.llama.domain.model.prompt.PtcfSystemDirective;
+import com.example.llama.domain.model.prompt.LlmResponseSchema;
+import com.example.llama.domain.model.prompt.LlmResponseTag;
+import com.example.llama.domain.model.prompt.LlmSystemDirective;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -102,7 +102,7 @@ public class AgentFactory {
         String generation = baseGeneration + "\nGENERATION TOOLKIT: " + expert.getGenerationDirective();
         String parameterized = baseParameterized + "\nSPECIFIC RULE: " + expert.getSpecificParameterizedRule();
 
-        return PtcfSystemDirective.builder()
+        return LlmSystemDirective.builder()
                 .role(role.name())
                 .domain(domain.name())
                 .mission(mission)
@@ -134,21 +134,19 @@ public class AgentFactory {
         };
     }
 
-    private PtcfResponseSchema getExpectedSchema(AgentType role) {
-        PtcfResponseSchema.PtcfResponseSchemaBuilder builder = PtcfResponseSchema.builder()
-                .requiredTag(PtcfResponseTag.STATUS)
-                .requiredTag(PtcfResponseTag.THOUGHT);
+    private LlmResponseSchema getExpectedSchema(AgentType role) {
+        LlmResponseSchema.LlmResponseSchemaBuilder builder = LlmResponseSchema.builder()
+                .requiredTag(LlmResponseTag.STATUS)
+                .requiredTag(LlmResponseTag.THOUGHT);
 
         switch (role) {
-            case DATA_MANAGER -> builder.requiredTag(PtcfResponseTag.FEEDBACK);
-            case IMPORT_CLERK -> builder.requiredTag(PtcfResponseTag.JAVA_HEADER);
-            case DATA_CLERK, SETUP_CLERK, MOCK_CLERK, EXEC_CLERK, VERIFY_CLERK, FRAGMENT_CLERK, SERVICE_LOGIC_CLERK,
-                    SERVICE_BOUNDARY_CLERK ->
-                builder.requiredTag(PtcfResponseTag.JAVA_MEMBERS);
-            case MASTER_ARCHITECT, INTEGRATION_ARCHITECT, ARBITRATOR, REPAIR_SPECIALIST, REPAIR_AGENT ->
-                builder.requiredTag(PtcfResponseTag.JAVA_CLASS);
-            case KNOWLEDGE_DISTILLER -> builder.requiredTag(PtcfResponseTag.KNOWLEDGE_BLOCK);
-            default -> builder.requiredTag(PtcfResponseTag.ANALYSIS);
+            case DATA_MANAGER -> builder.requiredTag(LlmResponseTag.FEEDBACK);
+            case KNOWLEDGE_DISTILLER -> builder.requiredTag(LlmResponseTag.KNOWLEDGE_BLOCK);
+            case DATA_CLERK, SETUP_CLERK, MOCK_CLERK, EXEC_CLERK, VERIFY_CLERK, FRAGMENT_CLERK,
+                    SERVICE_LOGIC_CLERK, SERVICE_BOUNDARY_CLERK, MASTER_ARCHITECT, INTEGRATION_ARCHITECT,
+                    ARBITRATOR, REPAIR_SPECIALIST, REPAIR_AGENT, CODER, SERVICE_CODER ->
+                builder.requiredTag(LlmResponseTag.CODE);
+            default -> builder.requiredTag(LlmResponseTag.CONTENT);
         }
         return builder.build();
     }

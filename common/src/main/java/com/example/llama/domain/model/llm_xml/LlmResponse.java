@@ -20,16 +20,15 @@ public class LlmResponse {
                 <response>
                     <status>SUCCESS</status>
                     <thought>Brief logic implementation strategy.</thought>
-                    <java_class>
+                    <code>
                         <![CDATA[
                         package ...;
-                        import ...;
 
                         public class ... {
-                            // Full Implementation
+                            // Implementation
                         }
                         ]]>
-                    </java_class>
+                    </code>
                 </response>
                 """;
     }
@@ -39,9 +38,9 @@ public class LlmResponse {
                 <response>
                     <status>COMPLETED</status>
                     <thought>Analysis summary.</thought>
-                    <analysis_report>
+                    <content>
                         <!-- Structured analysis content -->
-                    </analysis_report>
+                    </content>
                 </response>
                 """;
     }

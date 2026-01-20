@@ -18,8 +18,7 @@ public class ControllerExpert implements DomainExpert {
             case CONTROLLER_STRATEGIST ->
                 "You are an API Test Strategist. Your task is to define a list of REST Docs Scenarios for each endpoint. Include: 1. Successful Request (Default), 2. Validation Errors (400), 3. Auth Failures (401/403 if applicable), 4. Business Exceptions (Mapped to status codes). Do not generate code.";
             case CONTROLLER_CODER ->
-                "You are a Senior REST Test Developer. Your task is to write the final @WebMvcTest code using MockMvc and Spring REST Docs. Ensure .andDo(document(...)) is present. CRITICAL: Use the following XML Template for your response:\n"
-                        + com.example.llama.domain.model.llm_xml.LlmResponse.getCoderTemplate();
+                "You are a Senior REST Test Developer. Your task is to write the final @WebMvcTest code using MockMvc and Spring REST Docs. Ensure .andDo(document(...)) is present. CRITICAL: Response MUST use strict XML format: <response><status>...</status><thought>...</thought><code>...</code></response>. No Markdown, No LLM tags.";
             default -> "Execute specialized Controller layer technical duties.";
         };
     }
@@ -28,25 +27,27 @@ public class ControllerExpert implements DomainExpert {
     public String getDomainStrategy() {
         return """
                     Strategy: CONTROLLER Layer Slice Testing
-                    - Infrastructure: Use @WebMvcTest(TargetController.class) and @AutoConfigureRestDocs to create a focused web context.
+                    - Infrastructure: Use @WebMvcTest(TargetController.class) and @AutoConfigureRestDocs.
+                - Structure: Use @Nested for grouping tests by method. Use @ParameterizedTest for varying inputs.
                 - Documentation: Mandatory Spring REST Docs with .andDo(document("{method-name}", ...)).
-                - Mocking: Use @MockBean ONLY for dependencies explicitly defined in the Controller's constructor or fields. DO NOT mock if no dependencies exist.
-                - Interaction: Perform requests using MockMvcRequestBuilders and verify results with MockMvcResultMatchers.""";
+                - Mocking: Use @MockBean ONLY for dependencies explicitly defined.
+                - Interaction: Perform requests using MockMvcRequestBuilders.
+                - Verification: Use AssertJ assertions for response content where jsonPath is insufficient. Use extracting() and tuple() for list verification.""";
     }
 
     @Override
     public String getPlanningDirective() {
         return """
                 Strategic Planning for API Endpoints:
-                1. Positive Scenarios: Plan tests for successful requests (200 OK, 201 Created) including full body verification.
+                1. Positive Scenarios: Plan tests for successful requests (200 OK, 201 Created).
                 2. Payload Validation: Identify @Valid/@Validated constraints and plan scenarios for each violation (400 Bad Request).
-                3. Error Response Body: Plan scenarios to verify the exact structure and content of error response bodies (e.g., error codes, field errors).
-                4. Media Types: Identify accepted and produced Content-Types and plan scenarios for unsupported types (415 Unsupported Media Type).""";
+                3. Error Response: Plan scenarios to verify error bodies (codes, messages).
+                4. Edge Cases: Use @ParameterizedTest for boundary values.""";
     }
 
     @Override
     public String getSetupDirective() {
-        return "Prepare common JSON request bodies, path variables, or headers required for this endpoint group. Ensure the data matches the @RequestBody DTO structure.";
+        return "Prepare common JSON request bodies. Use Test Data Builders or Helper methods if complex.";
     }
 
     public String getMockingDirective() {
@@ -55,12 +56,12 @@ public class ControllerExpert implements DomainExpert {
 
     @Override
     public String getExecutionDirective() {
-        return "Use mockMvc.perform() with appropriate method (GET/POST/etc.) and content type. Pass the prepared JSON if necessary.";
+        return "Use mockMvc.perform() with appropriate method and content type.";
     }
 
     @Override
     public String getVerificationDirective() {
-        return "Verify via andExpect(status()) and andExpect(jsonPath()). Ensure andDo(document()) is included for every scenario.";
+        return "Verify via andExpect(status()) and andExpect(jsonPath()). Ensure andDo(document()) is included. For complex object validation, use assertThat(...).extracting(...).contains(...).";
     }
 
     @Override

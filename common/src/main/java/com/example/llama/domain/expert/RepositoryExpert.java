@@ -17,17 +17,8 @@ public class RepositoryExpert implements DomainExpert {
                 "MISSION: Write final JUnit 5 test code with @DataJpaTest.\n" +
                         "TECHNICAL RULES:\n" +
                         "1. PERSISTENCE: Use TestEntityManager to persist preconditions.\n" +
-                        "2. REQUIRED FIELDS: When creating entity instances in @BeforeEach or test methods, you MUST populate ALL fields marked with @NotBlank, @NotNull, or @NotEmpty to avoid ConstraintViolationException.\n"
-                        +
-                        "   Example for User entity:\n" +
-                        "   User user = new User();\n" +
-                        "   user.setName(\"Test User\");  // Required by @NotBlank\n" +
-                        "   user.setEmail(\"test@example.com\");  // Required by @NotBlank @Email\n" +
-                        "   testEntityManager.persist(user);\n" +
-                        "3. DEPENDENCY DETECTION: If the target Repository uses QueryDSL (e.g. QueryDslPredicateExecutor), you MUST include @Import(com.example.demo.config.QueryDslConfig.class).\n"
-                        +
-                        "4. ASSERTIONS: Use AssertJ for verification.\n" +
-                        "5. CONSTRAINTS: For unique constraint tests, call testEntityManager.flush() before assertion.";
+                        "2. REQUIRED FIELDS: Populate ALL mandatory fields to avoid ConstraintViolationException.\n" +
+                        "3. CRITICAL: Response MUST use strict XML format: <response><status>...</status><thought>...</thought><code>...</code></response>. No Markdown, No LLM tags.";
             default -> "Execute specialized Repository layer technical duties.";
         };
     }
@@ -36,39 +27,40 @@ public class RepositoryExpert implements DomainExpert {
     public String getDomainStrategy() {
         return """
                 Strategy: REPOSITORY Sliced Integration Testing
-                - Infrastructure: Use @DataJpaTest to provide an isolated database environment (usually H2).
-                - Prerequisite: Use TestEntityManager to persist domain entities and establish the required database state before executing queries.
-                - Focus: Test custom findBy... methods, complex @Query definitions, and ensure proper interaction with database unique constraints or foreign keys.""";
+                - Infrastructure: Use @DataJpaTest with TestEntityManager.
+                - Structure: Use @Nested annotations to group tests by method.
+                - Focus: Test custom findBy... methods and @Query definitions.
+                - Verification: Use AssertJ for precise state verification.""";
     }
 
     @Override
     public String getPlanningDirective() {
         return """
                 Strategic Planning for Repositories:
-                1. Query Filters: Plan scenarios for each filtering parameter (null, empty, partial string, case sensitivity).
-                2. Join Logic: Identify complex relationships and plan scenarios to verify that joins work as expected without data loss.
-                3. Paging & Sorting: If the repository supports Pageable, plan scenarios to verify correct offsets, sizes, and sort order.
-                4. Persistence State: Plan scenarios to verify that entities are correctly saved and retrieved, including @CreatedDate fields.""";
+                1. Query Filters: Plan scenarios for each filtering parameter (null, empty, partial).
+                2. Join Logic: Identify relationships and plan scenarios to verify integrity.
+                3. Paging & Sorting: Verify correct offsets, sizes, and sort order.
+                4. Constraints: Test unique constraints and foreign key violations.""";
     }
 
     @Override
     public String getSetupDirective() {
-        return "Generate @BeforeEach logic to persist necessary entities using testEntityManager. Ensure the DB state matches the query requirements.";
+        return "Generate @BeforeEach logic to persist necessary entities using testEntityManager. Ensure valid initial DB state.";
     }
 
     @Override
     public String getMockingDirective() {
-        return "Repositories typically do not mock. If needed, stub specific database interactions or native query results.";
+        return "Repositories generally do not mock. Use TestEntityManager.";
     }
 
     @Override
     public String getExecutionDirective() {
-        return "Perform the repository method call. Verify that the correct SQL/JPQL is generated implicitly through results.";
+        return "Perform the repository method call.";
     }
 
     @Override
     public String getVerificationDirective() {
-        return "Use AssertJ collection assertions: assertThat(result).hasSize(X).contains(entity). Verify that the database state reflects expected changes.";
+        return "Use AssertJ collection assertions: assertThat(result).extracting(...).contains(...). For Tuples, use Groups.tuple(). Verify DB state changes.";
     }
 
     @Override

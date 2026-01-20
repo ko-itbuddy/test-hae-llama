@@ -62,4 +62,25 @@ class JavaParserCodeSynthesizerTest {
         GeneratedCode result = synthesizer.sanitizeAndExtract(raw);
         assertThat(result.className()).isEqualTo("Baz");
     }
+
+    @Test
+    @DisplayName("Should extract code from new <code> tag")
+    void shouldExtractFromNewCodeTag() {
+        String raw = """
+                <response>
+                    <status>SUCCESS</status>
+                    <code>
+                        <![CDATA[
+                        package com.test;
+                        public class NewProtocol { }
+                        ]]>
+                    </code>
+                </response>
+                """;
+
+        GeneratedCode result = synthesizer.sanitizeAndExtract(raw);
+
+        assertThat(result.packageName()).isEqualTo("com.test");
+        assertThat(result.className()).isEqualTo("NewProtocol");
+    }
 }

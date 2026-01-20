@@ -8,80 +8,110 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
- * Quick and dirty dependency analyzer using Regex.
- * Scans build.gradle or pom.xml for dependencies.
+ * Dependency analyzer that uses build tool wrappers (gradlew/mvnw)
+ * to fetch accurate, resolved dependency information.
  */
 @Slf4j
 @Component
 public class SimpleDependencyAnalyzer {
 
     public List<String> analyze(Path projectRoot) {
-        List<String> dependencies = new ArrayList<>();
+        log.info("📊 Analyzing dependencies for project at: {}", projectRoot);
 
-        try {
-            // Priority 1: build.gradle
-            Path gradleFile = projectRoot.resolve("build.gradle");
-            if (Files.exists(gradleFile)) {
-                dependencies.addAll(parseGradle(gradleFile));
-            }
-
-            // Priority 2: build.gradle.kts
-            Path kotlinGradleFile = projectRoot.resolve("build.gradle.kts");
-            if (Files.exists(kotlinGradleFile)) {
-                dependencies.addAll(parseGradle(kotlinGradleFile));
-            }
-
-            // Priority 3: pom.xml (Simple scan)
-            Path pomFile = projectRoot.resolve("pom.xml");
-            if (Files.exists(pomFile)) {
-                dependencies.addAll(parseMaven(pomFile));
-            }
-
-        } catch (IOException e) {
-            log.warn("⚠️ Failed to parse dependencies: {}", e.getMessage());
+        // 1. Try Gradle Wrapper
+        Path gradlew = findWrapper(projectRoot, "gradlew");
+        if (gradlew != null) {
+            log.info("🐘 Gradle project detected. Using gradlew at: {}", gradlew);
+            return fetchGradleDependencies(gradlew, projectRoot);
         }
 
-        return dependencies.stream().distinct().collect(Collectors.toList());
+        // 2. Try Maven Wrapper
+        Path mvnw = findWrapper(projectRoot, "mvnw");
+        if (mvnw != null) {
+            log.info("📦 Maven project detected. Using mvnw at: {}", mvnw);
+            return fetchMavenDependencies(mvnw, projectRoot);
+        }
+
+        log.warn("⚠️ No build tool wrapper (gradlew/mvnw) found. Falling back to empty list.");
+        return new ArrayList<>();
     }
 
-    private List<String> parseGradle(Path path) throws IOException {
+    private Path findWrapper(Path current, String wrapperName) {
+        if (current == null)
+            return null;
+        Path wrapper = current.resolve(wrapperName);
+        if (Files.exists(wrapper))
+            return wrapper;
+        return findWrapper(current.getParent(), wrapperName);
+    }
+
+    private List<String> fetchGradleDependencies(Path gradlewPath, Path projectRoot) {
         List<String> deps = new ArrayList<>();
-        String content = Files.readString(path);
+        try {
+            // We use 'dependencies --configuration runtimeClasspath' to get resolved
+            // dependencies
+            // Note: We might need to identify the subproject name if projectRoot is a
+            // subproject.
+            String subproject = projectRoot.getFileName().toString();
+            String task = ":" + subproject + ":dependencies";
 
-        // 1. Spring Boot Version
-        Pattern bootPattern = Pattern
-                .compile("id\\s+['\"]org\\.springframework\\.boot['\"]\\s+version\\s+['\"](.*?)['\"]");
-        Matcher bootMatcher = bootPattern.matcher(content);
-        if (bootMatcher.find()) {
-            deps.add("Spring Boot: " + bootMatcher.group(1));
+            ProcessBuilder pb = new ProcessBuilder(
+                    gradlewPath.toAbsolutePath().toString(),
+                    "-q",
+                    task,
+                    "--configuration", "runtimeClasspath");
+            pb.directory(gradlewPath.getParent().toFile());
+
+            Process process = pb.start();
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    // Only pick top-level dependencies to keep the prompt compact
+                    if (line.startsWith("+--- ") || line.startsWith("\\--- ")) {
+                        String clean = line.substring(5).trim();
+                        // Ignore dependencies marked as (*) or (c) or project refs
+                        if (!clean.contains("(*)") && !clean.contains("(c)") && !clean.startsWith("project ")) {
+                            // Extract group:artifact:version (handle '->' version resolution)
+                            deps.add(clean.split(" -> ")[0].trim());
+                        }
+                    }
+                }
+            }
+            process.waitFor();
+        } catch (Exception e) {
+            log.warn("❌ Failed to fetch Gradle dependencies: {}", e.getMessage());
         }
-
-        // 2. Dependencies (implementation/testImplementation)
-        // Match: configuration 'group:artifact:version'
-        Pattern depPattern = Pattern
-                .compile("(implementation|testImplementation|api|runtimeOnly)\\s+['\"]([^'\"]+)['\"]");
-        Matcher depMatcher = depPattern.matcher(content);
-
-        while (depMatcher.find()) {
-            deps.add(depMatcher.group(2));
-        }
-
         return deps;
     }
 
-    private List<String> parseMaven(Path path) throws IOException {
+    private List<String> fetchMavenDependencies(Path mvnwPath, Path projectRoot) {
         List<String> deps = new ArrayList<>();
-        // Very basic XML scan - just grabbing artifactId and version if possible
-        // This is a backup.
-        try (Stream<String> lines = Files.lines(path)) {
-            // Not implemented fully yet
-            deps.add("Maven Project detected (Parsing not fully implemented)");
+        try {
+            ProcessBuilder pb = new ProcessBuilder(
+                    mvnwPath.toAbsolutePath().toString(),
+                    "-q",
+                    "dependency:list",
+                    "-DexcludeTransitive=true");
+            pb.directory(mvnwPath.getParent().toFile());
+
+            Process process = pb.start();
+            try (java.io.BufferedReader reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    // Maven dependency:list output usually has [INFO] or is raw with -q
+                    // Format: group:artifact:type:version:scope
+                    if (line.contains(":") && !line.startsWith("[")) {
+                        deps.add(line.trim());
+                    }
+                }
+            }
+            process.waitFor();
+        } catch (Exception e) {
+            log.warn("❌ Failed to fetch Maven dependencies: {}", e.getMessage());
         }
         return deps;
     }

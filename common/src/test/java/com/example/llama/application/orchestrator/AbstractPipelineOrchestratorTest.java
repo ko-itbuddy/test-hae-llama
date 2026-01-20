@@ -43,13 +43,16 @@ class AbstractPipelineOrchestratorTest {
     Agent repairAgent;
     @Mock
     com.example.llama.infrastructure.security.SecurityMasker securityMasker;
+    @Mock
+    com.example.llama.infrastructure.parser.JavaSourceSplitter javaSourceSplitter;
 
     // Concrete implementation for testing
     class TestOrchestrator extends AbstractPipelineOrchestrator {
         public TestOrchestrator(AgentFactory af, CodeSynthesizer cs, CodeAnalyzer ca,
                 com.example.llama.infrastructure.security.SecurityMasker sm,
-                com.example.llama.infrastructure.analysis.SimpleDependencyAnalyzer da) {
-            super(af, cs, ca, sm, da);
+                com.example.llama.infrastructure.analysis.SimpleDependencyAnalyzer da,
+                com.example.llama.infrastructure.parser.JavaSourceSplitter jss) {
+            super(af, cs, ca, sm, da, jss);
         }
 
         @Override
@@ -81,7 +84,7 @@ class AbstractPipelineOrchestratorTest {
     @BeforeEach
     void setUp() {
         orchestrator = new TestOrchestrator(agentFactory, codeSynthesizer, codeAnalyzer, securityMasker,
-                dependencyAnalyzer);
+                dependencyAnalyzer, javaSourceSplitter);
     }
 
     @Test

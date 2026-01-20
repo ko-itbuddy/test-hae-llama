@@ -2,7 +2,7 @@ package com.example.llama.infrastructure.parser;
 
 import com.example.llama.domain.model.GeneratedCode;
 import com.example.llama.domain.model.Intelligence;
-import com.example.llama.domain.model.prompt.PtcfResponseTag;
+import com.example.llama.domain.model.prompt.LlmResponseTag;
 import com.example.llama.domain.service.CodeSynthesizer;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
@@ -42,9 +42,9 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
         if (rawOutput == null || rawOutput.isBlank())
             return new GeneratedCode(new java.util.HashSet<>(), "");
 
-        // 1. Unified Extraction (Prioritize Content/Members/Class tags)
+        // 1. Unified Extraction (Prioritize Content/Code tags)
         String clean = rawOutput;
-        String[] tags = { "java_class", "java_code", "java_members", "java_header", "content" };
+        String[] tags = { "code", "content", "java_class", "java_code", "java_members", "java_header" };
 
         for (String tag : tags) {
             java.util.regex.Pattern p = java.util.regex.Pattern.compile("<" + tag + ">\\s*(.*?)\\s*</" + tag + ">",

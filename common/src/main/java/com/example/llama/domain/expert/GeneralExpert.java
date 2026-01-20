@@ -29,7 +29,7 @@ public class GeneralExpert implements DomainExpert {
                 - Infrastructure: Latest stable libraries (Java 21, JUnit 5.11, Mockito 5.14, AssertJ 3.26).
                 - Structure: Strictly follow @Nested Describe_<MethodName> organization.
                 - Pattern: Use // given, // when, // then as mandatory structural anchors.
-                - Logic Anchoring: Reuse actual business logic and naming from the [SOURCE_CODE] to ensure context-aware generation.
+                - Logic Anchoring: Reuse actual business logic and naming from the provided context tags to ensure context-aware generation.
                 - Verification: Ensure 100% logic coverage with meaningful Korean @DisplayName.""";
     }
 

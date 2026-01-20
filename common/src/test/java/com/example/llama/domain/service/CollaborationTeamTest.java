@@ -47,7 +47,7 @@ class CollaborationTeamTest {
         given(reviewer.getRole()).willReturn("Manager");
 
         given(worker.act(anyString(), anyString())).willReturn("draft 1", "draft 2");
-        // PTCF Fix: Match code in the second argument (Context)
+        // LLM Fix: Match code in the second argument (Context)
         given(reviewer.act(anyString(), contains("draft 1")))
                 .willReturn("<response><status>REJECTED</status><content>error</content></response>");
         given(reviewer.act(anyString(), contains("draft 2")))
@@ -73,7 +73,7 @@ class CollaborationTeamTest {
         String result = squad.execute("mission", "context");
 
         assertThat(result).isEqualTo("Final Verdict");
-        // PTCF Fix: Match code in the second argument (Context)
+        // LLM Fix: Match code in the second argument (Context)
         verify(arbitrator).act(anyString(), contains("draft 2"));
     }
 }

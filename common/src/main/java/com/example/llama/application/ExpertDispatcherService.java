@@ -2,7 +2,7 @@ package com.example.llama.application;
 
 import com.example.llama.domain.model.AgentType;
 import com.example.llama.domain.model.Intelligence;
-import com.example.llama.domain.model.prompt.PtcfResponseTag;
+import com.example.llama.domain.model.prompt.LlmResponseTag;
 import com.example.llama.domain.service.Agent;
 import com.example.llama.domain.service.AgentFactory;
 import lombok.RequiredArgsConstructor;

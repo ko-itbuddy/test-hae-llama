@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
  */
 @Getter
 @RequiredArgsConstructor
-public enum PtcfResponseTag {
+public enum LlmResponseTag {
     RESPONSE("response"),
     STATUS("status"),
     THOUGHT("thought"),
@@ -18,7 +18,9 @@ public enum PtcfResponseTag {
     JAVA_CLASS("java_class"),
     ANALYSIS("analysis_report"),
     FEEDBACK("feedback_details"),
-    KNOWLEDGE_BLOCK("knowledge_block");
+    KNOWLEDGE_BLOCK("knowledge_block"),
+    CODE("code"),
+    CONTENT("content");
 
     private final String tagName;
 

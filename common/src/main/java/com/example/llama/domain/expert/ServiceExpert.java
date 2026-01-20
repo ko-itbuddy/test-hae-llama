@@ -25,11 +25,8 @@ public class ServiceExpert implements DomainExpert {
                 "MISSION: Write final JUnit 5 test code.\n" +
                         "TECHNICAL RULES:\n" +
                         "1. Use @ExtendWith(MockitoExtension.class).\n" +
-                        "2. MOCKITO MATCHERS: Never mix matchers (any(), eq()) with raw values. All arguments must use matchers if one does.\n"
-                        +
-                        "3. DEPENDENCY DETECTION: For QueryDSL/JPA custom repos, include necessary @Import or @TestConfiguration.\n"
-                        +
-                        "4. STATIC IMPORTS: Include static imports for ArgumentMatchers.eq, any, etc.";
+                        "2. MOCKITO MATCHERS: Never mix matchers (any(), eq()) with raw values.\n" +
+                        "3. CRITICAL: Response MUST use strict XML format: <response><status>...</status><thought>...</thought><code>...</code></response>. No Markdown, No LLM tags.";
             default -> "Execute specialized Service layer technical duties.";
         };
     }
@@ -39,39 +36,40 @@ public class ServiceExpert implements DomainExpert {
         return """
                 Strategy: SERVICE Layer Pure Unit Testing
                 - Infrastructure: Use JUnit 5 with @ExtendWith(MockitoExtension.class). No Spring Context allowed.
-                - Mocking: Use @Mock for all external dependencies and @InjectMocks for the target service to ensure complete isolation.
-                - Pattern: Follow the Arrange-Act-Assert (AAA) pattern strictly, marked by // given, // when, // then comments.
-                - Focus: Validate core business calculations, domain-level validation rules, and the correct sequence of dependency interactions (verify).""";
+                - Structure: Use @Nested annotations to group tests by method under test.
+                - Mocking: Use @Mock for dependencies and @InjectMocks for the target service.
+                - Pattern: Follow the Arrange-Act-Assert (AAA) pattern strictly.
+                - Focus: Validate core business calculations and dependency interactions.""";
     }
 
     @Override
     public String getPlanningDirective() {
         return """
                 Strategic Planning for Service Logic:
-                1. Success Path: Identify the primary logical flow where all conditions are met and the result is returned successfully.
-                2. Conditional Branching: Identify every secondary path (else if, else) and plan specific data sets to trigger them.
-                3. Exception Analysis: For every business-level exception thrown, plan a dedicated scenario to verify the exception type and the specific error message content.
-                4. External Invariants: Identify method calls to mocks and plan scenarios to verify that they are called with the correct arguments.""";
+                1. Success Path: Identify the primary logical flow.
+                2. Conditional Branching: Identify every secondary path (else if, else).
+                3. Exception Analysis: Plan separate tests for each exception scenario.
+                4. Data Variants: Use @ParameterizedTest for testing logic with multiple data inputs.""";
     }
 
     @Override
     public String getSetupDirective() {
-        return "Generate @BeforeEach to initialize common DTOs or Entities required for this method group. Ensure all required fields for the service's input are set up.";
+        return "Generate @BeforeEach to initialize common DTOs or Entities. Ensure valid initial state.";
     }
 
     @Override
     public String getMockingDirective() {
-        return "Use BDDMockito.given() to define exact behavior for all dependency mocks. Include edge case returns like null, empty collections, or custom exceptions to trigger error handling.";
+        return "Use BDDMockito.given() to define exact behavior. Use strict argument matchers.";
     }
 
     @Override
     public String getExecutionDirective() {
-        return "Perform the actual service method call using the service instance under test. Use locally defined variables for clarity.";
+        return "Perform the actual service method call using the service instance under test.";
     }
 
     @Override
     public String getVerificationDirective() {
-        return "Use AssertJ assertThat(). Verify side effects using Mockito verify() only for state-changing calls or required internal interactions. Specifically, if ApplicationEventPublisher is used, verify that publishEvent was called with the correct event object using ArgumentCaptor.";
+        return "Use AssertJ assertions. For lists/objects, use .extracting(...).contains(...). For Tuples, use Groups.tuple(). Verify side effects using Mockito verify() only when necessary.";
     }
 
     @Override

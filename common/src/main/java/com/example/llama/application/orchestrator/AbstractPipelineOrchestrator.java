@@ -3,9 +3,11 @@ package com.example.llama.application.orchestrator;
 import com.example.llama.domain.model.AgentType;
 import com.example.llama.domain.model.GeneratedCode;
 import com.example.llama.domain.model.Intelligence;
+import com.example.llama.domain.model.prompt.LlmUserRequest;
 import com.example.llama.domain.service.Agent;
 import com.example.llama.domain.service.AgentFactory;
 import com.example.llama.domain.service.CodeSynthesizer;
+import com.example.llama.infrastructure.parser.JavaSourceSplitter;
 import com.example.llama.infrastructure.security.SecurityMasker;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
     protected final com.example.llama.domain.service.CodeAnalyzer codeAnalyzer;
     protected final SecurityMasker securityMasker;
     protected final com.example.llama.infrastructure.analysis.SimpleDependencyAnalyzer dependencyAnalyzer;
+    protected final JavaSourceSplitter javaSourceSplitter;
 
     protected abstract AgentType getAnalystRole();
 
@@ -46,6 +49,7 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
         // 1.1 Dependency Analysis
         Path projectRoot = findProjectRoot(sourcePath);
         java.util.List<String> deps = dependencyAnalyzer.analyze(projectRoot);
+        String libInfo = String.join("\n", deps);
 
         // 1.2 Related Context Retrieval (DTOs, Models)
         String relatedContext = fetchRelatedContext(intelligence, projectRoot);
@@ -53,17 +57,20 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
         // 2. Global Setup Phase (Class Skeleton & Mocks)
         log.info("🏗️ [Phase 2] Generating Global Test Setup...");
         Agent setupAgent = agentFactory.create(getCoderRole(), getDomain());
-        // We use Coder role for Setup generation as it involves writing Java code
-        // (Skeleton)
-        // We use Coder role for Setup generation as it involves writing Java code
-        // (Skeleton)
-        String setupContext = "SOURCE_CODE:\n" + maskedSourceCode +
-                "\n\nINTELLIGENCE:\n" + intelligence.toString() +
-                "\n\nDEPENDENCIES:\n" + String.join("\n", deps) +
-                "\n\nRELATED_CODE_CONTEXT:\n" + relatedContext;
-        String setupCode = setupAgent.act(
-                "Generate the Test Class Skeleton with @ExtendWith, Mocks, and @BeforeEach setup. DO NOT generate @Test methods yet.",
-                setupContext);
+
+        JavaSourceSplitter.SplitResult setupSplit = javaSourceSplitter.createSkeletonOnly(maskedSourceCode);
+
+        LlmUserRequest setupReq = LlmUserRequest.builder()
+                .task("Generate the Test Class Skeleton with @ExtendWith, Mocks, and @BeforeEach setup. DO NOT generate @Test methods yet.")
+                .libraryInfo(libInfo)
+                .packageName(setupSplit.packageName())
+                .imports(setupSplit.imports())
+                .references(relatedContext)
+                .classStructure(setupSplit.classStructure())
+                .targetMethodSource(setupSplit.targetMethodSource())
+                .build();
+
+        String setupCode = setupAgent.act(setupReq);
         log.info("--> Setup Complete:\n{}", setupCode);
 
         // 3. Method Iteration Phase
@@ -72,27 +79,28 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
         Agent methodCoder = agentFactory.create(getCoderRole(), getDomain());
 
         for (String methodSignature : intelligence.methods()) {
-            // Heuristic: Skip obvious boilerplate like toString, equals, hashCode if
-            // desired,
-            // but for now we test everything relevant.
             if (methodSignature.contains("toString()") || methodSignature.contains("hashCode()"))
                 continue;
 
             String methodName = extractNameFromSignature(methodSignature);
-            log.info("   -> Generating tests for method: {}", methodName);
+            log.info("   -> Generating tests for method: [{}]", methodName);
 
-            // Re-read specific method body to ensure high focus (or use full source if
-            // needed context)
-            // Ideally getting just the method body + signature helps the LLM focus.
-            // But giving full source is safer for context. We focus the prompt instead.
+            JavaSourceSplitter.SplitResult methodSplit = javaSourceSplitter.split(maskedSourceCode, methodName);
+            log.info("      Extracted Source Size: {} characters", methodSplit.targetMethodSource().length());
 
-            String methodContext = "SOURCE_CODE:\n" + maskedSourceCode +
-                    "\n\nTARGET_METHOD: " + methodSignature +
-                    "\n\nEXISTING_SETUP:\n" + setupCode;
+            LlmUserRequest methodReq = LlmUserRequest.builder()
+                    .task("Generate @Test methods ONLY for the target method: " + methodName
+                            + ". Use @Nested Describe_" + methodName
+                            + " if appropriate. Do NOT repeat the class setup.")
+                    .libraryInfo(libInfo)
+                    .packageName(methodSplit.packageName())
+                    .imports(methodSplit.imports())
+                    .references(relatedContext + "\n\nEXISTING_TEST_SKELETON:\n" + setupCode)
+                    .classStructure(methodSplit.classStructure())
+                    .targetMethodSource(methodSplit.targetMethodSource())
+                    .build();
 
-            String testMethods = methodCoder.act("Generate @Test methods ONLY for the target method: " + methodName
-                    + ". Use @Nested Describe_" + methodName + " if appropriate. Do NOT repeat the class setup.",
-                    methodContext);
+            String testMethods = methodCoder.act(methodReq);
             allTestsMethods.append("\n").append(testMethods).append("\n");
         }
 
@@ -105,8 +113,6 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
         String sourceFqn = intelligence.packageName() + "." + intelligence.className();
         java.util.Set<String> newImports = new java.util.HashSet<>(sanitized.imports());
         newImports.add(sourceFqn);
-
-        // Add minimal required imports for tests if missing
         newImports.add("org.junit.jupiter.api.Test");
         newImports.add("org.junit.jupiter.api.DisplayName");
         newImports.add("org.junit.jupiter.api.Nested");
@@ -170,11 +176,13 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
             if (count > 10)
                 break; // Hard limit
             String cleanImp = imp.replace("import ", "").replace(";", "").trim();
-            if (cleanImp.startsWith("java.") || cleanImp.startsWith("org.") || cleanImp.startsWith("jakarta."))
+            if (cleanImp.startsWith("java.") || cleanImp.startsWith("javax.") || cleanImp.startsWith("jakarta.")
+                    || cleanImp.startsWith("org.springframework."))
                 continue;
 
             String relativePath = "src/main/java/" + cleanImp.replace(".", "/") + ".java";
             Path candidate = projectRoot.resolve(relativePath);
+            log.info("🔎 Checking Related Context: Imp={}, Path={}", cleanImp, candidate);
 
             if (java.nio.file.Files.exists(candidate)) {
                 try {
@@ -199,12 +207,21 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
         com.example.llama.domain.service.Agent repairAgent = agentFactory.create(AgentType.REPAIR_AGENT, getDomain());
 
         String maskedSourceCode = securityMasker.mask(sourceCode); // 🛡️ LSP Enforcement for Repair
-        String context = "SOURCE_CODE:\n" + maskedSourceCode +
-                "\n\nBROKEN_TEST_CODE:\n" + brokenCode.toFullSource() +
-                "\n\nTARGET_TEST_CLASS_NAME:\n" + brokenCode.className() +
-                "\n\nERROR_LOG:\n" + errorLog;
 
-        String fixedCode = repairAgent.act("Fix the compilation or runtime errors in the Test Code.", context);
+        Path projectRoot = findProjectRoot(sourcePath);
+        java.util.List<String> deps = dependencyAnalyzer.analyze(projectRoot);
+        String libInfo = String.join("\n", deps);
+
+        LlmUserRequest repairReq = LlmUserRequest.builder()
+                .task("Fix the compilation or runtime errors in the Test Code.")
+                .libraryInfo(libInfo)
+                .references("BROKEN_TEST_CODE:\n" + brokenCode.toFullSource() +
+                        "\n\nERROR_LOG:\n" + errorLog)
+                .classStructure(maskedSourceCode)
+                .targetMethodSource("")
+                .build();
+
+        String fixedCode = repairAgent.act(repairReq);
 
         log.info("🧩 [Phase 5.1] Assembling Repaired Code...");
         GeneratedCode sanitized = codeSynthesizer.sanitizeAndExtract(fixedCode);

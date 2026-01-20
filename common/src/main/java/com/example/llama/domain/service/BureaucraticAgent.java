@@ -4,7 +4,7 @@ import com.example.llama.utils.AgentLogger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import com.example.llama.domain.model.prompt.PtcfUserRequest;
+import com.example.llama.domain.model.prompt.LlmUserRequest;
 
 /**
  * A generic implementation of an Agent that follows the bureaucratic protocol.
@@ -18,21 +18,16 @@ public class BureaucraticAgent implements Agent {
     private final LlmClient llmClient;
 
     @Override
-    public String act(String instruction, String context) {
-        log.info("[Agent: {}] Acting on instruction (PTCF Builder)...", role);
-        
-        PtcfUserRequest userPrompt = PtcfUserRequest.builder()
-                .task(instruction)
-                .context(context)
-                .build();
+    public String act(LlmUserRequest request) {
+        log.info("[Agent: {}] Acting on instruction (XML Prompt)...", role);
 
-        String xmlPrompt = userPrompt.toXml();
-        
+        String xmlPrompt = request.toXml();
+
         // [LOG] Record the exact prompt being sent
         com.example.llama.utils.AgentLogger.logInteraction(role, "PROMPT", xmlPrompt);
 
         String response = llmClient.generate(xmlPrompt, systemDirective);
-        
+
         // [LOG] Record the raw response
         com.example.llama.utils.AgentLogger.logInteraction(role, "RESPONSE", response);
 

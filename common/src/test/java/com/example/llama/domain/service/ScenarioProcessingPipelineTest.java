@@ -88,7 +88,7 @@ class ScenarioProcessingPipelineTest {
                 given(testPlanner.planScenarios(any(), anyString(), any())).willReturn(List.of());
                 given(codeSynthesizer.assembleStructuralTestClass(anyString(), any(), any())).willReturn("test code");
 
-                // PTCF Fix: Add missing stubs for the updated orchestrator logic
+                // LLM Fix: Add missing stubs for the updated orchestrator logic
                 given(orchestrator.getLeaderFor(any())).willReturn(teamLeader);
                 given(orchestrator.requestSpecialist(eq(AgentType.ARBITRATOR), any())).willReturn(mockAgent);
                 given(orchestrator.getExpertFor(any()))
