@@ -1,0 +1,26 @@
+spring:
+  main:
+    web-application-type: none
+    lazy-initialization: true # ⚡ Speed up startup by creating beans only when needed
+  ai:
+    ollama:
+      base-url: http://127.0.0.1:11434
+      chat:
+        options:
+          model: qwen2.5-coder:14b
+          temperature: 0.3
+      embedding:
+        options:
+          model: nomic-embed-text:latest
+      keep-alive: -1
+
+# 🕵️‍♂️ FULL TRACE LOGGING: No more hidden failures
+logging:
+  level:
+    root: INFO
+    org.springframework.ai.ollama: INFO
+    org.springframework.ai.chat.model: INFO
+    org.springframework.web.client.RestClient: INFO
+    org.springframework.http.client: INFO
+    org.springframework.web.reactive.function.client.WebClient: INFO
+    reactor.netty.http.client: INFO

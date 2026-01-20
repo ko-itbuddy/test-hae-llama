@@ -1,0 +1,39 @@
+{
+  "name": "test-hae-llama",
+  "displayName": "Test-Hae-Llama (테스트해라마)",
+  "publisher": "itbuddy",
+  "version": "0.1.0",
+  "description": "야, 라마야! 테스트 코드 좀 짜라! (Interactive Local LLM Assistant)",
+  "license": "MIT",
+  "icon": "icon.png",
+  "engines": { "vscode": "^1.85.0" },
+  "main": "./out/extension.js",
+  "activationEvents": [ "*" ],
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "llama-v4-container",
+          "title": "테스트해라마",
+          "icon": "icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "llama-v4-container": [
+        {
+          "id": "llama-chat-view",
+          "type": "webview",
+          "name": "🦙 라마와 대화하기"
+        }
+      ]
+    },
+    "commands": [
+      { "command": "test-hae-llama.ingest", "title": "🦙 프로젝트 공부시키기" },
+      { "command": "test-hae-llama.generate", "title": "🚀 테스트 코드 짜줘라마!" },
+      { "command": "test-hae-llama.reinstall", "title": "♻️ 환경 재구축하기" }
+    ]
+  },
+  "scripts": { "compile": "node build.js && tsc -p ./" },
+  "devDependencies": { "@types/vscode": "^1.85.0", "typescript": "^5.3.3" }
+}

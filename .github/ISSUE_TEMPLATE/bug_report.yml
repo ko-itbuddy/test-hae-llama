@@ -1,0 +1,29 @@
+name: 🐛 Bug Report
+about: 라마가 사고를 쳤나요? 버그를 알려주라마!
+title: '[BUG] '
+labels: bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        어떤 상황에서 버그가 발생했는지 알려주라마! 🦙
+  - type: textarea
+    id: description
+    attributes:
+      label: 버그 설명
+      placeholder: 무엇이 문제라마?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 재현 방법
+      placeholder: |
+        1. 어떤 파일을 열었라마?
+        2. 어떤 메뉴를 눌렀라마?
+        3. 결과가 어땠라마?
+  - type: textarea
+    id: logs
+    attributes:
+      label: 관련 로그 (Output: Test-Hae-Llama 🦙 채널 내용)
+      render: shell

@@ -1,0 +1,56 @@
+plugins {
+    id 'org.springframework.boot'
+    id 'io.spring.dependency-management'
+    id 'java-library'
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://repo.spring.io/milestone' }
+    maven { url 'https://repo.spring.io/snapshot' }
+}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.shell:spring-shell-dependencies:3.2.0"
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.shell:spring-shell-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-webflux'
+    
+    // 🧠 Spring AI (Milestone 1.1.0-M4)
+    implementation 'org.springframework.ai:spring-ai-starter-model-ollama:1.1.0-M4'
+    implementation 'org.springframework.ai:spring-ai-chroma-store:1.1.0-M4'
+    
+    // 🧱 Tools
+    implementation 'com.squareup:javapoet:1.10.0'
+    implementation 'com.github.javaparser:javaparser-core:3.27.1'
+    implementation 'com.github.javaparser:javaparser-symbol-solver-core:3.27.1'
+    implementation 'org.yaml:snakeyaml:2.3'
+    
+    // 🌶️ Lombok: Pure Power for Java 21
+    compileOnly 'org.projectlombok:lombok:1.18.34'
+    annotationProcessor 'org.projectlombok:lombok:1.18.34'
+    testCompileOnly 'org.projectlombok:lombok:1.18.34'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
+    
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.restdocs:spring-restdocs-mockmvc'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+bootJar {
+    enabled = true
+    archiveClassifier = 'boot'
+}
+
+jar {
+    enabled = true
+}

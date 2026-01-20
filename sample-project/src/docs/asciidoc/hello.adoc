@@ -1,0 +1,11 @@
+= HelloController API Guide
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 4
+:sectlinks:
+
+== Overview
+This document provides details of the HelloController endpoints.
+

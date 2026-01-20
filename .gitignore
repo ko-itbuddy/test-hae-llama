@@ -1,0 +1,50 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+
+# Vector DB (Local Data)
+chroma_db/
+*.sqlite3
+
+# Logs
+*.log
+
+# Java / Build Tools
+target/
+build/
+.gradle/
+out/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project Specific
+ollama_*.log
+.gemini/
+.env
+.env.*
+
+# Local AI Test Generator Data
+# Test-Hae-Llama Data
+.test-hea-llama/
+
+# Test-Hae-Llama Data
+.test-hea-llama/
+
+# Node
+**/node_modules/
+npm-debug.log
+yarn-error.log

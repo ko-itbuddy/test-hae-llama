@@ -1,0 +1,12 @@
+= API Documentation
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 4
+:sectlinks:
+
+== Introduction
+This is the aggregating document for all APIs.
+
+include::hello.adoc[]

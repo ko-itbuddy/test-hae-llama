@@ -1,0 +1,27 @@
+<idea-plugin>
+    <id>itbuddy.test-hae-llama</id>
+    <name>Test-Hae-Llama (테스트해라마)</name>
+    <vendor email="skvudrms54@gmail.com" url="https://github.com/ko-itbuddy/test-hae-llama">itbuddy</vendor>
+
+    <description><![CDATA[
+    야, 라마야! 테스트 코드 좀 짜라! <br>
+    <b>Test-Hae-Llama</b>는 로컬 LLM(Ollama/GLM4)과 Upstash Context7 MCP를 사용하여 <br>
+    최신 문법을 완벽히 반영한 JUnit 5 테스트 코드를 자동으로 생성해라마!
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends>com.intellij.modules.java</depends>
+
+    <actions>
+        <group id="LlamaGroup" text="🦙 테스트해라마" popup="true">
+            <add-to-group group-id="ProjectViewPopupMenu" anchor="last"/>
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            
+            <action id="LlamaIngest" class="com.example.llama.IngestAction" text="공부해라 라마야 (Ingest)" description="Learn codebase">
+            </action>
+            
+            <action id="LlamaGenerate" class="com.example.llama.GenerateAction" text="테스트 짜라 라마야 (Generate)" description="Generate unit test">
+            </action>
+        </group>
+    </actions>
+</idea-plugin>

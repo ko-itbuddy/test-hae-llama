@@ -1,0 +1,64 @@
+name: Release Test-Hae-Llama
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      # 💡 태그에서 버전 추출
+      - name: Set Release Version
+        run: echo "REL_VER=${GITHUB_REF_NAME#v}" >> $GITHUB_ENV
+
+      # 1. Build VS Code Extension
+      - name: Build VS Code
+        run: |
+          cd vscode-extension
+          npm install
+          npm run compile
+          npx @vscode/vsce package --allow-missing-repository --out "../test-hae-llama-vscode-${{ env.REL_VER }}.vsix"
+
+      # TODO: IntelliJ 빌드는 너무 느려서 일단 비활성화라마! 나중에 최적화하고 살려라마.
+      # 2. Build IntelliJ Plugin (DISABLED)
+      # - name: Build IntelliJ
+      #   run: |
+      #     cd intellij-plugin
+      #     chmod +x gradlew
+      #     ./gradlew buildPlugin
+      #     mv build/distributions/*.zip "../test-hae-llama-intellij-${{ env.REL_VER }}.zip"
+
+      # 3. 🚀 Create Release using 'gh' CLI (VS Code Only for now)
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ github.ref_name }}" \
+            --title "Test-Hae-Llama ${{ github.ref_name }}" \
+            --notes "🦙 VS Code 전용 초고속 릴리즈라마! (IntelliJ는 수행 수행 중라마...)" \
+            "test-hae-llama-vscode-${{ env.REL_VER }}.vsix"
+            # "test-hae-llama-intellij-${{ env.REL_VER }}.zip"
