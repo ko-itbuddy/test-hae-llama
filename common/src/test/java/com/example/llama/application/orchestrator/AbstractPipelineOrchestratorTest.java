@@ -103,6 +103,9 @@ class AbstractPipelineOrchestratorTest {
         GeneratedCode broken = new GeneratedCode("com.test", "BrokenTest", Set.of(), "// broken");
         String errorLog = "Error: Cannot compile";
         String sourceCode = localSourceCode; // Use localSourceCode
+        
+        GeneratedCode repaired = new GeneratedCode("com.test", "BrokenTest", Set.of(), "// fixed");
+        given(repairService.repair(any(), any(), any())).willReturn(repaired);
 
         // When
         orchestrator.repair(broken, errorLog, sourceCode, sourcePath);
