@@ -12,7 +12,7 @@
 - [x] **Task:** Integrate the `REPAIR_AGENT` into the `RepairService`. `a4d495c`
 - [x] **Task:** Implement the feedback loop: construct the prompt for the `REPAIR_AGENT` with the broken code and error log. `beb6212`
 
-## Phase 3: Loop and State Management
+## Phase 3: Loop and State Management [checkpoint: 1d2cbee]
 
 - [x] **Task:** Implement the retry mechanism within the `RepairService`, allowing for a configurable number of repair attempts. `438f44c`
 - [x] **Task:** Add state management to track the current repair attempt and halt if the maximum number of retries is reached. `c915c16`
