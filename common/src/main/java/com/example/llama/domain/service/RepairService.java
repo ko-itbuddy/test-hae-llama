@@ -17,28 +17,32 @@ public class RepairService {
     private final AgentFactory agentFactory;
     private final CodeSynthesizer codeSynthesizer;
 
-    public GeneratedCode selfHeal(GeneratedCode originalCode, String testCommand) {
-        ShellExecutionService.ExecutionResult result = shellExecutionService.execute(testCommand);
-        if (result.isSuccess()) {
-            return originalCode;
+    public GeneratedCode selfHeal(GeneratedCode originalCode, String testCommand, int maxRetries) {
+        GeneratedCode currentCode = originalCode;
+        for (int i = 0; i < maxRetries; i++) {
+            ShellExecutionService.ExecutionResult result = shellExecutionService.execute(testCommand);
+            if (result.isSuccess()) {
+                return currentCode;
+            }
+
+            Agent repairAgent = agentFactory.create(AgentType.REPAIR_AGENT, null);
+
+            LlmClassContext repairClassContext = LlmClassContext.builder()
+                    .reference(LlmCollaborator.builder()
+                            .name("BROKEN_TEST_CODE_AND_ERROR_LOG")
+                            .methods("BROKEN_TEST_CODE:\n" + currentCode.toFullSource() + "\n\nERROR_LOG:\n" + result.stderr())
+                            .build())
+                    .build();
+            
+            LlmUserRequest repairReq = LlmUserRequest.builder()
+                    .task("Fix the compilation or runtime errors in the Test Code.")
+                    .classContext(repairClassContext)
+                    .build();
+
+            String fixedCode = repairAgent.act(repairReq);
+            
+            currentCode = codeSynthesizer.sanitizeAndExtract(fixedCode);
         }
-
-        Agent repairAgent = agentFactory.create(AgentType.REPAIR_AGENT, null);
-
-        LlmClassContext repairClassContext = LlmClassContext.builder()
-                .reference(LlmCollaborator.builder()
-                        .name("BROKEN_TEST_CODE_AND_ERROR_LOG")
-                        .methods("BROKEN_TEST_CODE:\n" + originalCode.toFullSource() + "\n\nERROR_LOG:\n" + result.stderr())
-                        .build())
-                .build();
-        
-        LlmUserRequest repairReq = LlmUserRequest.builder()
-                .task("Fix the compilation or runtime errors in the Test Code.")
-                .classContext(repairClassContext)
-                .build();
-
-        String fixedCode = repairAgent.act(repairReq);
-        
-        return codeSynthesizer.sanitizeAndExtract(fixedCode);
+        return currentCode;
     }
 }
