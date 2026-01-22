@@ -14,8 +14,9 @@ public class ServiceOrchestrator extends AbstractPipelineOrchestrator {
             com.example.llama.domain.service.CodeAnalyzer codeAnalyzer,
             com.example.llama.infrastructure.security.SecurityMasker securityMasker,
             com.example.llama.infrastructure.analysis.SimpleDependencyAnalyzer dependencyAnalyzer,
-            JavaSourceSplitter javaSourceSplitter) {
-        super(agentFactory, codeSynthesizer, codeAnalyzer, securityMasker, dependencyAnalyzer, javaSourceSplitter);
+            JavaSourceSplitter javaSourceSplitter,
+            com.example.llama.domain.service.RepairService repairService) {
+        super(agentFactory, codeSynthesizer, codeAnalyzer, securityMasker, dependencyAnalyzer, javaSourceSplitter, repairService);
     }
 
     @Override

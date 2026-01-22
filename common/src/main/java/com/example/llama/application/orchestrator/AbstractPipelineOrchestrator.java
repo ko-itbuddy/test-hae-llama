@@ -32,6 +32,7 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
     protected final SecurityMasker securityMasker;
     protected final com.example.llama.infrastructure.analysis.SimpleDependencyAnalyzer dependencyAnalyzer;
     protected final JavaSourceSplitter javaSourceSplitter;
+    protected final com.example.llama.domain.service.RepairService repairService;
 
     protected abstract AgentType getAnalystRole();
 
@@ -277,41 +278,10 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
     public GeneratedCode repair(GeneratedCode brokenCode, String errorLog, String sourceCode, Path sourcePath) {
         log.info("🚑 [Phase 5] Auto-Repairing: {}", sourcePath.getFileName());
 
-        com.example.llama.domain.service.Agent repairAgent = agentFactory.create(AgentType.REPAIR_AGENT, getDomain());
-
-        String maskedSourceCode = securityMasker.mask(sourceCode); // 🛡️ LSP Enforcement for Repair
-
-        Path projectRoot = findProjectRoot(sourcePath);
-        java.util.List<String> deps = dependencyAnalyzer.analyze(projectRoot);
-        String libInfo = String.join("\n", deps);
-
-        LlmClassContext repairClassContext = LlmClassContext.builder()
-                .reference(LlmCollaborator.builder()
-                        .name("BROKEN_TEST_CODE_AND_ERROR_LOG")
-                        .methods("BROKEN_TEST_CODE:\n" + brokenCode.toFullSource() + "\n\nERROR_LOG:\n" + errorLog)
-                        .build())
-                .classStructure(maskedSourceCode)
-                .targetMethodSource("")
-                .build();
-
-        LlmUserRequest repairReq = LlmUserRequest.builder()
-                .task("Fix the compilation or runtime errors in the Test Code.")
-                .libraryInfo(libInfo)
-                .classContext(repairClassContext)
-                .build();
-
-        String fixedCode = repairAgent.act(repairReq);
-
-        log.info("🧩 [Phase 5.1] Assembling Repaired Code...");
-        GeneratedCode sanitized = codeSynthesizer.sanitizeAndExtract(fixedCode);
-
-        // Re-apply imports if needed (logic from Phase 4.1)
-        Intelligence intelligence = codeAnalyzer.extractIntelligence(sourceCode, sourcePath.toString());
-        String sourceFqn = intelligence.packageName() + "." + intelligence.className();
-
-        java.util.Set<String> newImports = new java.util.HashSet<>(sanitized.imports());
-        newImports.add(sourceFqn);
-
-        return new GeneratedCode(sanitized.packageName(), sanitized.className(), newImports, sanitized.getContent());
+        // For now, assume a default test command. This could be made configurable.
+        String testCommand = "./gradlew test";
+        
+        // Delegate to the RepairService
+        return repairService.selfHeal(brokenCode, testCommand, 3);
     }
 }
