@@ -89,11 +89,13 @@ No library info provided.
             ]]></ref_class_structure>
             <ref_methods><![CDATA[
         BROKEN_TEST_CODE:
+                package com.example.demo;
+                
                 // Error: YOLO mode is enabled. All tool calls will be automatically approved.
                 YOLO mode is enabled. All tool calls will be automatically approved.
-                (node:825) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+                (node:16172) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
                 (Use `node --trace-warnings ...` to show where the warning was created)
-                Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T09-58-49-614Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 12h31m6s.
+                Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T10-34-32-872Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 11h55m23s.
                     at classifyGoogleError (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/googleQuotaErrors.js:136:28)
                     at retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:130:37)
                     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
@@ -106,10 +108,10 @@ No library info provided.
                     at async main (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/gemini.js:458:9) {
                   cause: {
                     code: 429,
-                    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h31m6s.',
+                    message: 'You have exhausted your capacity on this model. Your quota will reset after 11h55m23s.',
                     details: [ [Object], [Object] ]
                   },
-                  retryDelayMs: 45066481.323219
+                  retryDelayMs: 42923217.082425
                 }
                 An unexpected critical error occurred:[object Object]
                 
@@ -119,9 +121,117 @@ No library info provided.
                 > Task :classes UP-TO-DATE
                 
                 > Task :compileTestJava FAILED
-                /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/presentation/ProductControllerTest.java:70: error: class, interface, enum, or record expected
-                }
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:2: error: class, interface, enum, or record expected
+                YOLO mode is enabled. All tool calls will be automatically approved.
                 ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:4: error: illegal character: '`'
+                (Use `node --trace-warnings ...` to show where the warning was created)
+                     ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:4: error: illegal character: '`'
+                (Use `node --trace-warnings ...` to show where the warning was created)
+                                               ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:5: error: illegal character: '`'
+                I will start by examining the source code of `ProductController` and `HelloService` in the `sample-projects/demo-app` directory, and then I'll check the content of the corrupted test files to see if any valid code remains.
+                                                             ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:5: error: illegal character: '`'
+                I will start by examining the source code of `ProductController` and `HelloService` in the `sample-projects/demo-app` directory, and then I'll check the content of the corrupted test files to see if any valid code remains.
+                                                                               ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:5: error: illegal character: '`'
+                I will start by examining the source code of `ProductController` and `HelloService` in the `sample-projects/demo-app` directory, and then I'll check the content of the corrupted test files to see if any valid code remains.
+                                                                                     ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:5: error: illegal character: '`'
+                I will start by examining the source code of `ProductController` and `HelloService` in the `sample-projects/demo-app` directory, and then I'll check the content of the corrupted test files to see if any valid code remains.
+                                                                                                  ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:5: error: illegal character: '`'
+                I will start by examining the source code of `ProductController` and `HelloService` in the `sample-projects/demo-app` directory, and then I'll check the content of the corrupted test files to see if any valid code remains.
+                                                                                                           ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:5: error: illegal character: '`'
+                I will start by examining the source code of `ProductController` and `HelloService` in the `sample-projects/demo-app` directory, and then I'll check the content of the corrupted test files to see if any valid code remains.
+                                                                                                                                    ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:5: error: unclosed character literal
+                I will start by examining the source code of `ProductController` and `HelloService` in the `sample-projects/demo-app` directory, and then I'll check the content of the corrupted test files to see if any valid code remains.
+                                                                                                                                                           ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:7: error: illegal character: '`'
+                I will read the source files `HelloService.java` and `ProductController.java` to understand their logic, and then I will examine the corrupted test files `HelloServiceTest.java` and `ProductControllerTest.java` to see if any valid code can be salvaged.
+                                             ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:7: error: illegal character: '`'
+                I will read the source files `HelloService.java` and `ProductController.java` to understand their logic, and then I will examine the corrupted test files `HelloServiceTest.java` and `ProductControllerTest.java` to see if any valid code can be salvaged.
+                                                               ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:7: error: illegal character: '`'
+                I will read the source files `HelloService.java` and `ProductController.java` to understand their logic, and then I will examine the corrupted test files `HelloServiceTest.java` and `ProductControllerTest.java` to see if any valid code can be salvaged.
+                                                                     ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:7: error: illegal character: '`'
+                I will read the source files `HelloService.java` and `ProductController.java` to understand their logic, and then I will examine the corrupted test files `HelloServiceTest.java` and `ProductControllerTest.java` to see if any valid code can be salvaged.
+                                                                                            ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:7: error: illegal character: '`'
+                I will read the source files `HelloService.java` and `ProductController.java` to understand their logic, and then I will examine the corrupted test files `HelloServiceTest.java` and `ProductControllerTest.java` to see if any valid code can be salvaged.
+                                                                                                                                                                          ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:7: error: illegal character: '`'
+                I will read the source files `HelloService.java` and `ProductController.java` to understand their logic, and then I will examine the corrupted test files `HelloServiceTest.java` and `ProductControllerTest.java` to see if any valid code can be salvaged.
+                                                                                                                                                                                                ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:7: error: illegal character: '`'
+                I will read the source files `HelloService.java` and `ProductController.java` to understand their logic, and then I will examine the corrupted test files `HelloServiceTest.java` and `ProductControllerTest.java` to see if any valid code can be salvaged.
+                                                                                                                                                                                                      ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:7: error: illegal character: '`'
+                I will read the source files `HelloService.java` and `ProductController.java` to understand their logic, and then I will examine the corrupted test files `HelloServiceTest.java` and `ProductControllerTest.java` to see if any valid code can be salvaged.
+                                                                                                                                                                                                                                 ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:9: error: illegal character: '`'
+                I will now read the `ProductService.java`, `ProductCreateRequest.java`, and `ProductResponse.java` files to understand their structure and dependencies, which will help me write a comprehensive test for `ProductController`.
+                                    ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:9: error: illegal character: '`'
+                I will now read the `ProductService.java`, `ProductCreateRequest.java`, and `ProductResponse.java` files to understand their structure and dependencies, which will help me write a comprehensive test for `ProductController`.
+                                                        ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:9: error: illegal character: '`'
+                I will now read the `ProductService.java`, `ProductCreateRequest.java`, and `ProductResponse.java` files to understand their structure and dependencies, which will help me write a comprehensive test for `ProductController`.
+                                                           ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:9: error: illegal character: '`'
+                I will now read the `ProductService.java`, `ProductCreateRequest.java`, and `ProductResponse.java` files to understand their structure and dependencies, which will help me write a comprehensive test for `ProductController`.
+                                                                                     ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:9: error: illegal character: '`'
+                I will now read the `ProductService.java`, `ProductCreateRequest.java`, and `ProductResponse.java` files to understand their structure and dependencies, which will help me write a comprehensive test for `ProductController`.
+                                                                                            ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:9: error: illegal character: '`'
+                I will now read the `ProductService.java`, `ProductCreateRequest.java`, and `ProductResponse.java` files to understand their structure and dependencies, which will help me write a comprehensive test for `ProductController`.
+                                                                                                                 ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:9: error: illegal character: '`'
+                I will now read the `ProductService.java`, `ProductCreateRequest.java`, and `ProductResponse.java` files to understand their structure and dependencies, which will help me write a comprehensive test for `ProductController`.
+                                                                                                                                                                                                                           ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:9: error: illegal character: '`'
+                I will now read the `ProductService.java`, `ProductCreateRequest.java`, and `ProductResponse.java` files to understand their structure and dependencies, which will help me write a comprehensive test for `ProductController`.
+                                                                                                                                                                                                                                             ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:11: error: illegal character: '`'
+                I will read the `ProductCreateRequest.java`, `ProductResponse.java`, and `ProductService.java` files to understand their contents.
+                                ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:11: error: illegal character: '`'
+                I will read the `ProductCreateRequest.java`, `ProductResponse.java`, and `ProductService.java` files to understand their contents.
+                                                          ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:11: error: illegal character: '`'
+                I will read the `ProductCreateRequest.java`, `ProductResponse.java`, and `ProductService.java` files to understand their contents.
+                                                             ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:11: error: illegal character: '`'
+                I will read the `ProductCreateRequest.java`, `ProductResponse.java`, and `ProductService.java` files to understand their contents.
+                                                                                  ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:11: error: illegal character: '`'
+                I will read the `ProductCreateRequest.java`, `ProductResponse.java`, and `ProductService.java` files to understand their contents.
+                                                                                         ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java:11: error: illegal character: '`'
+                I will read the `ProductCreateRequest.java`, `ProductResponse.java`, and `ProductService.java` files to understand their contents.
+                                                                                                             ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloServiceTest.java:4: error: class, interface, enum, or record expected
+                YOLO mode is enabled. All tool calls will be automatically approved.
+                ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloServiceTest.java:6: error: illegal character: '`'
+                (Use `node --trace-warnings ...` to show where the warning was created)
+                     ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloServiceTest.java:6: error: illegal character: '`'
+                (Use `node --trace-warnings ...` to show where the warning was created)
+                                               ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloServiceTest.java:20: error: unclosed character literal
+                    message: 'You have exhausted your capacity on this model. Your quota will reset after 11h55m23s.',
+                             ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloServiceTest.java:20: error: unclosed character literal
+                    message: 'You have exhausted your capacity on this model. Your quota will reset after 11h55m23s.',
+                                                                                                                    ^
                 /root/test-hae-llama/sample-projects/demo-app/src/test/java/HelloServiceTest.java:2: error: class, interface, enum, or record expected
                 YOLO mode is enabled. All tool calls will be automatically approved.
                 ^
@@ -132,12 +242,12 @@ No library info provided.
                 (Use `node --trace-warnings ...` to show where the warning was created)
                                                ^
                 /root/test-hae-llama/sample-projects/demo-app/src/test/java/HelloServiceTest.java:18: error: unclosed character literal
-                    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h31m6s.',
+                    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h7m39s.',
                              ^
                 /root/test-hae-llama/sample-projects/demo-app/src/test/java/HelloServiceTest.java:18: error: unclosed character literal
-                    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h31m6s.',
+                    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h7m39s.',
                                                                                                                    ^
-                6 errors
+                42 errors
                 
                 FAILURE: Build failed with an exception.
                 

@@ -287,6 +287,14 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
         log.info("🚑 [Phase 5] Auto-Repairing: {}", sourcePath.getFileName());
         
         // Delegate to the RepairService for a single repair attempt
-        return repairService.repair(brokenCode, errorLog, getDomain());
+        GeneratedCode result = repairService.repair(brokenCode, errorLog, getDomain());
+        
+        // Preserve package and class name if they are missing in the repaired code
+        String packageName = (result.getPackageName() == null || result.getPackageName().isEmpty()) 
+                ? brokenCode.getPackageName() : result.getPackageName();
+        String className = (result.getClassName() == null || result.getClassName().isEmpty()) 
+                ? brokenCode.getClassName() : result.getClassName();
+        
+        return new GeneratedCode(packageName, className, result.imports(), result.getContent());
     }
 }
