@@ -32,7 +32,7 @@ public class JavaSourceSplitterTest {
         assertThat(result.classStructure()).contains("public void myMethod(String arg) {");
         assertThat(result.classStructure()).contains("public void otherMethod() {");
         assertThat(result.classStructure()).doesNotContain("System.out.println(arg)");
-        assertThat(result.classStructure()).doesNotContain("System.out.println(\\"other\\")");
+        assertThat(result.classStructure()).doesNotContain("System.out.println(\"other\")");
     }
 
     @Test
@@ -52,10 +52,7 @@ public class JavaSourceSplitterTest {
         assertThat(result.classStructure()).contains("public void hello() {");
         assertThat(result.classStructure()).doesNotContain("System.out.println(name)");
 
-        // Target Method Source should contain EVERYTHING with full implementation
-        assertThat(result.targetMethodSource()).contains("private final String name;");
-        assertThat(result.targetMethodSource()).contains("public MyClass(String name)");
-        assertThat(result.targetMethodSource()).contains("public void hello()");
-        assertThat(result.targetMethodSource()).contains("System.out.println(name)");
+        // Target Method Source should be empty for skeleton phase
+        assertThat(result.targetMethodSource()).isEmpty();
     }
 }

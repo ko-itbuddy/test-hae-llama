@@ -73,12 +73,14 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
                 .build();
 
         LlmUserRequest setupReq = LlmUserRequest.builder()
-                .task("Generate the Test Class Skeleton with @ExtendWith, Mocks, and @BeforeEach setup. DO NOT generate @Test methods yet.")
+                .task("Generate the Test Class Skeleton with @ExtendWith, Mocks, and @BeforeEach setup. DO NOT generate any @Test methods or @Nested classes yet. Just the main class, fields, and setup.")
                 .libraryInfo(libInfo)
                 .classContext(setupClassContext)
                 .build();
 
-        String setupCode = setupAgent.act(setupReq);
+        String rawSetupCode = setupAgent.act(setupReq);
+        GeneratedCode sanitizedSetup = codeSynthesizer.sanitizeAndExtract(rawSetupCode);
+        String setupCode = sanitizedSetup.toFullSource();
         log.info("--> Setup Complete:\n{}", setupCode);
 
         // 3. Method Iteration Phase
@@ -98,14 +100,7 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
 
             // Add existing setup summary (optimized for token efficiency)
             List<LlmCollaborator> fullContext = new ArrayList<>(collaborators);
-            String setupSummary = String.format("""
-                    Test class setup already configured:
-                    - @ExtendWith(MockitoExtension.class)
-                    - @InjectMocks: %s
-                    - @Mock dependencies detected from constructor
-                    - @Nested Describe_{MethodName} structure ready
-                    - Do NOT repeat class-level setup
-                    """, intelligence.className());
+            String setupSummary = String.format("\n                    Test class setup already configured:\n                    - @ExtendWith(MockitoExtension.class)\n                    - @InjectMocks: %s\n                    - @Mock dependencies detected from constructor\n                    - Do NOT repeat class-level setup\n                    ", intelligence.className());
 
             fullContext.add(LlmCollaborator.builder()
                     .name("EXISTING_SETUP")
@@ -128,36 +123,51 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
                     .classContext(methodClassContext)
                     .build();
 
-            String testMethods = methodCoder.act(methodReq);
-            allTestsMethods.append("\n").append(testMethods).append("\n");
+            String rawTestMethods = methodCoder.act(methodReq);
+            GeneratedCode methodSnippet = codeSynthesizer.sanitizeAndExtract(rawTestMethods);
+            if (rawTestMethods.contains("<status>FAILED</status>")) {
+                log.warn("Method generation FAILED for [{}]. Skipping this method.", methodName);
+                continue;
+            }
+            allTestsMethods.append("\n").append(methodSnippet.body()).append("\n");
         }
 
         // 4. Assembly Phase
         log.info("🧩 [Phase 4] Assembling Code...");
-        String finalCode = mergeSetupAndTests(setupCode, allTestsMethods.toString());
-        GeneratedCode sanitized = codeSynthesizer.sanitizeAndExtract(finalCode);
-
+        
         // 4.1 Automated Import Injection
+        java.util.Set<String> newImports = new java.util.HashSet<>(sanitizedSetup.imports());
         String sourceFqn = intelligence.packageName() + "." + intelligence.className();
-        java.util.Set<String> newImports = new java.util.HashSet<>(sanitized.imports());
         newImports.add(sourceFqn);
         newImports.add("org.junit.jupiter.api.Test");
         newImports.add("org.junit.jupiter.api.DisplayName");
         newImports.add("org.junit.jupiter.api.Nested");
+        newImports.add("org.junit.jupiter.api.BeforeEach");
+        newImports.add("org.junit.jupiter.api.extension.ExtendWith");
+        newImports.add("org.junit.jupiter.params.ParameterizedTest");
+        newImports.add("org.junit.jupiter.params.provider.ValueSource");
+        newImports.add("org.junit.jupiter.params.provider.CsvSource");
+        newImports.add("org.junit.jupiter.params.provider.NullSource");
         newImports.add("org.mockito.Mock");
         newImports.add("org.mockito.InjectMocks");
+        newImports.add("org.mockito.junit.jupiter.MockitoExtension");
+        newImports.add("static org.assertj.core.api.Assertions.assertThat");
+        newImports.add("static org.assertj.core.api.Assertions.assertThatThrownBy");
+        newImports.add("static org.mockito.BDDMockito.given");
+        newImports.add("static org.mockito.Mockito.verify");
+        newImports.add("static org.mockito.ArgumentMatchers.any");
+        newImports.add("static org.mockito.ArgumentMatchers.eq");
 
-        sanitized = new GeneratedCode(sanitized.packageName(), sanitized.className(), newImports,
-                sanitized.getContent());
+        String finalCode = mergeSetupAndTests(setupCode, allTestsMethods.toString(), newImports);
 
         // 5. Wrapping
         String className = sourcePath.getFileName().toString().replace(".java", "Test");
-        String packageName = sanitized.getPackageName();
-        if (packageName == null || packageName.isEmpty()) {
-            packageName = intelligence.packageName();
-        }
+        String packageName = intelligence.packageName();
+        
+        // Ensure imports from newImports are actually in the returned GeneratedCode
+        java.util.Set<String> combinedImports = new java.util.HashSet<>(newImports);
 
-        return new GeneratedCode(packageName, className, sanitized.imports(), sanitized.getContent());
+        return new GeneratedCode(packageName, className, combinedImports, finalCode);
     }
 
     private String extractNameFromSignature(String signature) {
@@ -173,53 +183,51 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
         return parts[parts.length - 1];
     }
 
-    private String mergeSetupAndTests(String setupCode, String testMethods) {
+    private String mergeSetupAndTests(String setupCode, String testMethods, java.util.Set<String> extraImports) {
         try {
-            // Parse setup code (skeleton with empty @Nested classes)
+            // 1. Parse skeleton using JavaParser for reliable manipulation
             com.github.javaparser.ast.CompilationUnit setupCu = com.github.javaparser.StaticJavaParser.parse(setupCode);
-            com.github.javaparser.ast.body.ClassOrInterfaceDeclaration testClass = setupCu
-                    .findFirst(com.github.javaparser.ast.body.ClassOrInterfaceDeclaration.class)
+            
+            // 2. Identify the primary test class
+            com.github.javaparser.ast.body.ClassOrInterfaceDeclaration testClass = setupCu.getTypes().stream()
+                    .filter(t -> t instanceof com.github.javaparser.ast.body.ClassOrInterfaceDeclaration)
+                    .map(t -> (com.github.javaparser.ast.body.ClassOrInterfaceDeclaration) t)
+                    .findFirst()
                     .orElseThrow(() -> new RuntimeException("No test class found in setup code"));
 
-            // Parse test methods (contains @Nested classes with actual @Test methods)
-            String wrappedTests = "class Wrapper { " + testMethods + " }";
-            com.github.javaparser.ast.CompilationUnit testsCu = com.github.javaparser.StaticJavaParser
-                    .parse(wrappedTests);
-            com.github.javaparser.ast.body.ClassOrInterfaceDeclaration wrapperClass = testsCu
-                    .findFirst(com.github.javaparser.ast.body.ClassOrInterfaceDeclaration.class)
-                    .orElseThrow(() -> new RuntimeException("No wrapper class found"));
-
-            // Merge: Replace empty @Nested classes with filled ones
-            for (com.github.javaparser.ast.body.BodyDeclaration<?> newMember : wrapperClass.getMembers()) {
-                if (newMember instanceof com.github.javaparser.ast.body.ClassOrInterfaceDeclaration newNestedClass) {
-                    String nestedClassName = newNestedClass.getNameAsString();
-
-                    // Find and replace the empty @Nested class in setup
-                    java.util.Optional<com.github.javaparser.ast.body.ClassOrInterfaceDeclaration> existingNested = testClass
-                            .findFirst(com.github.javaparser.ast.body.ClassOrInterfaceDeclaration.class,
-                                    c -> c.getNameAsString().equals(nestedClassName));
-
-                    if (existingNested.isPresent()) {
-                        // Replace empty @Nested class with filled one
-                        testClass.getMembers().remove(existingNested.get());
-                        testClass.addMember(newNestedClass);
-                        log.debug("Merged @Nested class: {}", nestedClassName);
-                    } else {
-                        // Add new @Nested class if not found
-                        testClass.addMember(newNestedClass);
-                        log.debug("Added new @Nested class: {}", nestedClassName);
+            // 3. Remove all placeholder nested classes (starting with Describe_)
+            java.util.List<com.github.javaparser.ast.body.ClassOrInterfaceDeclaration> toRemove = new java.util.ArrayList<>();
+            testClass.getMembers().forEach(m -> {
+                if (m instanceof com.github.javaparser.ast.body.ClassOrInterfaceDeclaration c) {
+                    if (c.getNameAsString().startsWith("Describe_")) {
+                        toRemove.add(c);
                     }
+                }
+            });
+            
+            for (com.github.javaparser.ast.body.ClassOrInterfaceDeclaration c : toRemove) {
+                c.remove();
+            }
+
+            // 4. Inject all required imports
+            for (String imp : extraImports) {
+                if (imp.startsWith("static ")) {
+                    setupCu.addImport(imp.substring(7), true, false);
+                } else {
+                    setupCu.addImport(imp);
                 }
             }
 
-            return setupCu.toString();
-        } catch (Exception e) {
-            log.error("JavaParser merge failed, falling back to naive merge: {}", e.getMessage());
-            // Fallback to naive merge
-            String trimmedSetup = setupCode.trim();
-            if (trimmedSetup.endsWith("}")) {
-                return trimmedSetup.substring(0, trimmedSetup.lastIndexOf("}")) + "\n" + testMethods + "\n}";
+            // 5. Convert back to string and perform final insertion of test methods
+            String cleanedSkeleton = setupCu.toString();
+            int lastBraceIndex = cleanedSkeleton.lastIndexOf('}');
+            
+            if (lastBraceIndex != -1) {
+                return cleanedSkeleton.substring(0, lastBraceIndex) + "\n" + testMethods + "\n}";
             }
+            return cleanedSkeleton + "\n" + testMethods;
+        } catch (Exception e) {
+            log.error("Structural merge failed, falling back to naive: {}", e.getMessage());
             return setupCode + "\n" + testMethods;
         }
     }
@@ -277,11 +285,8 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
     @Override
     public GeneratedCode repair(GeneratedCode brokenCode, String errorLog, String sourceCode, Path sourcePath) {
         log.info("🚑 [Phase 5] Auto-Repairing: {}", sourcePath.getFileName());
-
-        // For now, assume a default test command. This could be made configurable.
-        String testCommand = "./gradlew test";
         
-        // Delegate to the RepairService
-        return repairService.selfHeal(brokenCode, testCommand, 3);
+        // Delegate to the RepairService for a single repair attempt
+        return repairService.repair(brokenCode, errorLog, getDomain());
     }
 }

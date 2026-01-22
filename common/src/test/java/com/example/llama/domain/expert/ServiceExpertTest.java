@@ -34,7 +34,7 @@ class ServiceExpertTest {
     void shouldProvideCoderMission() {
         String mission = expert.getDomainMission(AgentType.SERVICE_CODER);
         assertThat(mission)
-                .contains("Senior Java Test Developer")
+                .contains("MOCKITO MATCHERS")
                 .contains("@ExtendWith(MockitoExtension.class)")
                 .contains("<response>");
     }

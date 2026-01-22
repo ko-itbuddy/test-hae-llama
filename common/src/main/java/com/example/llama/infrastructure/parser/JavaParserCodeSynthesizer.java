@@ -45,6 +45,7 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
         // 1. Unified Extraction (Prioritize Content/Code tags)
         String clean = rawOutput;
         String[] tags = { "code", "content", "java_class", "java_code", "java_members", "java_header" };
+        boolean tagFound = false;
 
         for (String tag : tags) {
             // Pattern 1: <tag><![CDATA[...]]></tag>
@@ -55,6 +56,7 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
             if (cdataMatcher.find()) {
                 clean = cdataMatcher.group(1).trim();
                 log.debug("Extracted from <{}> with CDATA: {} chars", tag, clean.length());
+                tagFound = true;
                 break;
             }
 
@@ -65,18 +67,20 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
             if (m.find()) {
                 clean = m.group(1).trim();
                 log.debug("Extracted from <{}>: {} chars", tag, clean.length());
+                tagFound = true;
                 break;
             }
         }
 
         // 1.5 Markdown Block Extraction (if no XML tags found)
-        if (clean.equals(rawOutput)) {
+        if (!tagFound) {
             java.util.regex.Pattern mdPattern = java.util.regex.Pattern.compile("```(?:java|xml)?\\s*(.*?)\\s*```",
                     java.util.regex.Pattern.DOTALL);
             java.util.regex.Matcher mdMatcher = mdPattern.matcher(rawOutput);
             if (mdMatcher.find()) {
                 clean = mdMatcher.group(1).trim();
                 log.debug("Extracted from Markdown block: {} chars", clean.length());
+                tagFound = true;
             }
         }
 
@@ -100,45 +104,57 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
                 cu.getImports().forEach(imp -> extractedImports.add(imp.getNameAsString()));
                 codeOnly.append(cu.toString());
             } else {
-                // FALLBACK: Draconian line-by-line filtering
-                // FALLBACK: Draconian line-by-line filtering (only if no tags found)
-                java.util.concurrent.atomic.AtomicBoolean inClass = new java.util.concurrent.atomic.AtomicBoolean(
-                        false);
-                clean.lines().forEach(line -> {
-                    String cleanLine = line.replaceAll("<[^>]+>", "").trim();
+                // Try parsing as a fragment wrapped in a class
+                String wrapped = "class DummyFragment { " + clean + " }";
+                ParseResult<CompilationUnit> fragmentResult = parser.parse(wrapped);
+                if (fragmentResult.isSuccessful() && fragmentResult.getResult().isPresent()) {
+                    CompilationUnit cu = fragmentResult.getResult().get();
+                    cu.getClassByName("DummyFragment").ifPresent(c -> {
+                        c.getMembers().forEach(member -> codeOnly.append(member.toString()).append("\n"));
+                    });
+                    cu.getImports().forEach(imp -> extractedImports.add(imp.getNameAsString()));
+                } else if (tagFound) {
+                    // If tag was found but JavaParser still fails, we trust the tag content 
+                    // but filter out obvious non-Java lines to avoid garbage.
+                    clean.lines().forEach(line -> {
+                        if (!line.trim().startsWith("Loaded cached credentials") && 
+                            !line.trim().startsWith("Loading extension") &&
+                            !line.trim().startsWith("Server 'exa'")) {
+                            codeOnly.append(line).append("\n");
+                        }
+                    });
+                } else {
+                    // FALLBACK: Draconian line-by-line filtering
+                    java.util.concurrent.atomic.AtomicBoolean inClass = new java.util.concurrent.atomic.AtomicBoolean(
+                            false);
+                    clean.lines().forEach(line -> {
+                        String cleanLine = line.replaceAll("<[^>]+>", "").trim();
 
-                    // Detect class start to begin capturing logic lines
-                    if (cleanLine
-                            .matches("^(public\\s+|private\\s+|protected\\s+)?(class|interface|enum|record)\\b.*")) {
-                        inClass.set(true);
-                    }
-
-                    // Anchor-focused heuristic: Only keep lines that START with Java syntactic
-                    // anchors
-                    if (cleanLine.matches(
-                            "^(import|package|@|public|private|protected|static|class|interface|enum|record|void)\\b.*")
-                            ||
-                            cleanLine.equals("}") || cleanLine.equals("{") ||
-                            (inClass.get() && (cleanLine.matches("^\\w+\\s+\\w+\\s*=.*") || cleanLine.contains(";"))) ||
-                            (cleanLine.startsWith("//") && !cleanLine.contains(" ")) ||
-                            cleanLine.startsWith("/*")) {
-
-                        // Absolute blacklist for common prose starts
-                        String lower = cleanLine.toLowerCase();
-                        if (lower.startsWith("the ") || lower.startsWith("i ") || lower.startsWith("based ")
-                                || lower.startsWith("here ") || lower.startsWith("certainly")) {
-                            return;
+                        if (cleanLine.matches("^(public\\s+|private\\s+|protected\\s+)?(class|interface|enum|record)\\b.*")) {
+                            inClass.set(true);
                         }
 
-                        if (cleanLine.startsWith("import ")) {
-                            extractedImports.add(cleanLine.replace("import ", "").replace(";", "").trim());
-                        } else if (cleanLine.startsWith("package ")) {
-                            // capture package if we don't have it
-                        } else if (!cleanLine.isEmpty()) {
-                            codeOnly.append(cleanLine).append("\n");
+                        if (cleanLine.matches("^(import|package|@|public|private|protected|static|class|interface|enum|record|void)\\b.*")
+                                || cleanLine.startsWith("@") // Fix for annotations
+                                || cleanLine.equals("}") || cleanLine.equals("{") ||
+                                (inClass.get() && (cleanLine.matches("^\\w+\\s+\\w+\\s*=.*") || cleanLine.contains(";"))) ||
+                                (cleanLine.startsWith("//") && !cleanLine.contains(" ")) ||
+                                cleanLine.startsWith("/*")) {
+
+                            String lower = cleanLine.toLowerCase();
+                            if (lower.startsWith("the ") || lower.startsWith("i ") || lower.startsWith("based ")
+                                    || lower.startsWith("here ") || lower.startsWith("certainly")) {
+                                return;
+                            }
+
+                            if (cleanLine.startsWith("import ")) {
+                                extractedImports.add(cleanLine.replace("import ", "").replace(";", "").trim());
+                            } else if (!cleanLine.isEmpty() && !cleanLine.startsWith("package ")) {
+                                codeOnly.append(cleanLine).append("\n");
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
         } catch (Exception e) {
             codeOnly.append(clean.replaceAll("<[^>]+>", ""));

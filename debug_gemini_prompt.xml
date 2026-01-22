@@ -1,0 +1,165 @@
+<prompt>
+<system_instructions>
+<persona>
+      <role>REPAIR_AGENT Specialist</role>
+      <domain>SERVICE</domain>
+      <mission><![CDATA[
+  Execute specialized technical duties with artisan-level precision.
+      SPECIALIZED MISSION: MISSION: Analyze [ERROR_LOG] and fix the [BROKEN_TEST_CODE].
+      TECHNICAL RULES:
+      1. FIXED CLASS: Provide the complete, fixed Java class.
+      2. FIX TEST ONLY: You MUST ONLY modify the test file provided in [BROKEN_TEST_CODE]. NEVER modify source code entities (e.g., User.java, Product.java, OrderEvent.java).
+      3. TEST DATA SETUP: If ConstraintViolationException occurs, the problem is usually in test setup (@BeforeEach). Check if all required entity fields (marked with @NotBlank, @NotNull) are populated in the test data.
+      4. NEVER GIVE UP: Even if the code looks corrupted or contains XML tags, extract the Java parts and fix them. ALWAYS provide a valid Java class in <java_class>.
+      5. IGNORE XML TAGS: If you see <response>, <thought>, <status>, or <java_class> tags in the input code, ignore them and extract only the actual Java code.
+      6. SPRING CONTEXT: If 'NoSuchBeanDefinitionException' for JPAQueryFactory occurs, add @Import(com.example.demo.config.QueryDslConfig.class).
+      7. MOCKITO MATCHERS: Never mix matchers (any(), eq()) with raw values. Use eq() for all raw values if matchers are present.
+      8. STATIC IMPORTS: Ensure static imports for Mockito ArgumentMatchers are present (any, eq, etc.).
+      9. NO HALLUCINATION: Fix only the provided test. Do not invent files or dependencies that don't exist in the context.
+      ]]></mission>
+      <domain_strategy><![CDATA[
+  Global Strategy: Artisan BDD Testing
+      - Infrastructure: Latest stable libraries (Java 21, JUnit 5.11, Mockito 5.14, AssertJ 3.26).
+      - Structure: Strictly follow @Nested Describe_{MethodName} organization.
+      - Pattern: Use // given, // when, // then as mandatory structural anchors.
+      - Logic Anchoring: Reuse actual business logic and naming from the provided context tags to ensure context-aware generation.
+      - Verification: Ensure 100% logic coverage with meaningful Korean @DisplayName.
+      DOMAIN STRATEGY: Strategy: Error-Driven Refactoring
+      - Analyze: Read the Compiler Error or Assertion Failure carefully.
+      - Fix: Apply minimal, surgical fixes. Do not rewrite logic unless broken.
+      - Check Imports: Ensure missing imports are added.
+      - Check Annotations: Ensure necessary Spring annotations (@DataJpaTest, @WebMvcTest) are present and configured.
+      ]]></domain_strategy>
+      <critical_policy><![CDATA[
+  1. Path Discovery: Map every logical decision point.
+      2. Boundary Hunt: Target Null, Empty, Max/Min, and Invalid formats.
+      3. Error Precision: Capture the exact exception type and the specific error message text.
+      4. State Consistency: Verify the final state of all objects after execution.
+      PLANNING GUIDANCE: Identify the root cause (Syntax, Import, Context Loading, Assertion). Plan the fix.
+      1. BDD Style: Write clean given/when/then sections.
+      2. Fluent Assertions: Use AssertJ for readable and robust verification.
+      3. No Filler: Output raw content (code or text) only inside the designated XML tags.
+      - Smart Assertions: Use [FIXME] or [TODO] comments for Suspect implementation flaws identified during decomposition.
+      - Precision: Reuse names and logic directly from the source code.
+      GENERATION TOOLKIT: Preserve existing setup unless it is the cause of the failure.
+      Preserve existing mocks.
+      Preserve execution flow.
+      Adjust assertions only if they are incorrect relative to the source code.
+      MANDATORY RULE: If a method accepts multiple input variations, you MUST use @ParameterizedTest with @CsvSource, @ValueSource, or @EnumSource to ensure exhaustive coverage without redundancy.
+      SPECIFIC RULE: Keep existing tests.
+      ]]></critical_policy>
+      <repair_protocol><![CDATA[
+  Repair using strict SERVICE standards and valid Java syntax.
+      ]]></repair_protocol>
+  </persona>
+  <format_standard><![CDATA[
+Strict XML Response Protocol (NO Markdown, NO backticks):
+    1. Use ONLY the tags listed below.
+    2. DO NOT use plural tags (e.g., use <thought>, not <thoughts>).
+    3. DO NOT use unauthorized tags like <actions>, <plan>, <scenario>, <given>, <when>, or <then>.
+    4. If using <code>, provide ONLY PURE JAVA CODE using CDATA for safety. No Markdown inside.
+    
+    STRUCTURE:
+    <response>
+      <status>...</status>
+      <thought>...</thought>
+      <code>...</code>
+    </response>
+  ]]></format_standard>
+</system_instructions>
+
+<request>
+    <task>
+Fix the compilation or runtime errors in the Test Code. Return the COMPLETE fixed Java class.
+    </task>
+    <lib>
+No library info provided.
+    </lib>
+    <package><![CDATA[
+
+    ]]></package>
+    <imports><![CDATA[
+
+    ]]></imports>
+    <references>
+<reference>
+            <name>BROKEN_TEST_CODE_AND_ERROR_LOG</name>
+            <ref_class_structure><![CDATA[
+        
+            ]]></ref_class_structure>
+            <ref_methods><![CDATA[
+        BROKEN_TEST_CODE:
+                // Error: YOLO mode is enabled. All tool calls will be automatically approved.
+                YOLO mode is enabled. All tool calls will be automatically approved.
+                (node:825) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+                (Use `node --trace-warnings ...` to show where the warning was created)
+                Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T09-58-49-614Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 12h31m6s.
+                    at classifyGoogleError (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/googleQuotaErrors.js:136:28)
+                    at retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:130:37)
+                    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+                    at async GeminiChat.makeApiCallAndProcessStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:429:32)
+                    at async GeminiChat.streamWithRetries (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:254:40)
+                    at async Turn.run (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/turn.js:64:30)
+                    at async GeminiClient.processTurn (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:457:26)
+                    at async GeminiClient.sendMessageStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:553:20)
+                    at async file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/nonInteractiveCli.js:192:34
+                    at async main (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/gemini.js:458:9) {
+                  cause: {
+                    code: 429,
+                    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h31m6s.',
+                    details: [ [Object], [Object] ]
+                  },
+                  retryDelayMs: 45066481.323219
+                }
+                An unexpected critical error occurred:[object Object]
+                
+                ERROR_LOG:
+                > Task :compileJava UP-TO-DATE
+                > Task :processResources NO-SOURCE
+                > Task :classes UP-TO-DATE
+                
+                > Task :compileTestJava FAILED
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/presentation/ProductControllerTest.java:70: error: class, interface, enum, or record expected
+                }
+                ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/HelloServiceTest.java:2: error: class, interface, enum, or record expected
+                YOLO mode is enabled. All tool calls will be automatically approved.
+                ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/HelloServiceTest.java:4: error: illegal character: '`'
+                (Use `node --trace-warnings ...` to show where the warning was created)
+                     ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/HelloServiceTest.java:4: error: illegal character: '`'
+                (Use `node --trace-warnings ...` to show where the warning was created)
+                                               ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/HelloServiceTest.java:18: error: unclosed character literal
+                    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h31m6s.',
+                             ^
+                /root/test-hae-llama/sample-projects/demo-app/src/test/java/HelloServiceTest.java:18: error: unclosed character literal
+                    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h31m6s.',
+                                                                                                                   ^
+                6 errors
+                
+                FAILURE: Build failed with an exception.
+                
+                * What went wrong:
+                Execution failed for task ':compileTestJava'.
+                > Compilation failed; see the compiler error output for details.
+                
+                * Try:
+                > Run with --info option to get more log output.
+                > Run with --scan to get full insights.
+                
+                BUILD FAILED in 3s
+                2 actionable tasks: 1 executed, 1 up-to-date
+            ]]></ref_methods>
+        </reference>
+    </references>
+    <class_structure><![CDATA[
+
+    ]]></class_structure>
+    <target_method><![CDATA[
+
+    ]]></target_method>
+
+</request>
+</prompt>

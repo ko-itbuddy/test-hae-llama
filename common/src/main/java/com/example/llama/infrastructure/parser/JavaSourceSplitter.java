@@ -34,8 +34,16 @@ public class JavaSourceSplitter {
                                                 m.getDeclarationAsString().contains(targetMethodName))
                                 .findFirst();
 
-                String targetMethodSource = targetMethod.map(Node::toString)
-                                .orElse("// [ERROR] Method '" + targetMethodName + "' not found in source AST.");
+                String targetMethodSource = targetMethod.map(method -> {
+                    StringBuilder methodSourceBuilder = new StringBuilder();
+                    methodSourceBuilder.append(method.getDeclarationAsString());
+                    method.getBody().ifPresent(body -> methodSourceBuilder.append(" ").append(body.toString()));
+                    // Ensure the closing brace is present if body is empty (e.g., abstract methods handled elsewhere)
+                    if (method.getBody().isEmpty() && !method.isAbstract() && !method.isDefault() && !method.isNative()) {
+                        methodSourceBuilder.append(" {}");
+                    }
+                    return methodSourceBuilder.toString();
+                }).orElse("// [ERROR] Method '" + targetMethodName + "' not found in source AST.");
 
                 // 2. Create Compact Class Structure (signatures only, optimized for tokens)
                 StringBuilder compactStructure = new StringBuilder();
@@ -58,7 +66,7 @@ public class JavaSourceSplitter {
                         decl.getMethods().forEach(method -> {
                                 compactStructure.append("    ")
                                                 .append(method.getDeclarationAsString())
-                                                .append(";\n");
+                                                .append(" {\n"); // Changed from ; to {
                         });
 
                         compactStructure.append("}\n");

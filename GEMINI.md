@@ -7,7 +7,7 @@
 ## 🚨 1. 절대 규칙 (ABSOLUTE RULES)
 
 ### **Rule #1: 수동 개입 금지 (Deep Engineering Protocol)**
-- **규칙:** Antigravity는 테스트 생성 결과물인 `opencode_response.txt` 파일을 수동으로 작성, 수정, 생성해서는 안 된다.
+- **규칙:** Antigravity는 `opencode_response.txt` 파일을 수동으로 작성, 수정, 생성해서는 안 된다. 이 파일은 CLI에 의해 내부적으로 생성 및 관리되는 파일이다.
 - **이유:** 우리는 "운 좋게 통과하는 테스트"가 아니라, **"어떤 상황에서도 통과하는 강력한 엔진"**을 만드는 것이 목표이다.
 - **행동 강령:**
     - 생성된 테스트 코드가 올바르지 않다면, 결과물을 고치지 말고 **Java 엔진 로직(Prompt Engineering, Context Analyzer)**을 수정하라.

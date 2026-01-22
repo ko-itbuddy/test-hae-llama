@@ -1,0 +1,653 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.1)
+
+2026-01-22T08:04:28.291Z  INFO 13178 --- [           main] com.example.llama.LlamaApplication       : Starting LlamaApplication v0.0.1-SNAPSHOT using Java 21.0.9 with PID 13178 (/root/test-hae-llama/common/build/libs/common-0.0.1-SNAPSHOT-boot.jar started by root in /root/test-hae-llama)
+2026-01-22T08:04:28.299Z  INFO 13178 --- [           main] com.example.llama.LlamaApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-01-22T08:04:29.580Z  INFO 13178 --- [           main] c.e.l.i.io.InteractionLogger             : 📝 Interaction Log started: /root/test-hae-llama/.test-hea-llama/logs/llama_interaction_20260122_080429.log
+2026-01-22T08:04:29.908Z  WARN 13178 --- [           main] org.jline                                : Unable to create a system terminal, creating a dumb terminal (enable debug logging for more information)
+2026-01-22T08:04:30.199Z  INFO 13178 --- [           main] com.example.llama.LlamaApplication       : Started LlamaApplication in 2.74 seconds (process running for 3.644)
+2026-01-22T08:04:30.425Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🎼 Orchestrator [ServiceOrchestrator] conducting: ProductService.java
+2026-01-22T08:04:30.425Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🔍 [Phase 1] Analyzing Source Code Metadata...
+2026-01-22T08:04:30.645Z  INFO 13178 --- [           main] c.e.l.i.a.SimpleDependencyAnalyzer       : 📊 Analyzing dependencies for project at: /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T08:04:30.646Z  INFO 13178 --- [           main] c.e.l.i.a.SimpleDependencyAnalyzer       : 🐘 Gradle project detected. Using gradlew at: /root/test-hae-llama/sample-projects/demo-app/gradlew
+2026-01-22T08:04:32.569Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🏗️ [Phase 2] Generating Global Test Setup...
+2026-01-22T08:04:32.606Z  INFO 13178 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CODER] Acting on instruction (XML Prompt)...
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+PROMPT
+[RESPONSE]
+<prompt>
+<system_instructions>
+<persona>
+      <role>CODER Specialist</role>
+      <domain>SERVICE</domain>
+      <mission><![CDATA[
+  Execute specialized technical duties with artisan-level precision.
+      SPECIALIZED MISSION: MISSION: Write final JUnit 5 test code.
+      TECHNICAL RULES:
+      1. Use @ExtendWith(MockitoExtension.class).
+      2. MOCKITO MATCHERS: Never mix matchers (any(), eq()) with raw values.
+      3. CRITICAL: Response MUST use strict XML format: <response><status>...</st...(truncated)
+================================================================================
+
+2026-01-22T08:04:32.611Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T08:04:32.611Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 9217 chars
+2026-01-22T08:04:32.611Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T08:04:32.612Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+RESPONSE
+[RESPONSE]
+Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:13281) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+<response>
+<statu...(truncated)
+================================================================================
+
+2026-01-22T08:05:37.223Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : --> Setup Complete:
+Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:13281) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+<response>
+<status>SUCCESS</status>
+<thought>
+ProductService에 대한 JUnit 5 단위 테스트 스켈레톤을 생성합니다.
+MockitoExtension을 사용하여 Mock 객체(ProductRepository, AiService, ExchangeRateClient)를 주입하고, @BeforeEach를 통해 공통 테스트 데이터를 초기화합니다.
+각 메서드에 대해 @Nested 구조의 Describe_ 클래스들을 구성하여 향후 테스트 케이스 작성을 위한 기반을 마련합니다.
+</thought>
+<code><![CDATA[
+package com.example.demo.service;
+
+import com.example.demo.client.ExchangeRateClient;
+import com.example.demo.domain.Product;
+import com.example.demo.dto.ProductCreateRequest;
+import com.example.demo.dto.ProductResponse;
+import com.example.demo.repository.ProductRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import java.math.BigDecimal;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * ProductService의 비즈니스 로직을 검증하기 위한 단위 테스트 클래스입니다.
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName("ProductService 단위 테스트")
+class ProductServiceTest {
+
+    @InjectMocks
+    private ProductService productService;
+
+    @Mock
+    private ProductRepository productRepository;
+
+    @Mock
+    private AiService aiService;
+
+    @Mock
+    private ExchangeRateClient exchangeRateClient;
+
+    private Long productId;
+    private String productName;
+    private BigDecimal productPrice;
+    private Long stockQuantity;
+
+    @BeforeEach
+    void setUp() {
+        // given: 테스트에서 공통적으로 사용할 기본 상품 정보를 설정합니다.
+        productId = 1L;
+        productName = "테스트 상품";
+        productPrice = new BigDecimal("50000.00");
+        stockQuantity = 100L;
+    }
+
+    @Nested
+    @DisplayName("createProduct 메서드는")
+    class Describe_createProduct {
+        @Nested
+        @DisplayName("유효한 상품 생성 요청이 주어지면")
+        class Context_with_valid_request {
+            // TODO: 상품 저장 및 Response 반환 검증 구현 예정
+        }
+    }
+
+    @Nested
+    @DisplayName("getProduct 메서드는")
+    class Describe_getProduct {
+        @Nested
+        @DisplayName("존재하는 상품 ID가 주어지면")
+        class Context_with_existing_id {
+            // TODO: 상품 조회 성공 케이스 구현 예정
+        }
+
+        @Nested
+        @DisplayName("존재하지 않는 상품 ID가 주어지면")
+        class Context_with_non_existent_id {
+            // TODO: ProductNotFoundException 발생 검증 구현 예정
+        }
+    }
+
+    @Nested
+    @DisplayName("getAllProducts 메서드는")
+    class Describe_getAllProducts {
+        @Nested
+        @DisplayName("상품 목록 조회를 요청하면")
+        class Context_when_requested {
+            // TODO: 전체 상품 리스트 반환 검증 구현 예정
+        }
+    }
+
+    @Nested
+    @DisplayName("getDiscountedPriceInUsd 메서드는")
+    class Describe_getDiscountedPriceInUsd {
+        @Nested
+        @DisplayName("상품 ID가 주어지면")
+        class Context_with_product_id {
+            // TODO: AI 할인율 적용 및 USD 환율 변환 로직 검증 구현 예정
+        }
+    }
+
+    @Nested
+    @DisplayName("getExpensiveProducts 메서드는")
+    class Describe_getExpensiveProducts {
+        @Nested
+        @DisplayName("특정 가격 기준이 주어지면")
+        class Context_with_price_threshold {
+            // TODO: 기준 가격보다 비싼 상품 필터링 검증 구현 예정
+        }
+    }
+}
+]]></code>
+</response>
+
+2026-01-22T08:05:37.224Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🔄 [Phase 3] Iterating Methods...
+2026-01-22T08:05:37.225Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [createProduct]
+2026-01-22T08:05:37.238Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 318 characters
+2026-01-22T08:05:37.239Z  INFO 13178 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CODER] Acting on instruction (XML Prompt)...
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+PROMPT
+[RESPONSE]
+<prompt>
+<system_instructions>
+<persona>
+      <role>CODER Specialist</role>
+      <domain>SERVICE</domain>
+      <mission><![CDATA[
+  Execute specialized technical duties with artisan-level precision.
+      SPECIALIZED MISSION: MISSION: Write final JUnit 5 test code.
+      TECHNICAL RULES:
+      1. Use @ExtendWith(MockitoExtension.class).
+      2. MOCKITO MATCHERS: Never mix matchers (any(), eq()) with raw values.
+      3. CRITICAL: Response MUST use strict XML format: <response><status>...</st...(truncated)
+================================================================================
+
+2026-01-22T08:05:37.240Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T08:05:37.240Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 9383 chars
+2026-01-22T08:05:37.241Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T08:05:37.241Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+2026-01-22T08:06:50.477Z ERROR 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:13418) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T08-06-50-420Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 14h23m5s.
+    at classifyGoogleError (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/googleQuotaErrors.js:136:28)
+    at retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:130:37)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async GeminiChat.makeApiCallAndProcessStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:429:32)
+    at async GeminiChat.streamWithRetries (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:254:40)
+    at async Turn.run (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/turn.js:64:30)
+    at async GeminiClient.processTurn (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:457:26)
+    at async GeminiClient.sendMessageStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:553:20)
+    at async file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/nonInteractiveCli.js:192:34
+    at async main (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/gemini.js:458:9) {
+  cause: {
+    code: 429,
+    message: 'You have exhausted your capacity on this model. Your quota will reset after 14h23m5s.',
+    details: [ [Object], [Object] ]
+  },
+  retryDelayMs: 51785667.405237
+}
+An unexpected critical error occurred:[object Object]
+
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+RESPONSE
+[RESPONSE]
+<response><status>FAILED</status><thought>Gemini CLI execution failed.</thought><code>// Error: Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:13418) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase...(truncated)
+================================================================================
+
+2026-01-22T08:06:50.478Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [getProduct]
+2026-01-22T08:06:50.488Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 194 characters
+2026-01-22T08:06:50.489Z  INFO 13178 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CODER] Acting on instruction (XML Prompt)...
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+PROMPT
+[RESPONSE]
+<prompt>
+<system_instructions>
+<persona>
+      <role>CODER Specialist</role>
+      <domain>SERVICE</domain>
+      <mission><![CDATA[
+  Execute specialized technical duties with artisan-level precision.
+      SPECIALIZED MISSION: MISSION: Write final JUnit 5 test code.
+      TECHNICAL RULES:
+      1. Use @ExtendWith(MockitoExtension.class).
+      2. MOCKITO MATCHERS: Never mix matchers (any(), eq()) with raw values.
+      3. CRITICAL: Response MUST use strict XML format: <response><status>...</st...(truncated)
+================================================================================
+
+2026-01-22T08:06:50.490Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T08:06:50.490Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 9245 chars
+2026-01-22T08:06:50.490Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T08:06:50.491Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+2026-01-22T08:09:01.808Z ERROR 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:13778) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+Attempt 1 failed with status 429. Retrying with backoff... GaxiosError: [{
+  "error": {
+    "code": 429,
+    "message": "No capacity available for model gemini-3-flash-preview on the server",
+    "errors": [
+      {
+        "message": "No capacity available for model gemini-3-flash-preview on the server",
+        "domain": "global",
+        "reason": "rateLimitExceeded"
+      }
+    ],
+    "status": "RESOURCE_EXHAUSTED",
+    "details": [
+      {
+        "@type": "type.googleapis.com/google.rpc.ErrorInfo",
+        "reason": "MODEL_CAPACITY_EXHAUSTED",
+        "domain": "cloudcode-pa.googleapis.com",
+        "metadata": {
+          "model": "gemini-3-flash-preview"
+        }
+      }
+    ]
+  }
+}
+]
+    at Gaxios._request (/usr/local/share/.config/yarn/global/node_modules/gaxios/build/src/gaxios.js:142:23)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async OAuth2Client.requestAsync (/usr/local/share/.config/yarn/global/node_modules/google-auth-library/build/src/auth/oauth2client.js:429:18)
+    at async CodeAssistServer.requestStreamingPost (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/code_assist/server.js:166:21)
+    at async CodeAssistServer.generateContentStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/code_assist/server.js:27:27)
+    at async file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/loggingContentGenerator.js:132:26
+    at async retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:108:28)
+    at async GeminiChat.makeApiCallAndProcessStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:429:32)
+    at async GeminiChat.streamWithRetries (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:254:40)
+    at async Turn.run (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/turn.js:64:30) {
+  config: {
+    url: 'https://cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse',
+    method: 'POST',
+    params: { alt: 'sse' },
+    headers: {
+      'Content-Type': 'application/json',
+      'User-Agent': 'GeminiCLI/0.25.0/gemini-3-pro-preview (linux; arm64) google-api-nodejs-client/9.15.1',
+      Authorization: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.',
+      'x-goog-api-client': 'gl-node/20.19.4'
+    },
+    responseType: 'stream',
+    body: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.',
+    signal: AbortSignal { aborted: false },
+    paramsSerializer: [Function: paramsSerializer],
+    validateStatus: [Function: validateStatus],
+    errorRedactor: [Function: defaultErrorRedactor]
+  },
+  response: {
+    config: {
+      url: 'https://cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse',
+      method: 'POST',
+      params: [Object],
+      headers: [Object],
+      responseType: 'stream',
+      body: '<<REDACTED> - See `errorRedactor` option in `gaxios` for configuration>.',
+      signal: [AbortSignal],
+      paramsSerializer: [Function: paramsSerializer],
+      validateStatus: [Function: validateStatus],
+      errorRedactor: [Function: defaultErrorRedactor]
+    },
+    data: '[{\n' +
+      '  "error": {\n' +
+      '    "code": 429,\n' +
+      '    "message": "No capacity available for model gemini-3-flash-preview on the server",\n' +
+      '    "errors": [\n' +
+      '      {\n' +
+      '        "message": "No capacity available for model gemini-3-flash-preview on the server",\n' +
+      '        "domain": "global",\n' +
+      '        "reason": "rateLimitExceeded"\n' +
+      '      }\n' +
+      '    ],\n' +
+      '    "status": "RESOURCE_EXHAUSTED",\n' +
+      '    "details": [\n' +
+      '      {\n' +
+      '        "@type": "type.googleapis.com/google.rpc.ErrorInfo",\n' +
+      '        "reason": "MODEL_CAPACITY_EXHAUSTED",\n' +
+      '        "domain": "cloudcode-pa.googleapis.com",\n' +
+      '        "metadata": {\n' +
+      '          "model": "gemini-3-flash-preview"\n' +
+      '        }\n' +
+      '      }\n' +
+      '    ]\n' +
+      '  }\n' +
+      '}\n' +
+      ']',
+    headers: {
+      'alt-svc': 'h3=":443"; ma=2592000,h3-29=":443"; ma=2592000',
+      'content-length': '630',
+      'content-type': 'application/json; charset=UTF-8',
+      date: 'Thu, 22 Jan 2026 08:08:09 GMT',
+      server: 'ESF',
+      'server-timing': 'gfet4t7; dur=7002',
+      vary: 'Origin, X-Origin, Referer',
+      'x-cloudaicompanion-trace-id': 'c5fa71e341276202',
+      'x-content-type-options': 'nosniff',
+      'x-frame-options': 'SAMEORIGIN',
+      'x-xss-protection': '0'
+    },
+    status: 429,
+    statusText: 'Too Many Requests',
+    request: {
+      responseURL: 'https://cloudcode-pa.googleapis.com/v1internal:streamGenerateContent?alt=sse'
+    }
+  },
+  error: undefined,
+  status: 429,
+  [Symbol(gaxios-gaxios-error)]: '6.7.1'
+}
+Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T08-09-01-692Z.json Error: read ECONNABORTED
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:218:20)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
+  errno: -103,
+  code: 'ECONNABORTED',
+  syscall: 'read'
+}
+An unexpected critical error occurred:[object Object]
+
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+RESPONSE
+[RESPONSE]
+<response><status>FAILED</status><thought>Gemini CLI execution failed.</thought><code>// Error: Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:13778) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase...(truncated)
+================================================================================
+
+2026-01-22T08:09:01.810Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [getAllProducts]
+2026-01-22T08:09:01.817Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 154 characters
+2026-01-22T08:09:01.817Z  INFO 13178 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CODER] Acting on instruction (XML Prompt)...
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+PROMPT
+[RESPONSE]
+<prompt>
+<system_instructions>
+<persona>
+      <role>CODER Specialist</role>
+      <domain>SERVICE</domain>
+      <mission><![CDATA[
+  Execute specialized technical duties with artisan-level precision.
+      SPECIALIZED MISSION: MISSION: Write final JUnit 5 test code.
+      TECHNICAL RULES:
+      1. Use @ExtendWith(MockitoExtension.class).
+      2. MOCKITO MATCHERS: Never mix matchers (any(), eq()) with raw values.
+      3. CRITICAL: Response MUST use strict XML format: <response><status>...</st...(truncated)
+================================================================================
+
+2026-01-22T08:09:01.818Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T08:09:01.818Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 9205 chars
+2026-01-22T08:09:01.818Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T08:09:01.819Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+RESPONSE
+[RESPONSE]
+Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:15115) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+Attempt 1 failed ...(truncated)
+================================================================================
+
+2026-01-22T08:10:29.535Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [getDiscountedPriceInUsd]
+2026-01-22T08:10:29.549Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 484 characters
+2026-01-22T08:10:29.549Z  INFO 13178 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CODER] Acting on instruction (XML Prompt)...
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+PROMPT
+[RESPONSE]
+<prompt>
+<system_instructions>
+<persona>
+      <role>CODER Specialist</role>
+      <domain>SERVICE</domain>
+      <mission><![CDATA[
+  Execute specialized technical duties with artisan-level precision.
+      SPECIALIZED MISSION: MISSION: Write final JUnit 5 test code.
+      TECHNICAL RULES:
+      1. Use @ExtendWith(MockitoExtension.class).
+      2. MOCKITO MATCHERS: Never mix matchers (any(), eq()) with raw values.
+      3. CRITICAL: Response MUST use strict XML format: <response><status>...</st...(truncated)
+================================================================================
+
+2026-01-22T08:10:29.557Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T08:10:29.558Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 9593 chars
+2026-01-22T08:10:29.558Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T08:10:29.558Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+2026-01-22T08:10:51.325Z ERROR 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:16524) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T08-10-51-289Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 14h19m4s.
+    at classifyGoogleError (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/googleQuotaErrors.js:136:28)
+    at retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:130:37)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async GeminiChat.makeApiCallAndProcessStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:429:32)
+    at async GeminiChat.streamWithRetries (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:254:40)
+    at async Turn.run (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/turn.js:64:30)
+    at async GeminiClient.processTurn (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:457:26)
+    at async GeminiClient.sendMessageStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:553:20)
+    at async file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/nonInteractiveCli.js:192:34
+    at async main (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/gemini.js:458:9) {
+  cause: {
+    code: 429,
+    message: 'You have exhausted your capacity on this model. Your quota will reset after 14h19m4s.',
+    details: [ [Object], [Object] ]
+  },
+  retryDelayMs: 51544817.642312005
+}
+An unexpected critical error occurred:[object Object]
+
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+RESPONSE
+[RESPONSE]
+<response><status>FAILED</status><thought>Gemini CLI execution failed.</thought><code>// Error: Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:16524) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase...(truncated)
+================================================================================
+
+2026-01-22T08:10:51.326Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [getExpensiveProducts]
+2026-01-22T08:10:51.334Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 126 characters
+2026-01-22T08:10:51.334Z  INFO 13178 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CODER] Acting on instruction (XML Prompt)...
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+PROMPT
+[RESPONSE]
+<prompt>
+<system_instructions>
+<persona>
+      <role>CODER Specialist</role>
+      <domain>SERVICE</domain>
+      <mission><![CDATA[
+  Execute specialized technical duties with artisan-level precision.
+      SPECIALIZED MISSION: MISSION: Write final JUnit 5 test code.
+      TECHNICAL RULES:
+      1. Use @ExtendWith(MockitoExtension.class).
+      2. MOCKITO MATCHERS: Never mix matchers (any(), eq()) with raw values.
+      3. CRITICAL: Response MUST use strict XML format: <response><status>...</st...(truncated)
+================================================================================
+
+2026-01-22T08:10:51.336Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T08:10:51.336Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 9189 chars
+2026-01-22T08:10:51.336Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T08:10:51.336Z  INFO 13178 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+RESPONSE
+[RESPONSE]
+Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:17204) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+<response>
+  <sta...(truncated)
+================================================================================
+
+2026-01-22T08:12:12.281Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🧩 [Phase 4] Assembling Code...
+2026-01-22T08:12:12.291Z ERROR 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : JavaParser merge failed, falling back to naive merge: Lexical error at line 4, column 10.  Encountered: "x" (120), after : "\'e"
+Problem stacktrace : 
+  com.github.javaparser.GeneratedJavaParserTokenManager.getNextToken(GeneratedJavaParserTokenManager.java:3132)
+  com.github.javaparser.GeneratedJavaParser.getNextToken(GeneratedJavaParser.java:14365)
+  com.github.javaparser.GeneratedJavaParserBase.recover(GeneratedJavaParserBase.java:196)
+  com.github.javaparser.GeneratedJavaParser.CompilationUnit(GeneratedJavaParser.java:213)
+  com.github.javaparser.JavaParser.parse(JavaParser.java:125)
+  com.github.javaparser.JavaParser.parse(JavaParser.java:297)
+  com.github.javaparser.JavaParserAdapter.parse(JavaParserAdapter.java:104)
+  com.github.javaparser.StaticJavaParser.parse(StaticJavaParser.java:257)
+  com.example.llama.application.orchestrator.AbstractPipelineOrchestrator.mergeSetupAndTests(AbstractPipelineOrchestrator.java:179)
+  com.example.llama.application.orchestrator.AbstractPipelineOrchestrator.orchestrate(AbstractPipelineOrchestrator.java:137)
+  com.example.llama.application.BureaucracyOrchestrator.orchestrate(BureaucracyOrchestrator.java:36)
+  com.example.llama.interfaces.shell.GenerateCommand.generate(GenerateCommand.java:53)
+  java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+  java.base/java.lang.reflect.Method.invoke(Method.java:580)
+  org.springframework.shell.command.invocation.InvocableShellMethod.doInvoke(InvocableShellMethod.java:306)
+  org.springframework.shell.command.invocation.InvocableShellMethod.invoke(InvocableShellMethod.java:232)
+  org.springframework.shell.command.CommandExecution$DefaultCommandExecution.evaluate(CommandExecution.java:227)
+  org.springframework.shell.Shell.evaluate(Shell.java:248)
+  org.springframework.shell.Shell.run(Shell.java:159)
+  org.springframework.shell.jline.NonInteractiveShellRunner.run(NonInteractiveShellRunner.java:146)
+  org.springframework.shell.DefaultShellApplicationRunner.run(DefaultShellApplicationRunner.java:65)
+  org.springframework.boot.SpringApplication.lambda$callRunner$4(SpringApplication.java:784)
+  org.springframework.util.function.ThrowingConsumer$1.acceptWithException(ThrowingConsumer.java:82)
+  org.springframework.util.function.ThrowingConsumer.accept(ThrowingConsumer.java:60)
+  org.springframework.util.function.ThrowingConsumer$1.accept(ThrowingConsumer.java:86)
+  org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:796)
+  org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:784)
+  org.springframework.boot.SpringApplication.lambda$callRunners$3(SpringApplication.java:772)
+  java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+  java.base/java.util.stream.SortedOps$SizedRefSortingSink.end(SortedOps.java:357)
+  java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:510)
+  java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+  java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+  java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+  java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+  java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+  org.springframework.boot.SpringApplication.callRunners(SpringApplication.java:772)
+  org.springframework.boot.SpringApplication.run(SpringApplication.java:325)
+  org.springframework.boot.SpringApplication.run(SpringApplication.java:1361)
+  org.springframework.boot.SpringApplication.run(SpringApplication.java:1350)
+  com.example.llama.LlamaApplication.main(LlamaApplication.java:12)
+  java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+  java.base/java.lang.reflect.Method.invoke(Method.java:580)
+  org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:102)
+  org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:64)
+  org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:40)
+
+2026-01-22T08:12:12.328Z  INFO 13178 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/service/ProductServiceTest.java
+2026-01-22T08:12:12.328Z  INFO 13178 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.service.ProductServiceTest in /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T08:12:16.070Z  INFO 13178 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
+2026-01-22T08:12:16.076Z  WARN 13178 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 1/3). Initiating Repair...
+2026-01-22T08:12:16.082Z  WARN 13178 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+
+> Task :compileTestJava FAILED
+2026-01-22T08:12:16.082Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: ProductService.java
+2026-01-22T08:13:19.772Z  INFO 13178 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/service/ProductServiceTest.java
+2026-01-22T08:13:19.773Z  INFO 13178 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.service.ProductServiceTest in /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T08:13:23.019Z  INFO 13178 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
+2026-01-22T08:13:23.019Z  WARN 13178 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 2/3). Initiating Repair...
+2026-01-22T08:13:23.019Z  WARN 13178 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+
+> Task :compileTestJava FAILED
+2026-01-22T08:13:23.019Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: ProductService.java
+2026-01-22T08:14:16.082Z  INFO 13178 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/service/ProductServiceTest.java
+2026-01-22T08:14:16.083Z  INFO 13178 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.service.ProductServiceTest in /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T08:14:19.499Z  INFO 13178 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
+2026-01-22T08:14:19.499Z  WARN 13178 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 3/3). Initiating Repair...
+2026-01-22T08:14:19.499Z  WARN 13178 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+
+> Task :compileTestJava FAILED
+2026-01-22T08:14:19.500Z  INFO 13178 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: ProductService.java
+2026-01-22T08:15:02.581Z  INFO 13178 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/service/ProductServiceTest.java
+2026-01-22T08:15:02.582Z  INFO 13178 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : 🏁 Test generation process complete for ProductService.java

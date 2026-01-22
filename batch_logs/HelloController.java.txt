@@ -1,0 +1,259 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.1)
+
+2026-01-22T05:03:47.239Z  INFO 12033 --- [           main] com.example.llama.LlamaApplication       : Starting LlamaApplication v0.0.1-SNAPSHOT using Java 21.0.9 with PID 12033 (/root/test-hae-llama/common/build/libs/common-0.0.1-SNAPSHOT-boot.jar started by root in /root/test-hae-llama)
+2026-01-22T05:03:47.243Z  INFO 12033 --- [           main] com.example.llama.LlamaApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-01-22T05:03:48.525Z  INFO 12033 --- [           main] c.e.l.i.io.InteractionLogger             : 📝 Interaction Log started: /root/test-hae-llama/.test-hea-llama/logs/llama_interaction_20260122_050348.log
+2026-01-22T05:03:48.834Z  WARN 12033 --- [           main] org.jline                                : Unable to create a system terminal, creating a dumb terminal (enable debug logging for more information)
+2026-01-22T05:03:49.140Z  INFO 12033 --- [           main] com.example.llama.LlamaApplication       : Started LlamaApplication in 2.764 seconds (process running for 3.811)
+2026-01-22T05:03:49.371Z  INFO 12033 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🎼 Orchestrator [ControllerOrchestrator] conducting: HelloController.java
+2026-01-22T05:03:49.371Z  INFO 12033 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🔍 [Phase 1] Analyzing Source Code Metadata...
+2026-01-22T05:03:49.504Z  INFO 12033 --- [           main] c.e.l.i.a.SimpleDependencyAnalyzer       : 📊 Analyzing dependencies for project at: /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T05:03:49.505Z  INFO 12033 --- [           main] c.e.l.i.a.SimpleDependencyAnalyzer       : 🐘 Gradle project detected. Using gradlew at: /root/test-hae-llama/sample-projects/demo-app/gradlew
+2026-01-22T05:03:51.520Z  INFO 12033 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🏗️ [Phase 2] Generating Global Test Setup...
+2026-01-22T05:03:51.542Z  INFO 12033 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CONTROLLER_CODER] Acting on instruction (XML Prompt)...
+
+============================== [AUDIT LOG: CONTROLLER_CODER] ==============================
+[MISSION]
+PROMPT
+[RESPONSE]
+<prompt>
+<system_instructions>
+<persona>
+      <role>CONTROLLER_CODER Specialist</role>
+      <domain>CONTROLLER</domain>
+      <mission><![CDATA[
+  Execute specialized technical duties with artisan-level precision.
+      SPECIALIZED MISSION: You are a Senior REST Test Developer. Your task is to write the final @WebMvcTest code using MockMvc and Spring REST Docs. Ensure .andDo(document(...)) is present. CRITICAL: Response MUST use strict XML format: <response><status>...</status><thought>...</th...(truncated)
+================================================================================
+
+2026-01-22T05:03:51.547Z  INFO 12033 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T05:03:51.547Z  INFO 12033 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 5551 chars
+2026-01-22T05:03:51.547Z  INFO 12033 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T05:03:51.548Z  INFO 12033 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+
+============================== [AUDIT LOG: CONTROLLER_CODER] ==============================
+[MISSION]
+RESPONSE
+[RESPONSE]
+Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:12187) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+I will generate t...(truncated)
+================================================================================
+
+2026-01-22T05:04:56.156Z  INFO 12033 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : --> Setup Complete:
+Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:12187) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+I will generate the test class skeleton for `HelloControllerTest` using `@WebMvcTest` and `@AutoConfigureRestDocs` to support Spring REST Docs. The skeleton follows the `@Nested` structure for method-level organization and prepares for BDD-style testing as per the artisan strategy.
+
+<response>
+<status>SUCCESS</status>
+<thought>
+I have prepared the skeleton for HelloControllerTest. 
+1. Used @WebMvcTest(HelloController.class) for slice testing the controller layer.
+2. Added @AutoConfigureRestDocs to enable Spring REST Docs documentation.
+3. Injected MockMvc to perform requests.
+4. Created a @Nested class Describe_hello to group tests for the 'hello' method.
+5. Included the necessary imports for MockMvc and REST Docs.
+No @MockBean was added because the provided HelloController structure does not show any service dependencies.
+</thought>
+<code><![CDATA[
+package com.example.demo;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+
+/**
+ * HelloController의 REST API를 검증하며 Spring REST Docs를 사용하여 문서를 생성하는 테스트 클래스입니다.
+ */
+@WebMvcTest(HelloController.class)
+@AutoConfigureRestDocs
+@DisplayName("HelloController REST API 테스트")
+class HelloControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @BeforeEach
+    void setUp() {
+        // 테스트 수행 전 공통 초기화 로직을 작성합니다.
+    }
+
+    @Nested
+    @DisplayName("hello 메서드는")
+    class Describe_hello {
+        // TODO: @Test 메서드 구현 시 .andDo(document("hello", ...))를 사용하여 문서를 생성합니다.
+    }
+}
+]]></code>
+</response>
+
+2026-01-22T05:04:56.157Z  INFO 12033 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🔄 [Phase 3] Iterating Methods...
+2026-01-22T05:04:56.157Z  INFO 12033 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [hello]
+2026-01-22T05:04:56.171Z  INFO 12033 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 136 characters
+2026-01-22T05:04:56.173Z  INFO 12033 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CONTROLLER_CODER] Acting on instruction (XML Prompt)...
+
+============================== [AUDIT LOG: CONTROLLER_CODER] ==============================
+[MISSION]
+PROMPT
+[RESPONSE]
+<prompt>
+<system_instructions>
+<persona>
+      <role>CONTROLLER_CODER Specialist</role>
+      <domain>CONTROLLER</domain>
+      <mission><![CDATA[
+  Execute specialized technical duties with artisan-level precision.
+      SPECIALIZED MISSION: You are a Senior REST Test Developer. Your task is to write the final @WebMvcTest code using MockMvc and Spring REST Docs. Ensure .andDo(document(...)) is present. CRITICAL: Response MUST use strict XML format: <response><status>...</status><thought>...</th...(truncated)
+================================================================================
+
+2026-01-22T05:04:56.175Z  INFO 12033 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T05:04:56.175Z  INFO 12033 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 6182 chars
+2026-01-22T05:04:56.179Z  INFO 12033 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T05:04:56.180Z  INFO 12033 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+2026-01-22T05:05:36.381Z ERROR 12033 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:12735) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T05-05-36-335Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 17h24m19s.
+    at classifyGoogleError (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/googleQuotaErrors.js:136:28)
+    at retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:130:37)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async GeminiChat.makeApiCallAndProcessStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:429:32)
+    at async GeminiChat.streamWithRetries (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:254:40)
+    at async Turn.run (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/turn.js:64:30)
+    at async GeminiClient.processTurn (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:457:26)
+    at async GeminiClient.sendMessageStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:553:20)
+    at async file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/nonInteractiveCli.js:192:34
+    at async main (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/gemini.js:458:9) {
+  cause: {
+    code: 429,
+    message: 'You have exhausted your capacity on this model. Your quota will reset after 17h24m19s.',
+    details: [ [Object], [Object] ]
+  },
+  retryDelayMs: 62659826.869589
+}
+An unexpected critical error occurred:[object Object]
+
+
+============================== [AUDIT LOG: CONTROLLER_CODER] ==============================
+[MISSION]
+RESPONSE
+[RESPONSE]
+<response><status>FAILED</status><thought>Gemini CLI execution failed.</thought><code>// Error: Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:12735) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase...(truncated)
+================================================================================
+
+2026-01-22T05:05:36.383Z  INFO 12033 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🧩 [Phase 4] Assembling Code...
+2026-01-22T05:05:36.387Z ERROR 12033 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : JavaParser merge failed, falling back to naive merge: Lexical error at line 4, column 10.  Encountered: "x" (120), after : "\'e"
+Problem stacktrace : 
+  com.github.javaparser.GeneratedJavaParserTokenManager.getNextToken(GeneratedJavaParserTokenManager.java:3132)
+  com.github.javaparser.GeneratedJavaParser.getNextToken(GeneratedJavaParser.java:14365)
+  com.github.javaparser.GeneratedJavaParserBase.recover(GeneratedJavaParserBase.java:196)
+  com.github.javaparser.GeneratedJavaParser.CompilationUnit(GeneratedJavaParser.java:213)
+  com.github.javaparser.JavaParser.parse(JavaParser.java:125)
+  com.github.javaparser.JavaParser.parse(JavaParser.java:297)
+  com.github.javaparser.JavaParserAdapter.parse(JavaParserAdapter.java:104)
+  com.github.javaparser.StaticJavaParser.parse(StaticJavaParser.java:257)
+  com.example.llama.application.orchestrator.AbstractPipelineOrchestrator.mergeSetupAndTests(AbstractPipelineOrchestrator.java:179)
+  com.example.llama.application.orchestrator.AbstractPipelineOrchestrator.orchestrate(AbstractPipelineOrchestrator.java:137)
+  com.example.llama.application.BureaucracyOrchestrator.orchestrate(BureaucracyOrchestrator.java:38)
+  com.example.llama.interfaces.shell.GenerateCommand.generate(GenerateCommand.java:53)
+  java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+  java.base/java.lang.reflect.Method.invoke(Method.java:580)
+  org.springframework.shell.command.invocation.InvocableShellMethod.doInvoke(InvocableShellMethod.java:306)
+  org.springframework.shell.command.invocation.InvocableShellMethod.invoke(InvocableShellMethod.java:232)
+  org.springframework.shell.command.CommandExecution$DefaultCommandExecution.evaluate(CommandExecution.java:227)
+  org.springframework.shell.Shell.evaluate(Shell.java:248)
+  org.springframework.shell.Shell.run(Shell.java:159)
+  org.springframework.shell.jline.NonInteractiveShellRunner.run(NonInteractiveShellRunner.java:146)
+  org.springframework.shell.DefaultShellApplicationRunner.run(DefaultShellApplicationRunner.java:65)
+  org.springframework.boot.SpringApplication.lambda$callRunner$4(SpringApplication.java:784)
+  org.springframework.util.function.ThrowingConsumer$1.acceptWithException(ThrowingConsumer.java:82)
+  org.springframework.util.function.ThrowingConsumer.accept(ThrowingConsumer.java:60)
+  org.springframework.util.function.ThrowingConsumer$1.accept(ThrowingConsumer.java:86)
+  org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:796)
+  org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:784)
+  org.springframework.boot.SpringApplication.lambda$callRunners$3(SpringApplication.java:772)
+  java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+  java.base/java.util.stream.SortedOps$SizedRefSortingSink.end(SortedOps.java:357)
+  java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:510)
+  java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+  java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+  java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+  java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+  java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+  org.springframework.boot.SpringApplication.callRunners(SpringApplication.java:772)
+  org.springframework.boot.SpringApplication.run(SpringApplication.java:325)
+  org.springframework.boot.SpringApplication.run(SpringApplication.java:1361)
+  org.springframework.boot.SpringApplication.run(SpringApplication.java:1350)
+  com.example.llama.LlamaApplication.main(LlamaApplication.java:12)
+  java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+  java.base/java.lang.reflect.Method.invoke(Method.java:580)
+  org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:102)
+  org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:64)
+  org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:40)
+
+2026-01-22T05:05:36.415Z  INFO 12033 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloControllerTest.java
+2026-01-22T05:05:36.416Z  INFO 12033 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.HelloControllerTest in /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T05:05:45.643Z  INFO 12033 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
+2026-01-22T05:05:45.644Z  WARN 12033 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 1/3). Initiating Repair...
+2026-01-22T05:05:45.647Z  WARN 12033 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+> Task :compileTestJava
+> Task :processTestResources UP-TO-DATE
+2026-01-22T05:05:45.647Z  INFO 12033 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: HelloController.java
+2026-01-22T05:06:10.352Z  INFO 12033 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloControllerTest.java
+2026-01-22T05:06:10.353Z  INFO 12033 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.HelloControllerTest in /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T05:06:26.444Z  INFO 12033 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
+2026-01-22T05:06:26.444Z  WARN 12033 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 2/3). Initiating Repair...
+2026-01-22T05:06:26.444Z  WARN 12033 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+> Task :compileTestJava UP-TO-DATE
+> Task :processTestResources UP-TO-DATE
+2026-01-22T05:06:26.444Z  INFO 12033 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: HelloController.java
+2026-01-22T05:07:06.695Z  INFO 12033 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloControllerTest.java
+2026-01-22T05:07:06.695Z  INFO 12033 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.HelloControllerTest in /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T05:07:17.701Z  INFO 12033 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
+2026-01-22T05:07:17.702Z  WARN 12033 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 3/3). Initiating Repair...
+2026-01-22T05:07:17.702Z  WARN 12033 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+> Task :compileTestJava UP-TO-DATE
+> Task :processTestResources UP-TO-DATE
+2026-01-22T05:07:17.702Z  INFO 12033 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: HelloController.java
+2026-01-22T05:07:39.168Z  INFO 12033 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloControllerTest.java
+2026-01-22T05:07:39.168Z  INFO 12033 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : 🏁 Test generation process complete for HelloController.java

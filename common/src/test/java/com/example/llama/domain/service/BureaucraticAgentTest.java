@@ -1,5 +1,11 @@
 package com.example.llama.domain.service;
 
+import com.example.llama.domain.model.prompt.LlmClassContext;
+import com.example.llama.domain.model.prompt.LlmPersona;
+import com.example.llama.domain.model.prompt.LlmPrompt;
+import com.example.llama.domain.model.prompt.LlmSystemDirective;
+import com.example.llama.domain.model.prompt.LlmUserRequest;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -8,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.BDDMockito.given;
@@ -25,31 +32,58 @@ class BureaucraticAgentTest {
     void actWithPromptFormat() {
         // given
         String role = "TEST_ROLE";
-        String directive = "You are a tester.";
-        BureaucraticAgent agent = new BureaucraticAgent(role, directive, llmClient);
+        String directiveText = "You are a tester.";
+
+        LlmPersona persona = LlmPersona.builder()
+                .role(role)
+                .domain("test-domain")
+                .mission(directiveText)
+                .domainStrategy("test-strategy")
+                .criticalPolicy("test-policy")
+                .repairProtocol("test-repair")
+                .build();
+
+        LlmSystemDirective llmSystemDirective = LlmSystemDirective.builder()
+                .persona(persona)
+                .formatStandard("XML")
+                .build();
+
+        BureaucraticAgent agent = new BureaucraticAgent(role, llmSystemDirective, llmClient);
 
         String instruction = "Do something";
         String context = "Some context";
 
-        // Use anyString() because the exact formatting is XML-based now
-        given(llmClient.generate(anyString(), eq(directive))).willReturn("Result");
+        LlmClassContext classContext = LlmClassContext.builder()
+                .classStructure(context)
+                .build();
+
+        LlmUserRequest userRequest = LlmUserRequest.builder()
+                .task(instruction)
+                .classContext(classContext)
+                .build();
+
+        // Use any(LlmPrompt.class) because the agent constructs the full prompt
+        given(llmClient.generate(any(LlmPrompt.class))).willReturn("Result");
 
         // when
-        String result = agent.act(instruction, context);
+        String result = agent.act(userRequest);
 
         // then
         assertThat(result).isEqualTo("Result");
 
         // Verify that context and instruction are wrapped in XML tags
-        ArgumentCaptor<String> promptCaptor = ArgumentCaptor.forClass(String.class);
-        verify(llmClient).generate(promptCaptor.capture(), eq(directive));
+        ArgumentCaptor<LlmPrompt> promptCaptor = ArgumentCaptor.forClass(LlmPrompt.class);
+        verify(llmClient).generate(promptCaptor.capture());
 
-        String capturedPrompt = promptCaptor.getValue();
+        LlmPrompt capturedLlmPrompt = promptCaptor.getValue();
+        String capturedPromptXml = capturedLlmPrompt.toXml();
+
         // LLM Standards
-        assertThat(capturedPrompt).contains("<class_structure>");
-        assertThat(capturedPrompt).contains(context);
-        assertThat(capturedPrompt).contains("<task>");
-        assertThat(capturedPrompt).contains(instruction);
-        assertThat(capturedPrompt).contains("<request>");
+        assertThat(capturedPromptXml).contains(llmSystemDirective.toXml());
+        assertThat(capturedPromptXml).contains("<class_structure>");
+        assertThat(capturedPromptXml).contains(context);
+        assertThat(capturedPromptXml).contains("<task>");
+        assertThat(capturedPromptXml).contains(instruction);
+        assertThat(capturedPromptXml).contains("<request>");
     }
 }

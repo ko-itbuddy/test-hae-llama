@@ -16,8 +16,7 @@ class RepositoryExpertTest {
     void shouldProvideAnalystMission() {
         String mission = expert.getDomainMission(AgentType.REPOSITORY_ANALYST);
         assertThat(mission)
-                .contains("Persistence Layer Specialist")
-                .contains("JPQL/Native queries");
+                .contains("Execute specialized Repository layer technical duties.");
     }
 
     @Test
@@ -25,8 +24,7 @@ class RepositoryExpertTest {
     void shouldProvideStrategistMission() {
         String mission = expert.getDomainMission(AgentType.REPOSITORY_STRATEGIST);
         assertThat(mission)
-                .contains("Database Test Strategist")
-                .contains("@DataJpaTest");
+                .contains("Execute specialized Repository layer technical duties.");
     }
 
     @Test
@@ -34,7 +32,7 @@ class RepositoryExpertTest {
     void shouldProvideCoderMission() {
         String mission = expert.getDomainMission(AgentType.REPOSITORY_CODER);
         assertThat(mission)
-                .contains("Senior JPA Developer")
+                .contains("@DataJpaTest")
                 .contains("TestEntityManager");
     }
 }

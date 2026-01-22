@@ -19,6 +19,7 @@ dependencies {
     intellijPlatform {
         intellijIdeaCommunity("2024.3") // Latest Stable Dec 2025
         bundledPlugin("com.intellij.java")
+        instrumentationTools() // Add this line
     }
 }
 

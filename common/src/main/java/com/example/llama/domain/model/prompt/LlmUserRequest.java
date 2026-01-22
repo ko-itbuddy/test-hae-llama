@@ -1,6 +1,7 @@
 package com.example.llama.domain.model.prompt;
 
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
 
 /**
@@ -8,6 +9,7 @@ import lombok.NonNull;
  * Encapsulates Task (T), Library Info (L), References (R), Class Structure
  * (CS), and Target Method (TM).
  */
+@Getter
 @Builder
 public class LlmUserRequest {
 

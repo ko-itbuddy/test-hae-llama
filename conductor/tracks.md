@@ -1,8 +1,7 @@
 # Project Tracks
 
 This file tracks all major tracks for the project. Each track has its own detailed plan in its respective folder.
-
 ---
 
-- [x] **Track: Implement and stabilize the Self-Healing Verification Loop for Test Generation**
-  *Link: [./tracks/self_healing_loop_20260121/](./tracks/self_healing_loop_20260121/)*
+- [~] **Track: sample-projects 하위에 있는 프로젝트들의 테스트 코드를 하나씩 생성해 보며 품질을 평가하여 완벽한 테스트 코드가 되도록 common 의 테스트 코드 작성 엔진 수정 및 최적화**
+*Link: [./tracks/engine_optimization_20260122/](./tracks/engine_optimization_20260122/)*

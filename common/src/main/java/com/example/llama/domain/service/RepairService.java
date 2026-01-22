@@ -17,7 +17,27 @@ public class RepairService {
     private final AgentFactory agentFactory;
     private final CodeSynthesizer codeSynthesizer;
 
-    public GeneratedCode selfHeal(GeneratedCode originalCode, String testCommand, int maxRetries) {
+    public GeneratedCode repair(GeneratedCode brokenCode, String errorLog, com.example.llama.domain.model.Intelligence.ComponentType domain) {
+        Agent repairAgent = agentFactory.create(AgentType.REPAIR_AGENT, domain);
+
+        LlmClassContext repairClassContext = LlmClassContext.builder()
+                .reference(LlmCollaborator.builder()
+                        .name("BROKEN_TEST_CODE_AND_ERROR_LOG")
+                        .methods("BROKEN_TEST_CODE:\n" + brokenCode.toFullSource() + "\n\nERROR_LOG:\n" + errorLog)
+                        .build())
+                .build();
+        
+        LlmUserRequest repairReq = LlmUserRequest.builder()
+                .task("Fix the compilation or runtime errors in the Test Code. Return the COMPLETE fixed Java class.")
+                .classContext(repairClassContext)
+                .build();
+
+        String fixedCode = repairAgent.act(repairReq);
+        
+        return codeSynthesizer.sanitizeAndExtract(fixedCode);
+    }
+
+    public GeneratedCode selfHeal(GeneratedCode originalCode, String testCommand, int maxRetries, com.example.llama.domain.model.Intelligence.ComponentType domain) {
         GeneratedCode currentCode = originalCode;
         for (int i = 0; i < maxRetries; i++) {
             ShellExecutionService.ExecutionResult result = shellExecutionService.execute(testCommand);
@@ -25,23 +45,7 @@ public class RepairService {
                 return currentCode;
             }
 
-            Agent repairAgent = agentFactory.create(AgentType.REPAIR_AGENT, null);
-
-            LlmClassContext repairClassContext = LlmClassContext.builder()
-                    .reference(LlmCollaborator.builder()
-                            .name("BROKEN_TEST_CODE_AND_ERROR_LOG")
-                            .methods("BROKEN_TEST_CODE:\n" + currentCode.toFullSource() + "\n\nERROR_LOG:\n" + result.stderr())
-                            .build())
-                    .build();
-            
-            LlmUserRequest repairReq = LlmUserRequest.builder()
-                    .task("Fix the compilation or runtime errors in the Test Code.")
-                    .classContext(repairClassContext)
-                    .build();
-
-            String fixedCode = repairAgent.act(repairReq);
-            
-            currentCode = codeSynthesizer.sanitizeAndExtract(fixedCode);
+            currentCode = repair(currentCode, result.stderr(), domain);
         }
         return currentCode;
     }

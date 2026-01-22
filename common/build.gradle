@@ -1,6 +1,5 @@
 plugins {
     id 'org.springframework.boot'
-    id 'io.spring.dependency-management'
     id 'java-library'
 }
 
@@ -10,28 +9,69 @@ repositories {
     maven { url 'https://repo.spring.io/snapshot' }
 }
 
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.shell:spring-shell-dependencies:3.2.0"
-    }
-}
 dependencies {
-    implementation 'org.springframework.shell:spring-shell-starter'
+    implementation 'org.springframework.shell:spring-shell-starter:3.2.0' // Explicitly set version
     implementation 'org.springframework.boot:spring-boot-starter-webflux'
-    
+
     // 🧱 Tools
     implementation 'com.github.javaparser:javaparser-core:3.27.1'
     implementation 'com.github.javaparser:javaparser-symbol-solver-core:3.27.1'
-    
+
+    // ANTLR dependencies
+    implementation 'org.antlr:antlr4:4.13.1'
+    // The runtime dependency is for the generated parsers to run
+    implementation 'org.antlr:antlr4-runtime:4.13.1'
+
     // 🌶️ Lombok: Pure Power for Java 21
     compileOnly 'org.projectlombok:lombok:1.18.34'
     annotationProcessor 'org.projectlombok:lombok:1.18.34'
     testCompileOnly 'org.projectlombok:lombok:1.18.34'
     testAnnotationProcessor 'org.projectlombok:lombok:1.18.34'
-    
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
+
+// Custom ANTLR generation task
+task generateAntlrSource(type: JavaExec) {
+    // Make sure this task runs before compileJava
+    outputs.dir file("build/generated-src/antlr/main")
+    inputs.dir file("src/main/antlr")
+    
+    // Use the ANTLR tool from the 'antlr' configuration
+    classpath = configurations.runtimeClasspath
+
+    mainClass = 'org.antlr.v4.Tool'
+    
+    // Get all .g4 files from the source directory
+    def grammarFiles = fileTree("src/main/antlr").include("**/*.g4")
+    
+    args = [
+        '-visitor', // Generate visitor pattern
+        '-o', 'build/generated-src/antlr/main', // Output directory
+        '-package', 'com.example.llama.parser', // Package for generated files
+    ]
+    
+    // Add each grammar file as an argument
+    grammarFiles.each { file ->
+        args += file.absolutePath
+    }
+}
+
+// Make sure generated sources are compiled
+sourceSets {
+    main {
+        java {
+            srcDirs += 'build/generated-src/antlr/main'
+        }
+    }
+}
+
+// Ensure compileJava depends on our custom ANTLR generation task
+tasks.named('compileJava') {
+    dependsOn generateAntlrSource
+}
+
 
 test {
     useJUnitPlatform()

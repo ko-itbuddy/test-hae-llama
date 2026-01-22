@@ -1,0 +1,250 @@
+
+  .   ____          _            __ _ _
+ /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
+( ( )\___ | '_ | '_| | '_ \/ _` | \ \ \ \
+ \\/  ___)| |_)| | | | | || (_| |  ) ) ) )
+  '  |____| .__|_| |_|_| |_\__, | / / / /
+ =========|_|==============|___/=/_/_/_/
+
+ :: Spring Boot ::                (v3.4.1)
+
+2026-01-22T06:05:32.948Z  INFO 6550 --- [           main] com.example.llama.LlamaApplication       : Starting LlamaApplication v0.0.1-SNAPSHOT using Java 21.0.9 with PID 6550 (/root/test-hae-llama/common/build/libs/common-0.0.1-SNAPSHOT-boot.jar started by root in /root/test-hae-llama)
+2026-01-22T06:05:32.951Z  INFO 6550 --- [           main] com.example.llama.LlamaApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-01-22T06:05:34.230Z  INFO 6550 --- [           main] c.e.l.i.io.InteractionLogger             : 📝 Interaction Log started: /root/test-hae-llama/.test-hea-llama/logs/llama_interaction_20260122_060534.log
+2026-01-22T06:05:34.574Z  WARN 6550 --- [           main] org.jline                                : Unable to create a system terminal, creating a dumb terminal (enable debug logging for more information)
+2026-01-22T06:05:34.896Z  INFO 6550 --- [           main] com.example.llama.LlamaApplication       : Started LlamaApplication in 2.691 seconds (process running for 3.562)
+2026-01-22T06:05:35.104Z  INFO 6550 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🎼 Orchestrator [ServiceOrchestrator] conducting: QueryDslConfig.java
+2026-01-22T06:05:35.104Z  INFO 6550 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🔍 [Phase 1] Analyzing Source Code Metadata...
+2026-01-22T06:05:35.220Z  INFO 6550 --- [           main] c.e.l.i.a.SimpleDependencyAnalyzer       : 📊 Analyzing dependencies for project at: /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T06:05:35.221Z  INFO 6550 --- [           main] c.e.l.i.a.SimpleDependencyAnalyzer       : 🐘 Gradle project detected. Using gradlew at: /root/test-hae-llama/sample-projects/demo-app/gradlew
+2026-01-22T06:05:37.000Z  INFO 6550 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🏗️ [Phase 2] Generating Global Test Setup...
+2026-01-22T06:05:37.020Z  INFO 6550 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CODER] Acting on instruction (XML Prompt)...
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+PROMPT
+[RESPONSE]
+<prompt>
+<system_instructions>
+<persona>
+      <role>CODER Specialist</role>
+      <domain>SERVICE</domain>
+      <mission><![CDATA[
+  Execute specialized technical duties with artisan-level precision.
+      SPECIALIZED MISSION: MISSION: Write final JUnit 5 test code.
+      TECHNICAL RULES:
+      1. Use @ExtendWith(MockitoExtension.class).
+      2. MOCKITO MATCHERS: Never mix matchers (any(), eq()) with raw values.
+      3. CRITICAL: Response MUST use strict XML format: <response><status>...</st...(truncated)
+================================================================================
+
+2026-01-22T06:05:37.024Z  INFO 6550 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T06:05:37.024Z  INFO 6550 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 5395 chars
+2026-01-22T06:05:37.024Z  INFO 6550 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T06:05:37.027Z  INFO 6550 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+RESPONSE
+[RESPONSE]
+Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:6863) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+<response>
+<status...(truncated)
+================================================================================
+
+2026-01-22T06:06:59.259Z  INFO 6550 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : --> Setup Complete:
+Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:6863) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+<response>
+<status>success</status>
+<thought>
+QueryDslConfig 클래스의 Bean 생성 로직을 검증하기 위해 JUnit 5와 MockitoExtension 기반의 테스트 스켈레톤을 생성합니다. 
+사용자의 요청에 따라 @ExtendWith, @Mock, @InjectMocks, @BeforeEach 구성을 포함하며, 
+@Nested 구조를 사용하여 jpaQueryFactory 메서드에 대한 BDD 스타일의 테스트 레이아웃을 정의합니다.
+</thought>
+<code>
+<![CDATA[
+package com.example.demo.config;
+
+import com.querydsl.jpa.impl.JPAQueryFactory;
+import jakarta.persistence.EntityManager;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * QueryDslConfig 클래스의 JPAQueryFactory Bean 생성 로직을 검증하기 위한 단위 테스트입니다.
+ */
+@ExtendWith(MockitoExtension.class)
+@DisplayName("QueryDslConfig 단위 테스트")
+class QueryDslConfigTest {
+
+    @Mock
+    private EntityManager entityManager;
+
+    @InjectMocks
+    private QueryDslConfig queryDslConfig;
+
+    @BeforeEach
+    void setUp() {
+        // given: 테스트 수행 전 Mock 객체 초기화 및 공통 전제 조건을 설정합니다.
+    }
+
+    @Nested
+    @DisplayName("jpaQueryFactory 메서드는")
+    class Describe_jpaQueryFactory {
+
+        @Nested
+        @DisplayName("EntityManager가 주어졌을 때")
+        class Context_with_entityManager {
+            
+            // TODO: JPAQueryFactory 인스턴스가 올바르게 생성되고 반환되는지 검증하는 테스트를 추가할 예정입니다.
+        }
+    }
+}
+]]>
+</code>
+</response>
+
+2026-01-22T06:06:59.262Z  INFO 6550 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🔄 [Phase 3] Iterating Methods...
+2026-01-22T06:06:59.266Z  INFO 6550 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [jpaQueryFactory]
+2026-01-22T06:06:59.309Z  INFO 6550 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 91 characters
+2026-01-22T06:06:59.317Z  INFO 6550 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CODER] Acting on instruction (XML Prompt)...
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+PROMPT
+[RESPONSE]
+<prompt>
+<system_instructions>
+<persona>
+      <role>CODER Specialist</role>
+      <domain>SERVICE</domain>
+      <mission><![CDATA[
+  Execute specialized technical duties with artisan-level precision.
+      SPECIALIZED MISSION: MISSION: Write final JUnit 5 test code.
+      TECHNICAL RULES:
+      1. Use @ExtendWith(MockitoExtension.class).
+      2. MOCKITO MATCHERS: Never mix matchers (any(), eq()) with raw values.
+      3. CRITICAL: Response MUST use strict XML format: <response><status>...</st...(truncated)
+================================================================================
+
+2026-01-22T06:06:59.320Z  INFO 6550 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T06:06:59.320Z  INFO 6550 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 5927 chars
+2026-01-22T06:06:59.320Z  INFO 6550 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T06:06:59.322Z  INFO 6550 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+
+============================== [AUDIT LOG: CODER] ==============================
+[MISSION]
+RESPONSE
+[RESPONSE]
+Loaded cached credentials.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:10835) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(Use `node --trace-warnings ...` to show where the warning was created)
+<response>
+<statu...(truncated)
+================================================================================
+
+2026-01-22T06:08:18.287Z  INFO 6550 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🧩 [Phase 4] Assembling Code...
+2026-01-22T06:08:18.298Z ERROR 6550 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : JavaParser merge failed, falling back to naive merge: Lexical error at line 4, column 10.  Encountered: "x" (120), after : "\'e"
+Problem stacktrace : 
+  com.github.javaparser.GeneratedJavaParserTokenManager.getNextToken(GeneratedJavaParserTokenManager.java:3132)
+  com.github.javaparser.GeneratedJavaParser.getNextToken(GeneratedJavaParser.java:14365)
+  com.github.javaparser.GeneratedJavaParserBase.recover(GeneratedJavaParserBase.java:196)
+  com.github.javaparser.GeneratedJavaParser.CompilationUnit(GeneratedJavaParser.java:213)
+  com.github.javaparser.JavaParser.parse(JavaParser.java:125)
+  com.github.javaparser.JavaParser.parse(JavaParser.java:297)
+  com.github.javaparser.JavaParserAdapter.parse(JavaParserAdapter.java:104)
+  com.github.javaparser.StaticJavaParser.parse(StaticJavaParser.java:257)
+  com.example.llama.application.orchestrator.AbstractPipelineOrchestrator.mergeSetupAndTests(AbstractPipelineOrchestrator.java:179)
+  com.example.llama.application.orchestrator.AbstractPipelineOrchestrator.orchestrate(AbstractPipelineOrchestrator.java:137)
+  com.example.llama.application.BureaucracyOrchestrator.orchestrate(BureaucracyOrchestrator.java:36)
+  com.example.llama.interfaces.shell.GenerateCommand.generate(GenerateCommand.java:53)
+  java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+  java.base/java.lang.reflect.Method.invoke(Method.java:580)
+  org.springframework.shell.command.invocation.InvocableShellMethod.doInvoke(InvocableShellMethod.java:306)
+  org.springframework.shell.command.invocation.InvocableShellMethod.invoke(InvocableShellMethod.java:232)
+  org.springframework.shell.command.CommandExecution$DefaultCommandExecution.evaluate(CommandExecution.java:227)
+  org.springframework.shell.Shell.evaluate(Shell.java:248)
+  org.springframework.shell.Shell.run(Shell.java:159)
+  org.springframework.shell.jline.NonInteractiveShellRunner.run(NonInteractiveShellRunner.java:146)
+  org.springframework.shell.DefaultShellApplicationRunner.run(DefaultShellApplicationRunner.java:65)
+  org.springframework.boot.SpringApplication.lambda$callRunner$4(SpringApplication.java:784)
+  org.springframework.util.function.ThrowingConsumer$1.acceptWithException(ThrowingConsumer.java:82)
+  org.springframework.util.function.ThrowingConsumer.accept(ThrowingConsumer.java:60)
+  org.springframework.util.function.ThrowingConsumer$1.accept(ThrowingConsumer.java:86)
+  org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:796)
+  org.springframework.boot.SpringApplication.callRunner(SpringApplication.java:784)
+  org.springframework.boot.SpringApplication.lambda$callRunners$3(SpringApplication.java:772)
+  java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.accept(ForEachOps.java:184)
+  java.base/java.util.stream.SortedOps$SizedRefSortingSink.end(SortedOps.java:357)
+  java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:510)
+  java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:499)
+  java.base/java.util.stream.ForEachOps$ForEachOp.evaluateSequential(ForEachOps.java:151)
+  java.base/java.util.stream.ForEachOps$ForEachOp$OfRef.evaluateSequential(ForEachOps.java:174)
+  java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+  java.base/java.util.stream.ReferencePipeline.forEach(ReferencePipeline.java:596)
+  org.springframework.boot.SpringApplication.callRunners(SpringApplication.java:772)
+  org.springframework.boot.SpringApplication.run(SpringApplication.java:325)
+  org.springframework.boot.SpringApplication.run(SpringApplication.java:1361)
+  org.springframework.boot.SpringApplication.run(SpringApplication.java:1350)
+  com.example.llama.LlamaApplication.main(LlamaApplication.java:12)
+  java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+  java.base/java.lang.reflect.Method.invoke(Method.java:580)
+  org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:102)
+  org.springframework.boot.loader.launch.Launcher.launch(Launcher.java:64)
+  org.springframework.boot.loader.launch.JarLauncher.main(JarLauncher.java:40)
+
+2026-01-22T06:08:18.372Z  INFO 6550 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/config/QueryDslConfigTest.java
+2026-01-22T06:08:18.373Z  INFO 6550 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.config.QueryDslConfigTest in /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T06:08:24.812Z  INFO 6550 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
+2026-01-22T06:08:24.814Z  WARN 6550 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 1/3). Initiating Repair...
+2026-01-22T06:08:24.822Z  WARN 6550 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+
+> Task :compileTestJava
+2026-01-22T06:08:24.822Z  INFO 6550 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: QueryDslConfig.java
+2026-01-22T06:08:46.468Z  INFO 6550 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/config/QueryDslConfigTest.java
+2026-01-22T06:08:46.468Z  INFO 6550 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.config.QueryDslConfigTest in /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T06:08:51.679Z  INFO 6550 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
+2026-01-22T06:08:51.680Z  WARN 6550 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 2/3). Initiating Repair...
+2026-01-22T06:08:51.681Z  WARN 6550 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+
+> Task :compileTestJava
+2026-01-22T06:08:51.681Z  INFO 6550 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: QueryDslConfig.java
+2026-01-22T06:09:45.126Z  INFO 6550 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/config/QueryDslConfigTest.java
+2026-01-22T06:09:45.127Z  INFO 6550 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.config.QueryDslConfigTest in /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T06:09:50.839Z  INFO 6550 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
+2026-01-22T06:09:50.839Z  WARN 6550 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 3/3). Initiating Repair...
+2026-01-22T06:09:50.840Z  WARN 6550 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
+> Task :processResources NO-SOURCE
+> Task :classes UP-TO-DATE
+
+> Task :compileTestJava
+2026-01-22T06:09:50.840Z  INFO 6550 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: QueryDslConfig.java
+2026-01-22T06:10:42.951Z  INFO 6550 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/config/QueryDslConfigTest.java
+2026-01-22T06:10:42.952Z  INFO 6550 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : 🏁 Test generation process complete for QueryDslConfig.java

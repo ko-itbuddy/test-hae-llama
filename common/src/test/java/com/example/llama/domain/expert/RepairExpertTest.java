@@ -17,11 +17,10 @@ class RepairExpertTest {
         String mission = expert.getDomainMission(AgentType.REPAIR_AGENT);
 
         assertThat(mission)
-                .contains("Senior Debugger")
-                .contains("COMPLETE, FIXED JAVA CLASS")
-                .contains("java_class")
-                .contains("<response>")
-                .contains("<![CDATA[");
+                .contains("Analyze [ERROR_LOG] and fix the [BROKEN_TEST_CODE]")
+                .contains("MUST ONLY modify the test file")
+                .contains("ConstraintViolationException")
+                .contains("Mockito ArgumentMatchers");
     }
 
     @Test

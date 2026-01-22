@@ -43,17 +43,32 @@ public class GeminiLlmClient implements LlmClient {
         }
 
         try {
-            // gemini --prompt "FULL_PROMPT"
-            ProcessBuilder pb = new ProcessBuilder("gemini", "--prompt", fullPrompt);
+            // gemini - Using stdin for prompt and yolo mode to avoid interactive prompts
+            ProcessBuilder pb = new ProcessBuilder("gemini", "--approval-mode", "yolo");
             pb.redirectErrorStream(true);
             Process process = pb.start();
 
+            // Write prompt to stdin
+            try (java.io.OutputStream os = process.getOutputStream()) {
+                os.write(fullPrompt.getBytes(StandardCharsets.UTF_8));
+                os.flush();
+            }
+
+            // Read output
             String output;
             try (InputStream is = process.getInputStream()) {
                 output = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             }
 
-            int exitCode = process.waitFor();
+            // Wait for process to complete with a 5-minute timeout
+            boolean finished = process.waitFor(5, java.util.concurrent.TimeUnit.MINUTES);
+            if (!finished) {
+                process.destroyForcibly();
+                log.error("❌ Gemini CLI Timed out after 5 minutes.");
+                return "<response><status>FAILED</status><thought>Gemini CLI timed out.</thought><code>// Error: Timeout</code></response>";
+            }
+
+            int exitCode = process.exitValue();
             if (exitCode != 0) {
                 log.error("❌ Gemini CLI Failed (Exit: {}): {}", exitCode, output);
                 return "<response><status>FAILED</status><thought>Gemini CLI execution failed.</thought><code>// Error: "
