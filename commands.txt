@@ -1,1 +1,0 @@
-generate --input sample-projects/demo-app/src/main/java/com/example/demo/HelloService.java --output-project sample-projects/demo-app

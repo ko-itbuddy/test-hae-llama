@@ -1,6 +1,0 @@
-Loaded cached credentials.
-Loading extension: conductor
-Loading extension: exa-mcp-server
-Server 'exa' supports tool updates. Listening for changes...
-Server 'exa' supports resource updates. Listening for changes...
-I am the Gemini CLI agent, referred to as Antigravity within this project. How can I assist you with your software engineering tasks today?
