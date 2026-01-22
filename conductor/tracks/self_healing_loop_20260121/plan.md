@@ -6,7 +6,7 @@
 - [x] **Task:** Implement a failure detection mechanism that can determine if a test run failed based on the exit code. `9e0cffc`
 - [x] **Task:** Implement a log parser that can extract relevant error messages from the captured `stderr`. `d3d4415`
 
-## Phase 2: Repair Agent Integration
+## Phase 2: Repair Agent Integration [checkpoint: e52a4cf]
 
 - [x] **Task:** Create a `RepairService` that encapsulates the logic for the self-healing loop. `63377f8`
 - [x] **Task:** Integrate the `REPAIR_AGENT` into the `RepairService`. `a4d495c`
