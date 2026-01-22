@@ -8,7 +8,11 @@ import java.util.concurrent.TimeUnit;
 @Service
 public class ShellExecutionService {
 
-    public record ExecutionResult(int exitCode, String stdout, String stderr) {}
+    public record ExecutionResult(int exitCode, String stdout, String stderr) {
+        public boolean isSuccess() {
+            return exitCode == 0;
+        }
+    }
 
     public ExecutionResult execute(String command) {
         try {

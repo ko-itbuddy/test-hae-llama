@@ -15,6 +15,7 @@ class ShellExecutionServiceTest {
         assertThat(result.exitCode()).isEqualTo(0);
         assertThat(result.stdout()).isEqualTo("hello world\n");
         assertThat(result.stderr()).isEmpty();
+        assertThat(result.isSuccess()).isTrue();
     }
 
     @Test
@@ -25,5 +26,6 @@ class ShellExecutionServiceTest {
         assertThat(result.exitCode()).isNotEqualTo(0);
         assertThat(result.stdout()).isEmpty();
         assertThat(result.stderr()).contains("non_existent_directory");
+        assertThat(result.isSuccess()).isFalse();
     }
 }
