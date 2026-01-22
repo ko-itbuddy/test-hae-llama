@@ -9,7 +9,7 @@
 ## Phase 2: Repair Agent Integration
 
 - [x] **Task:** Create a `RepairService` that encapsulates the logic for the self-healing loop. `63377f8`
-- [ ] **Task:** Integrate the `REPAIR_AGENT` into the `RepairService`.
+- [x] **Task:** Integrate the `REPAIR_AGENT` into the `RepairService`. `a4d495c`
 - [ ] **Task:** Implement the feedback loop: construct the prompt for the `REPAIR_AGENT` with the broken code and error log.
 
 ## Phase 3: Loop and State Management
