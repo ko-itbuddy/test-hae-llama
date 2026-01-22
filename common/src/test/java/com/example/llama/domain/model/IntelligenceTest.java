@@ -20,7 +20,7 @@ class IntelligenceTest {
 
         // when
         Intelligence intel = new Intelligence(packageName, className, fields, methods,
-                Intelligence.ComponentType.SERVICE, List.of(), List.of());
+                Intelligence.ComponentType.SERVICE, List.of(), List.of(), "", List.of());
 
         // then
         assertThat(intel.packageName()).isEqualTo(packageName);
@@ -28,15 +28,19 @@ class IntelligenceTest {
         assertThat(intel.fields()).containsAll(fields);
         assertThat(intel.methods()).containsAll(methods);
         assertThat(intel.type()).isEqualTo(Intelligence.ComponentType.SERVICE);
+        assertThat(intel.superClass()).isEmpty();
+        assertThat(intel.interfaces()).isEmpty();
     }
 
     @Test
     void testIntelligenceCreation() {
         Intelligence intel = new Intelligence("com.test", "MyClass", List.of("field1"), List.of("method1"),
-                Intelligence.ComponentType.SERVICE, List.of("import java.util.List"), List.of());
+                Intelligence.ComponentType.SERVICE, List.of("import java.util.List"), List.of(), "BaseClass", List.of("MyInterface"));
         assertThat(intel.packageName()).isEqualTo("com.test");
         assertThat(intel.className()).isEqualTo("MyClass");
         assertThat(intel.packageName() + "." + intel.className()).isEqualTo("com.test.MyClass");
         assertThat(intel.imports()).contains("import java.util.List");
+        assertThat(intel.superClass()).isEqualTo("BaseClass");
+        assertThat(intel.interfaces()).contains("MyInterface");
     }
 }

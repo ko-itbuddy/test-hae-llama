@@ -12,7 +12,9 @@ public record Intelligence(
         List<String> methods,
         ComponentType type,
         List<String> imports,
-        List<String> annotations) {
+        List<String> annotations,
+        String superClass,
+        List<String> interfaces) {
     public enum ComponentType {
         CONTROLLER,
         SERVICE,

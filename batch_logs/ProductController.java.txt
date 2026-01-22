@@ -8,17 +8,17 @@
 
  :: Spring Boot ::                (v3.4.1)
 
-2026-01-22T10:22:19.013Z  INFO 12561 --- [           main] com.example.llama.LlamaApplication       : Starting LlamaApplication v0.0.1-SNAPSHOT using Java 21.0.9 with PID 12561 (/root/test-hae-llama/common/build/libs/common-0.0.1-SNAPSHOT-boot.jar started by root in /root/test-hae-llama)
-2026-01-22T10:22:19.018Z  INFO 12561 --- [           main] com.example.llama.LlamaApplication       : No active profile set, falling back to 1 default profile: "default"
-2026-01-22T10:22:20.412Z  INFO 12561 --- [           main] c.e.l.i.io.InteractionLogger             : 📝 Interaction Log started: /root/test-hae-llama/.test-hea-llama/logs/llama_interaction_20260122_102220.log
-2026-01-22T10:22:20.763Z  WARN 12561 --- [           main] org.jline                                : Unable to create a system terminal, creating a dumb terminal (enable debug logging for more information)
-2026-01-22T10:22:21.094Z  INFO 12561 --- [           main] com.example.llama.LlamaApplication       : Started LlamaApplication in 2.912 seconds (process running for 3.825)
-2026-01-22T10:22:21.337Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🎼 Orchestrator [ControllerOrchestrator] conducting: ProductController.java
-2026-01-22T10:22:21.337Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🔍 [Phase 1] Analyzing Source Code Metadata...
-2026-01-22T10:22:21.530Z  INFO 12561 --- [           main] c.e.l.i.a.SimpleDependencyAnalyzer       : 📊 Analyzing dependencies for project at: /root/test-hae-llama/sample-projects/demo-app
-2026-01-22T10:22:21.531Z  INFO 12561 --- [           main] c.e.l.i.a.SimpleDependencyAnalyzer       : 🐘 Gradle project detected. Using gradlew at: /root/test-hae-llama/sample-projects/demo-app/gradlew
-2026-01-22T10:22:31.410Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🏗️ [Phase 2] Generating Global Test Setup...
-2026-01-22T10:22:31.448Z  INFO 12561 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CONTROLLER_CODER] Acting on instruction (XML Prompt)...
+2026-01-22T11:01:54.550Z  INFO 890 --- [           main] com.example.llama.LlamaApplication       : Starting LlamaApplication v0.0.1-SNAPSHOT using Java 21.0.9 with PID 890 (/root/test-hae-llama/common/build/libs/common-0.0.1-SNAPSHOT-boot.jar started by root in /root/test-hae-llama)
+2026-01-22T11:01:54.554Z  INFO 890 --- [           main] com.example.llama.LlamaApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-01-22T11:02:26.421Z  INFO 890 --- [           main] c.e.l.i.io.InteractionLogger             : 📝 Interaction Log started: /root/test-hae-llama/.test-hea-llama/logs/llama_interaction_20260122_110226.log
+2026-01-22T11:02:26.768Z  WARN 890 --- [           main] org.jline                                : Unable to create a system terminal, creating a dumb terminal (enable debug logging for more information)
+2026-01-22T11:02:27.079Z  INFO 890 --- [           main] com.example.llama.LlamaApplication       : Started LlamaApplication in 33.402 seconds (process running for 4.056)
+2026-01-22T11:02:27.302Z  INFO 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🎼 Orchestrator [ControllerOrchestrator] conducting: ProductController.java
+2026-01-22T11:02:27.302Z  INFO 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🔍 [Phase 1] Analyzing Source Code Metadata...
+2026-01-22T11:02:27.500Z  INFO 890 --- [           main] c.e.l.i.a.SimpleDependencyAnalyzer       : 📊 Analyzing dependencies for project at: /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T11:02:27.501Z  INFO 890 --- [           main] c.e.l.i.a.SimpleDependencyAnalyzer       : 🐘 Gradle project detected. Using gradlew at: /root/test-hae-llama/sample-projects/demo-app/gradlew
+2026-01-22T11:02:29.568Z  INFO 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🏗️ [Phase 2] Generating Global Test Setup...
+2026-01-22T11:02:29.594Z  INFO 890 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CONTROLLER_CODER] Acting on instruction (XML Prompt)...
 
 ============================== [AUDIT LOG: CONTROLLER_CODER] ==============================
 [MISSION]
@@ -34,10 +34,10 @@ PROMPT
       SPECIALIZED MISSION: You are a Senior REST Test Developer. Your task is to write the final @WebMvcTest code using MockMvc and Spring REST Docs. Ensure .andDo(document(...)) is present. CRITICAL: Response MUST use strict XML format: <response><status>...</status><thought>...</th...(truncated)
 ================================================================================
 
-2026-01-22T10:22:31.452Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
-2026-01-22T10:22:31.452Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 8030 chars
-2026-01-22T10:22:31.452Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
-2026-01-22T10:22:31.455Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+2026-01-22T11:02:29.599Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T11:02:29.599Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 8030 chars
+2026-01-22T11:02:29.599Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T11:02:29.602Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
 
 ============================== [AUDIT LOG: CONTROLLER_CODER] ==============================
 [MISSION]
@@ -50,45 +50,51 @@ Loading extension: conductor
 Loading extension: exa-mcp-server
 Server 'exa' supports tool updates. Listening for changes...
 Server 'exa' supports resource updates. Listening for changes...
-(node:12649) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10...(truncated)
+(node:1038) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10....(truncated)
 ================================================================================
 
-2026-01-22T10:23:23.568Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : --> Setup Complete:
+2026-01-22T11:03:14.994Z  INFO 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : --> Setup Complete:
 package com.example.demo.presentation;
 
 import com.example.demo.service.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.web.servlet.MockMvc;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 
+/**
+ * ProductController API 단위 테스트
+ * - MockMvc를 이용한 컨트롤러 레이어 슬라이스 테스트
+ * - Spring REST Docs를 통한 API 문서화 자동화
+ */
 @WebMvcTest(ProductController.class)
 @AutoConfigureRestDocs
+@DisplayName("ProductController WebMvc 테스트")
 class ProductControllerTest {
 
     @Autowired
-    private MockMvc mockMvc;
+    protected MockMvc mockMvc;
 
     @Autowired
-    private ObjectMapper objectMapper;
+    protected ObjectMapper objectMapper;
 
     @MockBean
-    private ProductService productService;
+    protected ProductService productService;
 
     @BeforeEach
     void setUp() {
-        // Additional setup if required per method-level test strategy
+        // 테스트 수행 전 공통 초기화 로직이 필요한 경우 여기에 작성합니다.
     }
 }
-2026-01-22T10:23:23.568Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🔄 [Phase 3] Iterating Methods...
-2026-01-22T10:23:23.569Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [createProduct]
-2026-01-22T10:23:23.578Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 239 characters
-2026-01-22T10:23:23.579Z  INFO 12561 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CONTROLLER_CODER] Acting on instruction (XML Prompt)...
+2026-01-22T11:03:14.997Z  INFO 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🔄 [Phase 3] Iterating Methods...
+2026-01-22T11:03:14.998Z  INFO 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [createProduct]
+2026-01-22T11:03:15.016Z  INFO 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 239 characters
+2026-01-22T11:03:15.017Z  INFO 890 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CONTROLLER_CODER] Acting on instruction (XML Prompt)...
 
 ============================== [AUDIT LOG: CONTROLLER_CODER] ==============================
 [MISSION]
@@ -104,57 +110,20 @@ PROMPT
       SPECIALIZED MISSION: You are a Senior REST Test Developer. Your task is to write the final @WebMvcTest code using MockMvc and Spring REST Docs. Ensure .andDo(document(...)) is present. CRITICAL: Response MUST use strict XML format: <response><status>...</status><thought>...</th...(truncated)
 ================================================================================
 
-2026-01-22T10:23:23.580Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
-2026-01-22T10:23:23.580Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 8391 chars
-2026-01-22T10:23:23.580Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
-2026-01-22T10:23:23.581Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
-
-============================== [AUDIT LOG: CONTROLLER_CODER] ==============================
-[MISSION]
-RESPONSE
-[RESPONSE]
-YOLO mode is enabled. All tool calls will be automatically approved.
+2026-01-22T11:03:15.020Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T11:03:15.020Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 8391 chars
+2026-01-22T11:03:15.020Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T11:03:15.022Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+2026-01-22T11:03:44.193Z ERROR 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): YOLO mode is enabled. All tool calls will be automatically approved.
 Loaded cached credentials.
 YOLO mode is enabled. All tool calls will be automatically approved.
 Loading extension: conductor
 Loading extension: exa-mcp-server
 Server 'exa' supports tool updates. Listening for changes...
 Server 'exa' supports resource updates. Listening for changes...
-(node:12737) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10...(truncated)
-================================================================================
-
-2026-01-22T10:24:57.331Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [getProduct]
-2026-01-22T10:24:57.337Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 178 characters
-2026-01-22T10:24:57.337Z  INFO 12561 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CONTROLLER_CODER] Acting on instruction (XML Prompt)...
-
-============================== [AUDIT LOG: CONTROLLER_CODER] ==============================
-[MISSION]
-PROMPT
-[RESPONSE]
-<prompt>
-<system_instructions>
-<persona>
-      <role>CONTROLLER_CODER Specialist</role>
-      <domain>CONTROLLER</domain>
-      <mission><![CDATA[
-  Execute specialized technical duties with artisan-level precision.
-      SPECIALIZED MISSION: You are a Senior REST Test Developer. Your task is to write the final @WebMvcTest code using MockMvc and Spring REST Docs. Ensure .andDo(document(...)) is present. CRITICAL: Response MUST use strict XML format: <response><status>...</status><thought>...</th...(truncated)
-================================================================================
-
-2026-01-22T10:24:57.338Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
-2026-01-22T10:24:57.338Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 8324 chars
-2026-01-22T10:24:57.338Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
-2026-01-22T10:24:57.339Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
-2026-01-22T10:25:28.009Z ERROR 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): YOLO mode is enabled. All tool calls will be automatically approved.
-Loaded cached credentials.
-YOLO mode is enabled. All tool calls will be automatically approved.
-Loading extension: conductor
-Loading extension: exa-mcp-server
-Server 'exa' supports tool updates. Listening for changes...
-Server 'exa' supports resource updates. Listening for changes...
-(node:12844) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(node:7781) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
 (Use `node --trace-warnings ...` to show where the warning was created)
-Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T10-25-27-957Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 12h4m28s.
+Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T11-03-44-134Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 11h26m12s.
     at classifyGoogleError (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/googleQuotaErrors.js:136:28)
     at retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:130:37)
     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
@@ -167,10 +136,10 @@ Error when talking to Gemini API Full report available at: /tmp/gemini-client-er
     at async main (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/gemini.js:458:9) {
   cause: {
     code: 429,
-    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h4m28s.',
+    message: 'You have exhausted your capacity on this model. Your quota will reset after 11h26m12s.',
     details: [ [Object], [Object] ]
   },
-  retryDelayMs: 43468514.113955006
+  retryDelayMs: 41172018.419879004
 }
 An unexpected critical error occurred:[object Object]
 
@@ -186,13 +155,13 @@ Loading extension: conductor
 Loading extension: exa-mcp-server
 Server 'exa' supports tool updates. Listening for changes...
 Server 'exa' supports resource updates. Listening for changes...
-(node:12844) MaxListenersExceededWarning: Possible...(truncated)
+(node:7781) MaxListenersExceededWarning: Possible ...(truncated)
 ================================================================================
 
-2026-01-22T10:25:28.017Z  WARN 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : Method generation FAILED for [getProduct]. Skipping this method.
-2026-01-22T10:25:28.017Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [getAllProducts]
-2026-01-22T10:25:28.024Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 177 characters
-2026-01-22T10:25:28.025Z  INFO 12561 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CONTROLLER_CODER] Acting on instruction (XML Prompt)...
+2026-01-22T11:03:44.212Z  WARN 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : Method generation FAILED for [createProduct]. Skipping this method.
+2026-01-22T11:03:44.212Z  INFO 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [getProduct]
+2026-01-22T11:03:44.222Z  INFO 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 178 characters
+2026-01-22T11:03:44.222Z  INFO 890 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CONTROLLER_CODER] Acting on instruction (XML Prompt)...
 
 ============================== [AUDIT LOG: CONTROLLER_CODER] ==============================
 [MISSION]
@@ -208,20 +177,20 @@ PROMPT
       SPECIALIZED MISSION: You are a Senior REST Test Developer. Your task is to write the final @WebMvcTest code using MockMvc and Spring REST Docs. Ensure .andDo(document(...)) is present. CRITICAL: Response MUST use strict XML format: <response><status>...</status><thought>...</th...(truncated)
 ================================================================================
 
-2026-01-22T10:25:28.026Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
-2026-01-22T10:25:28.026Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 8331 chars
-2026-01-22T10:25:28.026Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
-2026-01-22T10:25:28.026Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
-2026-01-22T10:26:23.994Z ERROR 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): YOLO mode is enabled. All tool calls will be automatically approved.
+2026-01-22T11:03:44.225Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T11:03:44.225Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 8324 chars
+2026-01-22T11:03:44.225Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T11:03:44.225Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+2026-01-22T11:04:14.204Z ERROR 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): YOLO mode is enabled. All tool calls will be automatically approved.
 Loaded cached credentials.
 YOLO mode is enabled. All tool calls will be automatically approved.
 Loading extension: conductor
 Loading extension: exa-mcp-server
 Server 'exa' supports tool updates. Listening for changes...
 Server 'exa' supports resource updates. Listening for changes...
-(node:13000) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(node:7923) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
 (Use `node --trace-warnings ...` to show where the warning was created)
-Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T10-26-23-938Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 12h3m32s.
+Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T11-04-14-142Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 11h25m41s.
     at classifyGoogleError (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/googleQuotaErrors.js:136:28)
     at retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:130:37)
     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
@@ -234,10 +203,10 @@ Error when talking to Gemini API Full report available at: /tmp/gemini-client-er
     at async main (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/gemini.js:458:9) {
   cause: {
     code: 429,
-    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h3m32s.',
+    message: 'You have exhausted your capacity on this model. Your quota will reset after 11h25m41s.',
     details: [ [Object], [Object] ]
   },
-  retryDelayMs: 43412174.204381995
+  retryDelayMs: 41141915.157340996
 }
 An unexpected critical error occurred:[object Object]
 
@@ -253,13 +222,13 @@ Loading extension: conductor
 Loading extension: exa-mcp-server
 Server 'exa' supports tool updates. Listening for changes...
 Server 'exa' supports resource updates. Listening for changes...
-(node:13000) MaxListenersExceededWarning: Possible...(truncated)
+(node:7923) MaxListenersExceededWarning: Possible ...(truncated)
 ================================================================================
 
-2026-01-22T10:26:23.999Z  WARN 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : Method generation FAILED for [getAllProducts]. Skipping this method.
-2026-01-22T10:26:23.999Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [getDiscountedPriceInUsd]
-2026-01-22T10:26:24.006Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 198 characters
-2026-01-22T10:26:24.006Z  INFO 12561 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CONTROLLER_CODER] Acting on instruction (XML Prompt)...
+2026-01-22T11:04:14.212Z  WARN 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : Method generation FAILED for [getProduct]. Skipping this method.
+2026-01-22T11:04:14.212Z  INFO 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [getAllProducts]
+2026-01-22T11:04:14.222Z  INFO 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 177 characters
+2026-01-22T11:04:14.222Z  INFO 890 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CONTROLLER_CODER] Acting on instruction (XML Prompt)...
 
 ============================== [AUDIT LOG: CONTROLLER_CODER] ==============================
 [MISSION]
@@ -275,67 +244,74 @@ PROMPT
       SPECIALIZED MISSION: You are a Senior REST Test Developer. Your task is to write the final @WebMvcTest code using MockMvc and Spring REST Docs. Ensure .andDo(document(...)) is present. CRITICAL: Response MUST use strict XML format: <response><status>...</status><thought>...</th...(truncated)
 ================================================================================
 
-2026-01-22T10:26:24.007Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
-2026-01-22T10:26:24.007Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 8370 chars
-2026-01-22T10:26:24.007Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
-2026-01-22T10:26:24.008Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
-2026-01-22T10:27:22.470Z ERROR 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): YOLO mode is enabled. All tool calls will be automatically approved.
-Loaded cached credentials.
-YOLO mode is enabled. All tool calls will be automatically approved.
-Loading extension: conductor
-Loading extension: exa-mcp-server
-Server 'exa' supports tool updates. Listening for changes...
-Server 'exa' supports resource updates. Listening for changes...
-(node:13131) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
-(Use `node --trace-warnings ...` to show where the warning was created)
-Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T10-27-22-406Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 12h2m33s.
-    at classifyGoogleError (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/googleQuotaErrors.js:136:28)
-    at retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:130:37)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async GeminiChat.makeApiCallAndProcessStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:429:32)
-    at async GeminiChat.streamWithRetries (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:254:40)
-    at async Turn.run (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/turn.js:64:30)
-    at async GeminiClient.processTurn (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:457:26)
-    at async GeminiClient.sendMessageStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:553:20)
-    at async file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/nonInteractiveCli.js:192:34
-    at async main (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/gemini.js:458:9) {
-  cause: {
-    code: 429,
-    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h2m33s.',
-    details: [ [Object], [Object] ]
-  },
-  retryDelayMs: 43353711.681235
-}
-An unexpected critical error occurred:[object Object]
-
+2026-01-22T11:04:14.224Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T11:04:14.224Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 8331 chars
+2026-01-22T11:04:14.224Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T11:04:14.224Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
 
 ============================== [AUDIT LOG: CONTROLLER_CODER] ==============================
 [MISSION]
 RESPONSE
 [RESPONSE]
-<response><status>FAILED</status><thought>Gemini CLI execution failed.</thought><code>// Error: YOLO mode is enabled. All tool calls will be automatically approved.
+YOLO mode is enabled. All tool calls will be automatically approved.
 Loaded cached credentials.
 YOLO mode is enabled. All tool calls will be automatically approved.
 Loading extension: conductor
 Loading extension: exa-mcp-server
 Server 'exa' supports tool updates. Listening for changes...
 Server 'exa' supports resource updates. Listening for changes...
-(node:13131) MaxListenersExceededWarning: Possible...(truncated)
+(node:8074) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10....(truncated)
 ================================================================================
 
-2026-01-22T10:27:22.475Z  WARN 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : Method generation FAILED for [getDiscountedPriceInUsd]. Skipping this method.
-2026-01-22T10:27:22.475Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🧩 [Phase 4] Assembling Code...
-2026-01-22T10:27:22.495Z  INFO 12561 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/presentation/ProductControllerTest.java
-2026-01-22T10:27:22.496Z  INFO 12561 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.presentation.ProductControllerTest in /root/test-hae-llama/sample-projects/demo-app
-2026-01-22T10:27:26.066Z  INFO 12561 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
-2026-01-22T10:27:26.067Z  WARN 12561 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 1/3). Initiating Repair...
-2026-01-22T10:27:26.070Z  WARN 12561 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
+2026-01-22T11:05:32.581Z  INFO 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [getDiscountedPriceInUsd]
+2026-01-22T11:05:32.590Z  INFO 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 198 characters
+2026-01-22T11:05:32.590Z  INFO 890 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CONTROLLER_CODER] Acting on instruction (XML Prompt)...
+
+============================== [AUDIT LOG: CONTROLLER_CODER] ==============================
+[MISSION]
+PROMPT
+[RESPONSE]
+<prompt>
+<system_instructions>
+<persona>
+      <role>CONTROLLER_CODER Specialist</role>
+      <domain>CONTROLLER</domain>
+      <mission><![CDATA[
+  Execute specialized technical duties with artisan-level precision.
+      SPECIALIZED MISSION: You are a Senior REST Test Developer. Your task is to write the final @WebMvcTest code using MockMvc and Spring REST Docs. Ensure .andDo(document(...)) is present. CRITICAL: Response MUST use strict XML format: <response><status>...</status><thought>...</th...(truncated)
+================================================================================
+
+2026-01-22T11:05:32.592Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T11:05:32.592Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 8370 chars
+2026-01-22T11:05:32.592Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T11:05:32.593Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+
+============================== [AUDIT LOG: CONTROLLER_CODER] ==============================
+[MISSION]
+RESPONSE
+[RESPONSE]
+YOLO mode is enabled. All tool calls will be automatically approved.
+Loaded cached credentials.
+YOLO mode is enabled. All tool calls will be automatically approved.
+Loading extension: conductor
+Loading extension: exa-mcp-server
+Server 'exa' supports tool updates. Listening for changes...
+Server 'exa' supports resource updates. Listening for changes...
+(node:8300) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10....(truncated)
+================================================================================
+
+2026-01-22T11:06:58.644Z  INFO 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🧩 [Phase 4] Assembling Code...
+2026-01-22T11:06:58.677Z  INFO 890 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/presentation/ProductControllerTest.java
+2026-01-22T11:06:58.678Z  INFO 890 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.presentation.ProductControllerTest in /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T11:07:02.856Z  INFO 890 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
+2026-01-22T11:07:02.857Z  WARN 890 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 1/3). Initiating Repair...
+2026-01-22T11:07:02.863Z  WARN 890 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
 > Task :processResources NO-SOURCE
 > Task :classes UP-TO-DATE
 
 > Task :compileTestJava FAILED
-2026-01-22T10:27:26.070Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: ProductController.java
-2026-01-22T10:27:26.073Z  INFO 12561 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: REPAIR_AGENT] Acting on instruction (XML Prompt)...
+2026-01-22T11:07:02.864Z  INFO 890 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: ProductController.java
+2026-01-22T11:07:02.866Z  INFO 890 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: REPAIR_AGENT] Acting on instruction (XML Prompt)...
 
 ============================== [AUDIT LOG: REPAIR_AGENT] ==============================
 [MISSION]
@@ -354,199 +330,18 @@ PROMPT
       2. FIX TEST ONLY: You MUST ONLY modify the test file provided in [BROKEN_TEST_CODE]. NEVER modify source code...(truncated)
 ================================================================================
 
-2026-01-22T10:27:26.082Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
-2026-01-22T10:27:26.082Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 14398 chars
-2026-01-22T10:27:26.082Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
-2026-01-22T10:27:26.084Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
-2026-01-22T10:28:18.389Z ERROR 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): YOLO mode is enabled. All tool calls will be automatically approved.
-Loaded cached credentials.
-YOLO mode is enabled. All tool calls will be automatically approved.
-Loading extension: conductor
-Loading extension: exa-mcp-server
-Server 'exa' supports tool updates. Listening for changes...
-Server 'exa' supports resource updates. Listening for changes...
-(node:13311) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
-(Use `node --trace-warnings ...` to show where the warning was created)
-Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T10-28-18-315Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 12h1m37s.
-    at classifyGoogleError (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/googleQuotaErrors.js:136:28)
-    at retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:130:37)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async GeminiChat.makeApiCallAndProcessStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:429:32)
-    at async GeminiChat.streamWithRetries (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:254:40)
-    at async Turn.run (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/turn.js:64:30)
-    at async GeminiClient.processTurn (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:457:26)
-    at async GeminiClient.sendMessageStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:553:20)
-    at async file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/nonInteractiveCli.js:192:34
-    at async main (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/gemini.js:458:9) {
-  cause: {
-    code: 429,
-    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h1m37s.',
-    details: [ [Object], [Object] ]
-  },
-  retryDelayMs: 43297835.865177006
-}
-An unexpected critical error occurred:[object Object]
-
+2026-01-22T11:07:02.880Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T11:07:02.881Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 31146 chars
+2026-01-22T11:07:02.881Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T11:07:02.882Z  INFO 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+2026-01-22T11:07:23.107Z ERROR 890 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 143): 
 
 ============================== [AUDIT LOG: REPAIR_AGENT] ==============================
 [MISSION]
 RESPONSE
 [RESPONSE]
-<response><status>FAILED</status><thought>Gemini CLI execution failed.</thought><code>// Error: YOLO mode is enabled. All tool calls will be automatically approved.
-Loaded cached credentials.
-YOLO mode is enabled. All tool calls will be automatically approved.
-Loading extension: conductor
-Loading extension: exa-mcp-server
-Server 'exa' supports tool updates. Listening for changes...
-Server 'exa' supports resource updates. Listening for changes...
-(node:13311) MaxListenersExceededWarning: Possible...(truncated)
+<response><status>FAILED</status><thought>Gemini CLI execution failed.</thought><code>// Error: </code></response>
 ================================================================================
 
-2026-01-22T10:28:18.393Z  WARN 12561 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ⚠️ Repair produced blank class name. Using expected class name: ProductControllerTest
-2026-01-22T10:28:18.398Z  INFO 12561 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java
-2026-01-22T10:28:18.398Z  INFO 12561 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: . in /root/test-hae-llama/sample-projects/demo-app
-2026-01-22T10:28:22.029Z  INFO 12561 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
-2026-01-22T10:28:22.029Z  WARN 12561 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 2/3). Initiating Repair...
-2026-01-22T10:28:22.030Z  WARN 12561 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
-> Task :processResources NO-SOURCE
-> Task :classes UP-TO-DATE
-
-> Task :compileTestJava FAILED
-2026-01-22T10:28:22.030Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: ProductController.java
-2026-01-22T10:28:22.031Z  INFO 12561 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: REPAIR_AGENT] Acting on instruction (XML Prompt)...
-
-============================== [AUDIT LOG: REPAIR_AGENT] ==============================
-[MISSION]
-PROMPT
-[RESPONSE]
-<prompt>
-<system_instructions>
-<persona>
-      <role>REPAIR_AGENT Specialist</role>
-      <domain>CONTROLLER</domain>
-      <mission><![CDATA[
-  Execute specialized technical duties with artisan-level precision.
-      SPECIALIZED MISSION: MISSION: Analyze [ERROR_LOG] and fix the [BROKEN_TEST_CODE].
-      TECHNICAL RULES:
-      1. FIXED CLASS: Provide the complete, fixed Java class.
-      2. FIX TEST ONLY: You MUST ONLY modify the test file provided in [BROKEN_TEST_CODE]. NEVER modify source code...(truncated)
-================================================================================
-
-2026-01-22T10:28:22.033Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
-2026-01-22T10:28:22.033Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 11741 chars
-2026-01-22T10:28:22.033Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
-2026-01-22T10:28:22.034Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
-2026-01-22T10:29:06.077Z ERROR 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): YOLO mode is enabled. All tool calls will be automatically approved.
-Loaded cached credentials.
-YOLO mode is enabled. All tool calls will be automatically approved.
-Loading extension: conductor
-Loading extension: exa-mcp-server
-Server 'exa' supports tool updates. Listening for changes...
-Server 'exa' supports resource updates. Listening for changes...
-(node:13614) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
-(Use `node --trace-warnings ...` to show where the warning was created)
-Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T10-29-06-018Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 12h0m50s.
-    at classifyGoogleError (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/googleQuotaErrors.js:136:28)
-    at retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:130:37)
-    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-    at async GeminiChat.makeApiCallAndProcessStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:429:32)
-    at async GeminiChat.streamWithRetries (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:254:40)
-    at async Turn.run (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/turn.js:64:30)
-    at async GeminiClient.processTurn (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:457:26)
-    at async GeminiClient.sendMessageStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:553:20)
-    at async file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/nonInteractiveCli.js:192:34
-    at async main (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/gemini.js:458:9) {
-  cause: {
-    code: 429,
-    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h0m50s.',
-    details: [ [Object], [Object] ]
-  },
-  retryDelayMs: 43250033.901529
-}
-An unexpected critical error occurred:[object Object]
-
-
-============================== [AUDIT LOG: REPAIR_AGENT] ==============================
-[MISSION]
-RESPONSE
-[RESPONSE]
-<response><status>FAILED</status><thought>Gemini CLI execution failed.</thought><code>// Error: YOLO mode is enabled. All tool calls will be automatically approved.
-Loaded cached credentials.
-YOLO mode is enabled. All tool calls will be automatically approved.
-Loading extension: conductor
-Loading extension: exa-mcp-server
-Server 'exa' supports tool updates. Listening for changes...
-Server 'exa' supports resource updates. Listening for changes...
-(node:13614) MaxListenersExceededWarning: Possible...(truncated)
-================================================================================
-
-2026-01-22T10:29:06.080Z  WARN 12561 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ⚠️ Repair produced blank class name. Using expected class name: ProductControllerTest
-2026-01-22T10:29:06.082Z  INFO 12561 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java
-2026-01-22T10:29:06.082Z  INFO 12561 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: . in /root/test-hae-llama/sample-projects/demo-app
-2026-01-22T10:29:09.430Z  INFO 12561 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
-2026-01-22T10:29:09.430Z  WARN 12561 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 3/3). Initiating Repair...
-2026-01-22T10:29:09.430Z  WARN 12561 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
-> Task :processResources NO-SOURCE
-> Task :classes UP-TO-DATE
-
-> Task :compileTestJava FAILED
-2026-01-22T10:29:09.431Z  INFO 12561 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: ProductController.java
-2026-01-22T10:29:09.431Z  INFO 12561 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: REPAIR_AGENT] Acting on instruction (XML Prompt)...
-
-============================== [AUDIT LOG: REPAIR_AGENT] ==============================
-[MISSION]
-PROMPT
-[RESPONSE]
-<prompt>
-<system_instructions>
-<persona>
-      <role>REPAIR_AGENT Specialist</role>
-      <domain>CONTROLLER</domain>
-      <mission><![CDATA[
-  Execute specialized technical duties with artisan-level precision.
-      SPECIALIZED MISSION: MISSION: Analyze [ERROR_LOG] and fix the [BROKEN_TEST_CODE].
-      TECHNICAL RULES:
-      1. FIXED CLASS: Provide the complete, fixed Java class.
-      2. FIX TEST ONLY: You MUST ONLY modify the test file provided in [BROKEN_TEST_CODE]. NEVER modify source code...(truncated)
-================================================================================
-
-2026-01-22T10:29:09.433Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
-2026-01-22T10:29:09.433Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 11738 chars
-2026-01-22T10:29:09.433Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
-2026-01-22T10:29:09.434Z  INFO 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
-2026-01-22T10:30:00.604Z ERROR 12561 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 143): YOLO mode is enabled. All tool calls will be automatically approved.
-Loaded cached credentials.
-YOLO mode is enabled. All tool calls will be automatically approved.
-Loading extension: conductor
-Loading extension: exa-mcp-server
-Server 'exa' supports tool updates. Listening for changes...
-Server 'exa' supports resource updates. Listening for changes...
-(node:13888) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
-(Use `node --trace-warnings ...` to show where the warning was created)
-I will start by examining the source code of `ProductController` and `HelloService` in the `sample-projects/demo-app` directory, and then I'll check the content of the corrupted test files to see if any valid code remains.
-
-I will read the source files `HelloService.java` and `ProductController.java` to understand their logic, and then I will examine the corrupted test files `HelloServiceTest.java` and `ProductControllerTest.java` to see if any valid code can be salvaged.
-
-I will now read the `ProductService.java`, `ProductCreateRequest.java`, and `ProductResponse.java` files to understand their structure and dependencies, which will help me write a comprehensive test for `ProductController`.
-
-I will read the `ProductCreateRequest.java`, `ProductResponse.java`, and `ProductService.java` files to understand their contents.
-
-
-
-============================== [AUDIT LOG: REPAIR_AGENT] ==============================
-[MISSION]
-RESPONSE
-[RESPONSE]
-<response><status>FAILED</status><thought>Gemini CLI execution failed.</thought><code>// Error: YOLO mode is enabled. All tool calls will be automatically approved.
-Loaded cached credentials.
-YOLO mode is enabled. All tool calls will be automatically approved.
-Loading extension: conductor
-Loading extension: exa-mcp-server
-Server 'exa' supports tool updates. Listening for changes...
-Server 'exa' supports resource updates. Listening for changes...
-(node:13888) MaxListenersExceededWarning: Possible...(truncated)
-================================================================================
-
-2026-01-22T10:30:00.609Z  WARN 12561 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ⚠️ Repair produced blank class name. Using expected class name: ProductControllerTest
-2026-01-22T10:30:00.611Z  INFO 12561 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/ProductControllerTest.java
-2026-01-22T10:30:00.612Z  INFO 12561 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : 🏁 Test generation process complete for ProductController.java
+2026-01-22T11:07:23.111Z  INFO 890 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/presentation/ProductControllerTest.java
+2026-01-22T11:07:23.111Z  INFO 890 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.presentation.ProductControllerTest in /root/test-hae-llama/sample-projects/demo-app

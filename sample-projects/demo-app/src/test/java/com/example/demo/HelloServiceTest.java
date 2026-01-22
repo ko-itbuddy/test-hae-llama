@@ -2,9 +2,9 @@ package com.example.demo;
 
 // Error: YOLO mode is enabled. All tool calls will be automatically approved.
 YOLO mode is enabled. All tool calls will be automatically approved.
-(node:17123) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(node:807) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
 (Use `node --trace-warnings ...` to show where the warning was created)
-Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T10-35-01-952Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 11h54m54s.
+Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T11-01-52-449Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 11h28m3s.
     at classifyGoogleError (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/googleQuotaErrors.js:136:28)
     at retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:130:37)
     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
@@ -17,9 +17,9 @@ Error when talking to Gemini API Full report available at: /tmp/gemini-client-er
     at async main (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/gemini.js:458:9) {
   cause: {
     code: 429,
-    message: 'You have exhausted your capacity on this model. Your quota will reset after 11h54m54s.',
+    message: 'You have exhausted your capacity on this model. Your quota will reset after 11h28m3s.',
     details: [ [Object], [Object] ]
   },
-  retryDelayMs: 42894102.052245
+  retryDelayMs: 41283597.253947996
 }
 An unexpected critical error occurred:[object Object]

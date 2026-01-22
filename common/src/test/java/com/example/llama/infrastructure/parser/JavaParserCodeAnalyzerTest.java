@@ -47,4 +47,13 @@ class JavaParserCodeAnalyzerTest {
         Intelligence intel = analyzer.extractIntelligence(code, "AppConfig.java");
         assertThat(intel.type()).isEqualTo(Intelligence.ComponentType.CONFIGURATION);
     }
+
+    @Test
+    @DisplayName("Should extract superclass and interfaces")
+    void extractHierarchy() {
+        String code = "public class MyService extends BaseService implements Interface1, Interface2 {}";
+        Intelligence intel = analyzer.extractIntelligence(code, "MyService.java");
+        assertThat(intel.superClass()).isEqualTo("BaseService");
+        assertThat(intel.interfaces()).containsExactly("Interface1", "Interface2");
+    }
 }

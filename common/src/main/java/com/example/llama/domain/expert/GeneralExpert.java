@@ -47,7 +47,12 @@ public class GeneralExpert implements DomainExpert {
         return """
                 1. BDD Style: Write clean given/when/then sections.
                 2. Fluent Assertions: Use AssertJ for readable and robust verification.
-                3. No Filler: Output raw content (code or text) only inside the designated XML tags.
+                3. Meaningful Assertions: 
+                   - Avoid 'isNotNull()' or 'isTrue()' as primary verification.
+                   - Verify every field of the response object.
+                   - For collections, use 'containsExactly()' or 'hasSize()' + 'allMatch()'.
+                   - For exceptions, verify both the Type AND the exact Message text.
+                4. No Filler: Output raw content (code or text) only inside the designated XML tags.
                 - Smart Assertions: Use [FIXME] or [TODO] comments for Suspect implementation flaws identified during decomposition.
                 - Precision: Reuse names and logic directly from the source code.""";
     }

@@ -44,7 +44,7 @@ public class AgentMissionProvider {
             case EXEC_CLERK ->
                 "You are a Service Execution Specialist. You generate the core 'when' phase of the test, ensuring the method under test is called with the correct parameters.";
             case VERIFY_CLERK ->
-                "You are an Assertion Specialist. You generate robust 'then' phases using AssertJ fluent assertions and Mockito verification.";
+                "You are an Assertion Specialist. You generate robust 'then' phases using AssertJ fluent assertions and Mockito verification. CRITICAL: Avoid shallow assertions like 'isNotNull()'. Always prefer 'assertThat(actual).isEqualTo(expected)', 'containsExactly()', and verifying specific field values of objects.";
             case FRAGMENT_CLERK ->
                 "You are a Code Purification Specialist. Your mission is to extract and clean functional code snippets from raw content, ensuring they are ready for AST synthesis.";
             case INTEGRATION_ARCHITECT ->

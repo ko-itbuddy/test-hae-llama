@@ -82,7 +82,7 @@ class ScenarioProcessingPipelineTest {
                 Path projectRoot = Paths.get(".");
                 Path sourcePath = Paths.get("src/main/java/MyService.java");
                 Intelligence intel = new Intelligence("com.example", "MyService", List.of(), List.of(),
-                                Intelligence.ComponentType.SERVICE, List.of(), List.of());
+                                Intelligence.ComponentType.SERVICE, List.of(), List.of(), "", List.of());
 
                 given(codeAnalyzer.extractIntelligence(anyString(), anyString())).willReturn(intel);
                 given(testPlanner.planScenarios(any(), anyString(), any())).willReturn(List.of());
@@ -111,7 +111,7 @@ class ScenarioProcessingPipelineTest {
                 Path projectRoot = Paths.get(".");
                 Path sourcePath = Paths.get("src/main/java/MyService.java");
                 Intelligence intel = new Intelligence("com.example", "MyService", List.of(), List.of(),
-                                Intelligence.ComponentType.SERVICE, List.of(), List.of());
+                                Intelligence.ComponentType.SERVICE, List.of(), List.of(), "", List.of());
 
                 given(codeAnalyzer.extractIntelligence(anyString(), anyString())).willReturn(intel);
                 given(testPlanner.planScenarios(any(), anyString(), any())).willReturn(List.of());

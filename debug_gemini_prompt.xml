@@ -2,7 +2,7 @@
 <system_instructions>
 <persona>
       <role>REPAIR_AGENT Specialist</role>
-      <domain>SERVICE</domain>
+      <domain>CONTROLLER</domain>
       <mission><![CDATA[
   Execute specialized technical duties with artisan-level precision.
       SPECIALIZED MISSION: MISSION: Analyze [ERROR_LOG] and fix the [BROKEN_TEST_CODE].
@@ -49,7 +49,7 @@
       SPECIFIC RULE: Keep existing tests.
       ]]></critical_policy>
       <repair_protocol><![CDATA[
-  Repair using strict SERVICE standards and valid Java syntax.
+  Repair using strict CONTROLLER standards and valid Java syntax.
       ]]></repair_protocol>
   </persona>
   <format_standard><![CDATA[
@@ -89,31 +89,130 @@ No library info provided.
             ]]></ref_class_structure>
             <ref_methods><![CDATA[
         BROKEN_TEST_CODE:
-                package com.example.demo;
+                package com.example.demo.presentation;
                 
-                // Error: YOLO mode is enabled. All tool calls will be automatically approved.
-                YOLO mode is enabled. All tool calls will be automatically approved.
-                (node:16172) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
-                (Use `node --trace-warnings ...` to show where the warning was created)
-                Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T10-34-32-872Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 11h55m23s.
-                    at classifyGoogleError (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/googleQuotaErrors.js:136:28)
-                    at retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:130:37)
-                    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
-                    at async GeminiChat.makeApiCallAndProcessStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:429:32)
-                    at async GeminiChat.streamWithRetries (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/geminiChat.js:254:40)
-                    at async Turn.run (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/turn.js:64:30)
-                    at async GeminiClient.processTurn (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:457:26)
-                    at async GeminiClient.sendMessageStream (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/core/client.js:553:20)
-                    at async file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/nonInteractiveCli.js:192:34
-                    at async main (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/gemini.js:458:9) {
-                  cause: {
-                    code: 429,
-                    message: 'You have exhausted your capacity on this model. Your quota will reset after 11h55m23s.',
-                    details: [ [Object], [Object] ]
-                  },
-                  retryDelayMs: 42923217.082425
+                import com.example.demo.service.ProductService;
+                import com.fasterxml.jackson.databind.ObjectMapper;
+                import org.junit.jupiter.api.BeforeEach;
+                import org.junit.jupiter.api.DisplayName;
+                import org.springframework.beans.factory.annotation.Autowired;
+                import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
+                import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+                import org.springframework.boot.test.mock.mockito.MockBean;
+                import org.springframework.test.web.servlet.MockMvc;
+                import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+                import org.junit.jupiter.params.provider.CsvSource;
+                import static org.assertj.core.api.Assertions.assertThatThrownBy;
+                import static org.mockito.ArgumentMatchers.eq;
+                import org.mockito.Mock;
+                import org.junit.jupiter.api.Nested;
+                import static org.mockito.ArgumentMatchers.any;
+                import org.junit.jupiter.api.extension.ExtendWith;
+                import static org.mockito.BDDMockito.given;
+                import org.junit.jupiter.params.provider.ValueSource;
+                import org.mockito.InjectMocks;
+                import org.mockito.junit.jupiter.MockitoExtension;
+                import static org.mockito.Mockito.verify;
+                import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+                import org.junit.jupiter.api.Test;
+                import static org.assertj.core.api.Assertions.assertThat;
+                import org.junit.jupiter.params.ParameterizedTest;
+                import org.junit.jupiter.params.provider.NullSource;
+                
+                /**
+                 * ProductController API 단위 테스트
+                 * - MockMvc를 이용한 컨트롤러 레이어 슬라이스 테스트
+                 * - Spring REST Docs를 통한 API 문서화 자동화
+                 */
+                @WebMvcTest(ProductController.class)
+                @AutoConfigureRestDocs
+                @DisplayName("ProductController WebMvc 테스트")
+                class ProductControllerTest {
+                
+                    @Autowired
+                    protected MockMvc mockMvc;
+                
+                    @Autowired
+                    protected ObjectMapper objectMapper;
+                
+                    @MockBean
+                    protected ProductService productService;
+                
+                    @BeforeEach
+                    void setUp() {
+                        // 테스트 수행 전 공통 초기화 로직이 필요한 경우 여기에 작성합니다.
+                    }
+                
+                
+                @Nested
+                @DisplayName("getAllProducts 메서드는")
+                class Describe_getAllProducts {
+                
+                    @Test
+                    @DisplayName("등록된 모든 상품 목록을 조회하면 200 OK와 상품 리스트를 반환한다")
+                    void it_returns_all_products_with_200_ok() throws Exception {
+                        // given
+                        List<ProductResponse> products = List.of(ProductResponse.builder().id(1L).name("테스트 상품 A").price(new BigDecimal("15000")).stockQuantity(100L).build(), ProductResponse.builder().id(2L).name("테스트 상품 B").price(new BigDecimal("25000")).stockQuantity(50L).build());
+                        given(productService.getAllProducts()).willReturn(products);
+                        // when
+                        var response = mockMvc.perform(get("/api/products").accept(MediaType.APPLICATION_JSON));
+                        // then
+                        response.andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(2)).andExpect(jsonPath("$[0].id").value(1L)).andExpect(jsonPath("$[0].name").value("테스트 상품 A")).andExpect(jsonPath("$[0].price").value(15000)).andExpect(jsonPath("$[1].id").value(2L)).andExpect(jsonPath("$[1].name").value("테스트 상품 B")).andDo(document("product/get-all-success", responseFields(fieldWithPath("[]").description("상품 목록"), fieldWithPath("[].id").description("상품 ID"), fieldWithPath("[].name").description("상품명"), fieldWithPath("[].price").description("가격"), fieldWithPath("[].stockQuantity").description("재고 수량"))));
+                    }
+                
+                    @Test
+                    @DisplayName("등록된 상품이 없는 경우 200 OK와 빈 리스트를 반환한다")
+                    void it_returns_empty_list_with_200_ok() throws Exception {
+                        // given
+                        given(productService.getAllProducts()).willReturn(List.of());
+                        // when
+                        var response = mockMvc.perform(get("/api/products").accept(MediaType.APPLICATION_JSON));
+                        // then
+                        response.andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(0)).andDo(document("product/get-all-empty"));
+                    }
                 }
-                An unexpected critical error occurred:[object Object]
+                
+                @Nested
+                @DisplayName("getDiscountedPriceInUsd 메서드는")
+                class Describe_getDiscountedPriceInUsd {
+                
+                    @Nested
+                    @DisplayName("존재하는 상품 ID가 주어지면")
+                    class Context_with_existing_id {
+                
+                        @ParameterizedTest
+                        @ValueSource(longs = { 1L, 100L })
+                        @DisplayName("할인된 USD 가격과 200 OK를 반환한다")
+                        void it_returns_discounted_price_and_200_ok(Long id) throws Exception {
+                            // given
+                            BigDecimal expectedPrice = new BigDecimal("120.50");
+                            given(productService.getDiscountedPriceInUsd(id)).willReturn(expectedPrice);
+                            // when
+                            var result = mockMvc.perform(get("/api/products/{id}/price/usd", id).contentType(MediaType.APPLICATION_JSON));
+                            // then
+                            result.andExpect(status().isOk()).andExpect(jsonPath("$").value(expectedPrice.doubleValue())).andDo(document("products/get-discounted-price-success", preprocessResponse(prettyPrint()), pathParameters(parameterWithName("id").description("상품 ID"))));
+                        }
+                    }
+                
+                    @Nested
+                    @DisplayName("존재하지 않는 상품 ID가 주어지면")
+                    class Context_with_non_existing_id {
+                
+                        @Test
+                        @DisplayName("404 Not Found를 반환한다")
+                        void it_returns_404_not_found() throws Exception {
+                            // given
+                            Long id = 999L;
+                            given(productService.getDiscountedPriceInUsd(id)).willThrow(new ProductNotFoundException(id));
+                            // when
+                            var result = mockMvc.perform(get("/api/products/{id}/price/usd", id).contentType(MediaType.APPLICATION_JSON));
+                            // then
+                            result.andExpect(status().isNotFound()).andDo(document("products/get-discounted-price-not-found", preprocessResponse(prettyPrint()), pathParameters(parameterWithName("id").description("상품 ID"))));
+                        }
+                    }
+                }
+                
+                }
                 
                 ERROR_LOG:
                 > Task :compileJava UP-TO-DATE
@@ -227,11 +326,11 @@ No library info provided.
                 (Use `node --trace-warnings ...` to show where the warning was created)
                                                ^
                 /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloServiceTest.java:20: error: unclosed character literal
-                    message: 'You have exhausted your capacity on this model. Your quota will reset after 11h55m23s.',
+                    message: 'You have exhausted your capacity on this model. Your quota will reset after 11h28m3s.',
                              ^
                 /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloServiceTest.java:20: error: unclosed character literal
-                    message: 'You have exhausted your capacity on this model. Your quota will reset after 11h55m23s.',
-                                                                                                                    ^
+                    message: 'You have exhausted your capacity on this model. Your quota will reset after 11h28m3s.',
+                                                                                                                   ^
                 /root/test-hae-llama/sample-projects/demo-app/src/test/java/HelloServiceTest.java:2: error: class, interface, enum, or record expected
                 YOLO mode is enabled. All tool calls will be automatically approved.
                 ^

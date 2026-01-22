@@ -108,7 +108,7 @@ class AbstractPipelineOrchestratorTest {
         orchestrator.repair(broken, errorLog, sourceCode, sourcePath);
 
         // Then
-        verify(repairService).selfHeal(eq(broken), anyString(), eq(3));
+        verify(repairService).repair(eq(broken), eq(errorLog), any());
     }
 
     @Test
@@ -127,7 +127,7 @@ class AbstractPipelineOrchestratorTest {
 
         // Prepare Intelligence with Import
         Intelligence intel = new Intelligence("com.test", "TargetService", List.of(), List.of("method()"),
-                Intelligence.ComponentType.SERVICE, List.of("import com.test.RelatedDto;"), List.of());
+                Intelligence.ComponentType.SERVICE, List.of("import com.test.RelatedDto;"), List.of(), "", List.of());
 
         given(codeAnalyzer.extractIntelligence(any(), any())).willReturn(intel);
         // Stub securityMasker to return the original sourceCode

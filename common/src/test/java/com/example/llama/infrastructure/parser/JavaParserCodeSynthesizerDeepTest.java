@@ -35,7 +35,7 @@ class JavaParserCodeSynthesizerDeepTest {
                                 List.of(), List.of(),
                                 Intelligence.ComponentType.SERVICE,
                                 originalImports,
-                                List.of());
+                                List.of(), "", List.of());
                 GeneratedCode fragment = new GeneratedCode(Set.of(), "public void testMethod() {}");
 
                 // when
@@ -54,7 +54,7 @@ class JavaParserCodeSynthesizerDeepTest {
                 // given
                 Intelligence intel = new Intelligence(
                                 "com.test", "Calc", List.of(), List.of(),
-                                Intelligence.ComponentType.SERVICE, List.of(), List.of());
+                                Intelligence.ComponentType.SERVICE, List.of(), List.of(), "", List.of());
                 GeneratedCode setupFragment = new GeneratedCode(Set.of(),
                                 "@BeforeEach void setUp() { System.out.println(\"setup\"); }");
                 GeneratedCode testFragment1 = new GeneratedCode(Set.of(), "@Test void test1() { }");

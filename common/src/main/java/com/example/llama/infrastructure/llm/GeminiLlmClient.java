@@ -60,11 +60,11 @@ public class GeminiLlmClient implements LlmClient {
                 output = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             }
 
-            // Wait for process to complete with a 5-minute timeout
-            boolean finished = process.waitFor(5, java.util.concurrent.TimeUnit.MINUTES);
+            // Wait for process to complete with a 10-minute timeout
+            boolean finished = process.waitFor(10, java.util.concurrent.TimeUnit.MINUTES);
             if (!finished) {
                 process.destroyForcibly();
-                log.error("❌ Gemini CLI Timed out after 5 minutes.");
+                log.error("❌ Gemini CLI Timed out after 10 minutes.");
                 return "<response><status>FAILED</status><thought>Gemini CLI timed out.</thought><code>// Error: Timeout</code></response>";
             }
 

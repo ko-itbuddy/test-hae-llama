@@ -77,6 +77,20 @@ public class JavaParserCodeAnalyzer implements CodeAnalyzer {
                                 .collect(Collectors.toList()))
                         .orElse(java.util.Collections.emptyList()));
 
+        // Extract hierarchy info
+        String superClass = cu.findAll(ClassOrInterfaceDeclaration.class).stream()
+                .findFirst()
+                .flatMap(c -> c.getExtendedTypes().stream().findFirst())
+                .map(t -> t.getNameAsString())
+                .orElse("");
+
+        List<String> interfaces = cu.findAll(ClassOrInterfaceDeclaration.class).stream()
+                .findFirst()
+                .map(c -> c.getImplementedTypes().stream()
+                        .map(t -> t.getNameAsString())
+                        .collect(Collectors.toList()))
+                .orElse(java.util.Collections.emptyList());
+
         return new Intelligence(
                 packageName,
                 className,
@@ -84,7 +98,9 @@ public class JavaParserCodeAnalyzer implements CodeAnalyzer {
                 methods,
                 detectType(cu, filePath),
                 imports,
-                annotations);
+                annotations,
+                superClass,
+                interfaces);
     }
 
     private Intelligence.ComponentType detectType(CompilationUnit cu, String filePath) {

@@ -8,17 +8,17 @@
 
  :: Spring Boot ::                (v3.4.1)
 
-2026-01-22T10:16:33.373Z  INFO 10404 --- [           main] com.example.llama.LlamaApplication       : Starting LlamaApplication v0.0.1-SNAPSHOT using Java 21.0.9 with PID 10404 (/root/test-hae-llama/common/build/libs/common-0.0.1-SNAPSHOT-boot.jar started by root in /root/test-hae-llama)
-2026-01-22T10:16:33.376Z  INFO 10404 --- [           main] com.example.llama.LlamaApplication       : No active profile set, falling back to 1 default profile: "default"
-2026-01-22T10:16:34.631Z  INFO 10404 --- [           main] c.e.l.i.io.InteractionLogger             : 📝 Interaction Log started: /root/test-hae-llama/.test-hea-llama/logs/llama_interaction_20260122_101634.log
-2026-01-22T10:16:34.954Z  WARN 10404 --- [           main] org.jline                                : Unable to create a system terminal, creating a dumb terminal (enable debug logging for more information)
-2026-01-22T10:16:35.260Z  INFO 10404 --- [           main] com.example.llama.LlamaApplication       : Started LlamaApplication in 2.671 seconds (process running for 3.604)
-2026-01-22T10:16:35.501Z  INFO 10404 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🎼 Orchestrator [ServiceOrchestrator] conducting: HelloService.java
-2026-01-22T10:16:35.502Z  INFO 10404 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🔍 [Phase 1] Analyzing Source Code Metadata...
-2026-01-22T10:16:35.653Z  INFO 10404 --- [           main] c.e.l.i.a.SimpleDependencyAnalyzer       : 📊 Analyzing dependencies for project at: /root/test-hae-llama/sample-projects/demo-app
-2026-01-22T10:16:35.654Z  INFO 10404 --- [           main] c.e.l.i.a.SimpleDependencyAnalyzer       : 🐘 Gradle project detected. Using gradlew at: /root/test-hae-llama/sample-projects/demo-app/gradlew
-2026-01-22T10:16:37.871Z  INFO 10404 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🏗️ [Phase 2] Generating Global Test Setup...
-2026-01-22T10:16:37.896Z  INFO 10404 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CODER] Acting on instruction (XML Prompt)...
+2026-01-22T10:55:46.082Z  INFO 30848 --- [           main] com.example.llama.LlamaApplication       : Starting LlamaApplication v0.0.1-SNAPSHOT using Java 21.0.9 with PID 30848 (/root/test-hae-llama/common/build/libs/common-0.0.1-SNAPSHOT-boot.jar started by root in /root/test-hae-llama)
+2026-01-22T10:55:46.086Z  INFO 30848 --- [           main] com.example.llama.LlamaApplication       : No active profile set, falling back to 1 default profile: "default"
+2026-01-22T10:55:47.366Z  INFO 30848 --- [           main] c.e.l.i.io.InteractionLogger             : 📝 Interaction Log started: /root/test-hae-llama/.test-hea-llama/logs/llama_interaction_20260122_105547.log
+2026-01-22T10:55:47.701Z  WARN 30848 --- [           main] org.jline                                : Unable to create a system terminal, creating a dumb terminal (enable debug logging for more information)
+2026-01-22T10:55:48.037Z  INFO 30848 --- [           main] com.example.llama.LlamaApplication       : Started LlamaApplication in 2.733 seconds (process running for 3.658)
+2026-01-22T10:55:48.262Z  INFO 30848 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🎼 Orchestrator [ServiceOrchestrator] conducting: HelloService.java
+2026-01-22T10:55:48.262Z  INFO 30848 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🔍 [Phase 1] Analyzing Source Code Metadata...
+2026-01-22T10:55:48.428Z  INFO 30848 --- [           main] c.e.l.i.a.SimpleDependencyAnalyzer       : 📊 Analyzing dependencies for project at: /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T10:55:48.428Z  INFO 30848 --- [           main] c.e.l.i.a.SimpleDependencyAnalyzer       : 🐘 Gradle project detected. Using gradlew at: /root/test-hae-llama/sample-projects/demo-app/gradlew
+2026-01-22T10:55:55.207Z  INFO 30848 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🏗️ [Phase 2] Generating Global Test Setup...
+2026-01-22T10:55:55.230Z  INFO 30848 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CODER] Acting on instruction (XML Prompt)...
 
 ============================== [AUDIT LOG: CODER] ==============================
 [MISSION]
@@ -38,10 +38,10 @@ PROMPT
       3. CRITICAL: Response MUST use strict XML format: <response><status>...</st...(truncated)
 ================================================================================
 
-2026-01-22T10:16:37.899Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
-2026-01-22T10:16:37.899Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 5187 chars
-2026-01-22T10:16:37.899Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
-2026-01-22T10:16:37.903Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+2026-01-22T10:55:55.235Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T10:55:55.235Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 5187 chars
+2026-01-22T10:55:55.235Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T10:55:55.236Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
 
 ============================== [AUDIT LOG: CODER] ==============================
 [MISSION]
@@ -54,10 +54,10 @@ Loading extension: conductor
 Loading extension: exa-mcp-server
 Server 'exa' supports tool updates. Listening for changes...
 Server 'exa' supports resource updates. Listening for changes...
-(node:10550) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10...(truncated)
+(node:30944) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10...(truncated)
 ================================================================================
 
-2026-01-22T10:17:27.133Z  INFO 10404 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : --> Setup Complete:
+2026-01-22T10:56:51.302Z  INFO 30848 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : --> Setup Complete:
 package com.example.demo;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -65,9 +65,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.junit.jupiter.MockitoExtension;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * HelloService의 비즈니스 로직을 검증하기 위한 단위 테스트 클래스입니다.
+ * HelloService의 비즈니스 로직을 검증하기 위한 순수 단위 테스트 클래스입니다.
  */
 @ExtendWith(MockitoExtension.class)
 @DisplayName("HelloService 단위 테스트")
@@ -78,13 +79,13 @@ class HelloServiceTest {
 
     @BeforeEach
     void setUp() {
-        // 각 테스트 실행 전 필요한 공통 초기화 로직을 정의합니다.
+        // 테스트 초기 상태 정의
     }
 }
-2026-01-22T10:17:27.133Z  INFO 10404 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🔄 [Phase 3] Iterating Methods...
-2026-01-22T10:17:27.133Z  INFO 10404 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [greet]
-2026-01-22T10:17:27.137Z  INFO 10404 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 294 characters
-2026-01-22T10:17:27.138Z  INFO 10404 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CODER] Acting on instruction (XML Prompt)...
+2026-01-22T10:56:51.302Z  INFO 30848 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🔄 [Phase 3] Iterating Methods...
+2026-01-22T10:56:51.302Z  INFO 30848 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [greet]
+2026-01-22T10:56:51.307Z  INFO 30848 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 294 characters
+2026-01-22T10:56:51.307Z  INFO 30848 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CODER] Acting on instruction (XML Prompt)...
 
 ============================== [AUDIT LOG: CODER] ==============================
 [MISSION]
@@ -104,50 +105,28 @@ PROMPT
       3. CRITICAL: Response MUST use strict XML format: <response><status>...</st...(truncated)
 ================================================================================
 
-2026-01-22T10:17:27.138Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
-2026-01-22T10:17:27.138Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 5992 chars
-2026-01-22T10:17:27.138Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
-2026-01-22T10:17:27.140Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
-2026-01-22T10:18:30.140Z ERROR 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): YOLO mode is enabled. All tool calls will be automatically approved.
-Loaded cached credentials.
-YOLO mode is enabled. All tool calls will be automatically approved.
-Loading extension: conductor
-Loading extension: exa-mcp-server
-Server 'exa' supports tool updates. Listening for changes...
-Server 'exa' supports resource updates. Listening for changes...
-(node:11107) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
-(Use `node --trace-warnings ...` to show where the warning was created)
-I will read the existing test file to identify the current setup and ensure I don't repeat class-level configurations while generating the `greet` method tests.
-I will check the directory contents to confirm if the test file exists and if I need to create it or just append the methods.
-I will read the existing content of `HelloServiceTest.java` to understand its structure and ensure the new test methods integrate seamlessly.
-Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T10-18-30-090Z.json Error: read ECONNABORTED
-    at TLSWrap.onStreamRead (node:internal/stream_base_commons:218:20)
-    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17) {
-  errno: -103,
-  code: 'ECONNABORTED',
-  syscall: 'read'
-}
-An unexpected critical error occurred:[object Object]
-
+2026-01-22T10:56:51.308Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T10:56:51.308Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 5992 chars
+2026-01-22T10:56:51.308Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T10:56:51.309Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
 
 ============================== [AUDIT LOG: CODER] ==============================
 [MISSION]
 RESPONSE
 [RESPONSE]
-<response><status>FAILED</status><thought>Gemini CLI execution failed.</thought><code>// Error: YOLO mode is enabled. All tool calls will be automatically approved.
+YOLO mode is enabled. All tool calls will be automatically approved.
 Loaded cached credentials.
 YOLO mode is enabled. All tool calls will be automatically approved.
 Loading extension: conductor
 Loading extension: exa-mcp-server
 Server 'exa' supports tool updates. Listening for changes...
 Server 'exa' supports resource updates. Listening for changes...
-(node:11107) MaxListenersExceededWarning: Possible...(truncated)
+(node:31638) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10...(truncated)
 ================================================================================
 
-2026-01-22T10:18:30.145Z  WARN 10404 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : Method generation FAILED for [greet]. Skipping this method.
-2026-01-22T10:18:30.145Z  INFO 10404 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [calculateAge]
-2026-01-22T10:18:30.149Z  INFO 10404 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 218 characters
-2026-01-22T10:18:30.149Z  INFO 10404 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CODER] Acting on instruction (XML Prompt)...
+2026-01-22T10:58:02.139Z  INFO 30848 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :    -> Generating tests for method: [calculateAge]
+2026-01-22T10:58:02.143Z  INFO 30848 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   :       Extracted Source Size: 218 characters
+2026-01-22T10:58:02.143Z  INFO 30848 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: CODER] Acting on instruction (XML Prompt)...
 
 ============================== [AUDIT LOG: CODER] ==============================
 [MISSION]
@@ -167,10 +146,10 @@ PROMPT
       3. CRITICAL: Response MUST use strict XML format: <response><status>...</st...(truncated)
 ================================================================================
 
-2026-01-22T10:18:30.150Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
-2026-01-22T10:18:30.150Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 5906 chars
-2026-01-22T10:18:30.150Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
-2026-01-22T10:18:30.150Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+2026-01-22T10:58:02.144Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T10:58:02.144Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 5906 chars
+2026-01-22T10:58:02.144Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T10:58:02.145Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
 
 ============================== [AUDIT LOG: CODER] ==============================
 [MISSION]
@@ -183,21 +162,21 @@ Loading extension: conductor
 Loading extension: exa-mcp-server
 Server 'exa' supports tool updates. Listening for changes...
 Server 'exa' supports resource updates. Listening for changes...
-(node:11701) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10...(truncated)
+(node:32466) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10...(truncated)
 ================================================================================
 
-2026-01-22T10:19:39.049Z  INFO 10404 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🧩 [Phase 4] Assembling Code...
-2026-01-22T10:19:39.063Z  INFO 10404 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloServiceTest.java
-2026-01-22T10:19:39.064Z  INFO 10404 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.HelloServiceTest in /root/test-hae-llama/sample-projects/demo-app
-2026-01-22T10:19:54.498Z  INFO 10404 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
-2026-01-22T10:19:54.499Z  WARN 10404 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 1/3). Initiating Repair...
-2026-01-22T10:19:54.504Z  WARN 10404 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
+2026-01-22T10:59:17.237Z  INFO 30848 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🧩 [Phase 4] Assembling Code...
+2026-01-22T10:59:17.256Z  INFO 30848 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloServiceTest.java
+2026-01-22T10:59:17.257Z  INFO 30848 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.HelloServiceTest in /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T10:59:26.487Z  INFO 30848 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
+2026-01-22T10:59:26.488Z  WARN 30848 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 1/3). Initiating Repair...
+2026-01-22T10:59:26.493Z  WARN 30848 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
 > Task :processResources NO-SOURCE
 > Task :classes UP-TO-DATE
 
 > Task :compileTestJava FAILED
-2026-01-22T10:19:54.505Z  INFO 10404 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: HelloService.java
-2026-01-22T10:19:54.506Z  INFO 10404 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: REPAIR_AGENT] Acting on instruction (XML Prompt)...
+2026-01-22T10:59:26.493Z  INFO 30848 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: HelloService.java
+2026-01-22T10:59:26.494Z  INFO 30848 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: REPAIR_AGENT] Acting on instruction (XML Prompt)...
 
 ============================== [AUDIT LOG: REPAIR_AGENT] ==============================
 [MISSION]
@@ -216,20 +195,20 @@ PROMPT
       2. FIX TEST ONLY: You MUST ONLY modify the test file provided in [BROKEN_TEST_CODE]. NEVER modify source code en...(truncated)
 ================================================================================
 
-2026-01-22T10:19:54.511Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
-2026-01-22T10:19:54.511Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 10340 chars
-2026-01-22T10:19:54.511Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
-2026-01-22T10:19:54.512Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
-2026-01-22T10:20:25.117Z ERROR 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): YOLO mode is enabled. All tool calls will be automatically approved.
+2026-01-22T10:59:26.502Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T10:59:26.502Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 27286 chars
+2026-01-22T10:59:26.502Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T10:59:26.505Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+2026-01-22T11:00:16.677Z ERROR 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): YOLO mode is enabled. All tool calls will be automatically approved.
 Loaded cached credentials.
 YOLO mode is enabled. All tool calls will be automatically approved.
 Loading extension: conductor
 Loading extension: exa-mcp-server
 Server 'exa' supports tool updates. Listening for changes...
 Server 'exa' supports resource updates. Listening for changes...
-(node:12112) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(node:32682) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
 (Use `node --trace-warnings ...` to show where the warning was created)
-Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T10-20-25-067Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 12h9m31s.
+Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T11-00-16-630Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 11h29m39s.
     at classifyGoogleError (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/googleQuotaErrors.js:136:28)
     at retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:130:37)
     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
@@ -242,10 +221,10 @@ Error when talking to Gemini API Full report available at: /tmp/gemini-client-er
     at async main (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/gemini.js:458:9) {
   cause: {
     code: 429,
-    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h9m31s.',
+    message: 'You have exhausted your capacity on this model. Your quota will reset after 11h29m39s.',
     details: [ [Object], [Object] ]
   },
-  retryDelayMs: 43771390.342689
+  retryDelayMs: 41379819.304913
 }
 An unexpected critical error occurred:[object Object]
 
@@ -261,21 +240,20 @@ Loading extension: conductor
 Loading extension: exa-mcp-server
 Server 'exa' supports tool updates. Listening for changes...
 Server 'exa' supports resource updates. Listening for changes...
-(node:12112) MaxListenersExceededWarning: Possible...(truncated)
+(node:32682) MaxListenersExceededWarning: Possible...(truncated)
 ================================================================================
 
-2026-01-22T10:20:25.122Z  WARN 10404 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ⚠️ Repair produced blank class name. Using expected class name: HelloServiceTest
-2026-01-22T10:20:25.126Z  INFO 10404 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/HelloServiceTest.java
-2026-01-22T10:20:25.127Z  INFO 10404 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: . in /root/test-hae-llama/sample-projects/demo-app
-2026-01-22T10:20:34.811Z  INFO 10404 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
-2026-01-22T10:20:34.811Z  WARN 10404 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 2/3). Initiating Repair...
-2026-01-22T10:20:34.811Z  WARN 10404 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
+2026-01-22T11:00:16.686Z  INFO 30848 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloServiceTest.java
+2026-01-22T11:00:16.686Z  INFO 30848 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.HelloServiceTest in /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T11:00:27.383Z  INFO 30848 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
+2026-01-22T11:00:27.383Z  WARN 30848 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 2/3). Initiating Repair...
+2026-01-22T11:00:27.384Z  WARN 30848 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
 > Task :processResources NO-SOURCE
 > Task :classes UP-TO-DATE
 
 > Task :compileTestJava FAILED
-2026-01-22T10:20:34.811Z  INFO 10404 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: HelloService.java
-2026-01-22T10:20:34.813Z  INFO 10404 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: REPAIR_AGENT] Acting on instruction (XML Prompt)...
+2026-01-22T11:00:27.384Z  INFO 30848 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: HelloService.java
+2026-01-22T11:00:27.385Z  INFO 30848 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: REPAIR_AGENT] Acting on instruction (XML Prompt)...
 
 ============================== [AUDIT LOG: REPAIR_AGENT] ==============================
 [MISSION]
@@ -294,20 +272,20 @@ PROMPT
       2. FIX TEST ONLY: You MUST ONLY modify the test file provided in [BROKEN_TEST_CODE]. NEVER modify source code en...(truncated)
 ================================================================================
 
-2026-01-22T10:20:34.815Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
-2026-01-22T10:20:34.815Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 10509 chars
-2026-01-22T10:20:34.815Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
-2026-01-22T10:20:34.816Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
-2026-01-22T10:21:17.019Z ERROR 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): YOLO mode is enabled. All tool calls will be automatically approved.
+2026-01-22T11:00:27.387Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T11:00:27.387Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 26373 chars
+2026-01-22T11:00:27.387Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T11:00:27.388Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+2026-01-22T11:00:55.382Z ERROR 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): YOLO mode is enabled. All tool calls will be automatically approved.
 Loaded cached credentials.
 YOLO mode is enabled. All tool calls will be automatically approved.
 Loading extension: conductor
 Loading extension: exa-mcp-server
 Server 'exa' supports tool updates. Listening for changes...
 Server 'exa' supports resource updates. Listening for changes...
-(node:12301) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(node:602) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
 (Use `node --trace-warnings ...` to show where the warning was created)
-Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T10-21-16-952Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 12h8m39s.
+Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T11-00-55-324Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 11h29m0s.
     at classifyGoogleError (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/googleQuotaErrors.js:136:28)
     at retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:130:37)
     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
@@ -320,10 +298,10 @@ Error when talking to Gemini API Full report available at: /tmp/gemini-client-er
     at async main (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/gemini.js:458:9) {
   cause: {
     code: 429,
-    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h8m39s.',
+    message: 'You have exhausted your capacity on this model. Your quota will reset after 11h29m0s.',
     details: [ [Object], [Object] ]
   },
-  retryDelayMs: 43719328.688451
+  retryDelayMs: 41340844.614222
 }
 An unexpected critical error occurred:[object Object]
 
@@ -339,21 +317,20 @@ Loading extension: conductor
 Loading extension: exa-mcp-server
 Server 'exa' supports tool updates. Listening for changes...
 Server 'exa' supports resource updates. Listening for changes...
-(node:12301) MaxListenersExceededWarning: Possible...(truncated)
+(node:602) MaxListenersExceededWarning: Possible E...(truncated)
 ================================================================================
 
-2026-01-22T10:21:17.028Z  WARN 10404 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ⚠️ Repair produced blank class name. Using expected class name: HelloServiceTest
-2026-01-22T10:21:17.030Z  INFO 10404 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/HelloServiceTest.java
-2026-01-22T10:21:17.030Z  INFO 10404 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: . in /root/test-hae-llama/sample-projects/demo-app
-2026-01-22T10:21:20.851Z  INFO 10404 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
-2026-01-22T10:21:20.852Z  WARN 10404 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 3/3). Initiating Repair...
-2026-01-22T10:21:20.853Z  WARN 10404 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
+2026-01-22T11:00:55.389Z  INFO 30848 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloServiceTest.java
+2026-01-22T11:00:55.389Z  INFO 30848 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : 🚀 Executing test: com.example.demo.HelloServiceTest in /root/test-hae-llama/sample-projects/demo-app
+2026-01-22T11:00:59.226Z  INFO 30848 --- [           main] c.e.l.i.e.GradleProcessTestRunner        : Test execution finished. Success: false
+2026-01-22T11:00:59.227Z  WARN 30848 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ❌ Test Verification Failed (Attempt 3/3). Initiating Repair...
+2026-01-22T11:00:59.227Z  WARN 30848 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : Error Sample: > Task :compileJava UP-TO-DATE
 > Task :processResources NO-SOURCE
 > Task :classes UP-TO-DATE
 
 > Task :compileTestJava FAILED
-2026-01-22T10:21:20.853Z  INFO 10404 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: HelloService.java
-2026-01-22T10:21:20.854Z  INFO 10404 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: REPAIR_AGENT] Acting on instruction (XML Prompt)...
+2026-01-22T11:00:59.227Z  INFO 30848 --- [           main] c.e.l.a.o.AbstractPipelineOrchestrator   : 🚑 [Phase 5] Auto-Repairing: HelloService.java
+2026-01-22T11:00:59.228Z  INFO 30848 --- [           main] c.e.l.domain.service.BureaucraticAgent   : [Agent: REPAIR_AGENT] Acting on instruction (XML Prompt)...
 
 ============================== [AUDIT LOG: REPAIR_AGENT] ==============================
 [MISSION]
@@ -372,20 +349,20 @@ PROMPT
       2. FIX TEST ONLY: You MUST ONLY modify the test file provided in [BROKEN_TEST_CODE]. NEVER modify source code en...(truncated)
 ================================================================================
 
-2026-01-22T10:21:20.856Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
-2026-01-22T10:21:20.856Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 10509 chars
-2026-01-22T10:21:20.856Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
-2026-01-22T10:21:20.856Z  INFO 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
-2026-01-22T10:22:17.012Z ERROR 10404 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): YOLO mode is enabled. All tool calls will be automatically approved.
+2026-01-22T11:00:59.229Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ======================================== [EXECUTING GEMINI CLI] ========================================
+2026-01-22T11:00:59.229Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : TOTAL PROMPT SIZE: 26366 chars
+2026-01-22T11:00:59.229Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ====================================================================================================
+2026-01-22T11:00:59.230Z  INFO 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : 💾 Saved debug prompt to: /root/test-hae-llama/debug_gemini_prompt.xml
+2026-01-22T11:01:52.506Z ERROR 30848 --- [           main] c.e.l.i.llm.GeminiLlmClient              : ❌ Gemini CLI Failed (Exit: 1): YOLO mode is enabled. All tool calls will be automatically approved.
 Loaded cached credentials.
 YOLO mode is enabled. All tool calls will be automatically approved.
 Loading extension: conductor
 Loading extension: exa-mcp-server
 Server 'exa' supports tool updates. Listening for changes...
 Server 'exa' supports resource updates. Listening for changes...
-(node:12503) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
+(node:807) MaxListenersExceededWarning: Possible EventTarget memory leak detected. 11 abort listeners added to [AbortSignal]. MaxListeners is 10. Use events.setMaxListeners() to increase limit
 (Use `node --trace-warnings ...` to show where the warning was created)
-Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T10-22-16-947Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 12h7m39s.
+Error when talking to Gemini API Full report available at: /tmp/gemini-client-error-Turn.run-sendMessageStream-2026-01-22T11-01-52-449Z.json TerminalQuotaError: You have exhausted your capacity on this model. Your quota will reset after 11h28m3s.
     at classifyGoogleError (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/googleQuotaErrors.js:136:28)
     at retryWithBackoff (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli-core/dist/src/utils/retry.js:130:37)
     at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
@@ -398,10 +375,10 @@ Error when talking to Gemini API Full report available at: /tmp/gemini-client-er
     at async main (file:///usr/local/share/.config/yarn/global/node_modules/@google/gemini-cli/dist/src/gemini.js:458:9) {
   cause: {
     code: 429,
-    message: 'You have exhausted your capacity on this model. Your quota will reset after 12h7m39s.',
+    message: 'You have exhausted your capacity on this model. Your quota will reset after 11h28m3s.',
     details: [ [Object], [Object] ]
   },
-  retryDelayMs: 43659211.350005
+  retryDelayMs: 41283597.253947996
 }
 An unexpected critical error occurred:[object Object]
 
@@ -417,9 +394,8 @@ Loading extension: conductor
 Loading extension: exa-mcp-server
 Server 'exa' supports tool updates. Listening for changes...
 Server 'exa' supports resource updates. Listening for changes...
-(node:12503) MaxListenersExceededWarning: Possible...(truncated)
+(node:807) MaxListenersExceededWarning: Possible E...(truncated)
 ================================================================================
 
-2026-01-22T10:22:17.017Z  WARN 10404 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : ⚠️ Repair produced blank class name. Using expected class name: HelloServiceTest
-2026-01-22T10:22:17.019Z  INFO 10404 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/HelloServiceTest.java
-2026-01-22T10:22:17.019Z  INFO 10404 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : 🏁 Test generation process complete for HelloService.java
+2026-01-22T11:01:52.513Z  INFO 30848 --- [           main] c.e.l.i.io.FileSystemCodeWriter          : 💾 Saved generated test to: /root/test-hae-llama/sample-projects/demo-app/src/test/java/com/example/demo/HelloServiceTest.java
+2026-01-22T11:01:52.513Z  INFO 30848 --- [           main] c.e.l.interfaces.shell.GenerateCommand   : 🏁 Test generation process complete for HelloService.java

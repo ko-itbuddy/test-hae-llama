@@ -39,7 +39,7 @@ class RepairServiceTest {
         GeneratedCode originalCode = new GeneratedCode("com.test", "MyTest", null, "code");
         given(shellExecutionService.execute(anyString())).willReturn(new ShellExecutionService.ExecutionResult(0, "OK", ""));
 
-        GeneratedCode result = repairService.selfHeal(originalCode, "test command", 3);
+        GeneratedCode result = repairService.selfHeal(originalCode, "test command", 3, com.example.llama.domain.model.Intelligence.ComponentType.SERVICE);
         
         assertThat(result).isEqualTo(originalCode);
     }
@@ -54,11 +54,11 @@ class RepairServiceTest {
                 .willReturn(new ShellExecutionService.ExecutionResult(1, "", errorLog)) // First call fails
                 .willReturn(new ShellExecutionService.ExecutionResult(0, "OK", "")); // Second call succeeds
 
-        given(agentFactory.create(AgentType.REPAIR_AGENT, null)).willReturn(repairAgent);
+        given(agentFactory.create(AgentType.REPAIR_AGENT, com.example.llama.domain.model.Intelligence.ComponentType.SERVICE)).willReturn(repairAgent);
         given(repairAgent.act(any(LlmUserRequest.class))).willReturn("repaired code response");
         given(codeSynthesizer.sanitizeAndExtract("repaired code response")).willReturn(repairedCode);
 
-        GeneratedCode result = repairService.selfHeal(originalCode, "test command", 3);
+        GeneratedCode result = repairService.selfHeal(originalCode, "test command", 3, com.example.llama.domain.model.Intelligence.ComponentType.SERVICE);
 
         verify(repairAgent, times(1)).act(any(LlmUserRequest.class));
         assertThat(result).isEqualTo(repairedCode);
@@ -71,11 +71,11 @@ class RepairServiceTest {
         
         // Tests fail every time
         given(shellExecutionService.execute(anyString())).willReturn(new ShellExecutionService.ExecutionResult(1, "", errorLog));
-        given(agentFactory.create(AgentType.REPAIR_AGENT, null)).willReturn(repairAgent);
+        given(agentFactory.create(AgentType.REPAIR_AGENT, com.example.llama.domain.model.Intelligence.ComponentType.SERVICE)).willReturn(repairAgent);
         given(repairAgent.act(any(LlmUserRequest.class))).willReturn("repaired code response");
         given(codeSynthesizer.sanitizeAndExtract("repaired code response")).willReturn(originalCode); // Return original code to simulate failed repair
 
-        repairService.selfHeal(originalCode, "test command", 3);
+        repairService.selfHeal(originalCode, "test command", 3, com.example.llama.domain.model.Intelligence.ComponentType.SERVICE);
 
         // Verify that the repair agent was called 3 times
         verify(repairAgent, times(3)).act(any(LlmUserRequest.class));
