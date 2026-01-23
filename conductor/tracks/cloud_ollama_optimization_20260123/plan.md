@@ -12,7 +12,7 @@ This phase focuses on refactoring the existing LLM client architecture to suppor
     - [ ] Write unit tests for `CloudOllamaLlmClient` mocking external API calls.
     - [ ] Implement client logic using the Ollama Java client or REST API.
     - [ ] Ensure it supports remote/cloud endpoints specifically.
-- [ ] Task: Implement Provider Strategy/Factory.
+- [x] Task: Implement Provider Strategy/Factory. [5cce05e]
     - [ ] Create an `LlmProviderFactory` to resolve the client based on configuration or CLI flags.
     - [ ] Update configuration properties to support `llama.provider` (gemini/ollama).
 - [ ] Task: Conductor - User Manual Verification 'Phase 1: Infrastructure & Provider Refactoring' (Protocol in workflow.md)
