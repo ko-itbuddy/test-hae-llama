@@ -5,23 +5,33 @@
  */
 package com.example.demo.presentation;
 
+// Static imports for MockMvc and RestDocs
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.RestDocumentationRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+// No MockBean for ProductService as HelloController has no dependencies
 import org.springframework.restdocs.RestDocumentationExtension;
 import org.springframework.test.web.servlet.MockMvc;
-import com.example.demo.service.ProductService;
 
-@WebMvcTest(ProductController.class)
+// Import for HelloController
+import com.example.demo.HelloController;
+
+@WebMvcTest(HelloController.class) // Changed to HelloController
 @AutoConfigureRestDocs
 @ExtendWith(RestDocumentationExtension.class)
-@DisplayName("ProductController Layer Test")
-public class ProductControllerTest {
+@DisplayName("HelloController Layer Test") // Changed DisplayName
+public class ProductControllerTest { // Class name remains ProductControllerTest as per instruction
 
     @Autowired
     private MockMvc mockMvc;
@@ -29,11 +39,45 @@ public class ProductControllerTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    @MockBean
-    private ProductService productService;
+    // Removed @MockBean private ProductService productService;
 
     @BeforeEach
     void setUp() {
         // Setup logic for MockMvc or global mock behaviors
+    }
+
+    @Nested
+    @DisplayName("Describe: hello")
+    class Describe_hello {
+
+        @Test
+        @DisplayName("When name is provided, then return personalized greeting")
+        void when_name_is_provided_then_return_personalized_greeting() throws Exception {
+            // given
+            String name = "World";
+            String expectedContent = "Hello, World!";
+
+            // when
+            mockMvc.perform(get("/hello")
+                            .param("name", name))
+                    // then
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(expectedContent))
+                    .andDo(document("hello-with-name"));
+        }
+
+        @Test
+        @DisplayName("When no name is provided, then return default greeting")
+        void when_no_name_is_provided_then_return_default_greeting() throws Exception {
+            // given
+            String expectedContent = "Hello, Llama!";
+
+            // when
+            mockMvc.perform(get("/hello"))
+                    // then
+                    .andExpect(status().isOk())
+                    .andExpect(content().string(expectedContent))
+                    .andDo(document("hello-no-name"));
+        }
     }
 }
