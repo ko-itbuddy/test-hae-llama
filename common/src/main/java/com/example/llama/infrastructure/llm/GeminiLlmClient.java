@@ -40,6 +40,12 @@ public class GeminiLlmClient implements LlmClient {
             log.info("🚀 Attempting generation with model: {}", model);
             String response = executeCli(fullPrompt, model);
             
+            if (response.contains("RetryableQuotaError")) {
+                log.warn("⏳ Quota exhausted for model: {}. Waiting 5s before fallback...", model);
+                try { Thread.sleep(5000); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+                continue; // Force fallback
+            }
+
             if (!response.contains("TerminalQuotaError") && !response.contains("<status>FAILED</status>")) {
                 this.lastUsedModel = model;
                 // Inject model info into response for downstream consumption
@@ -54,7 +60,7 @@ public class GeminiLlmClient implements LlmClient {
 
     private String executeCli(String fullPrompt, String model) {
         try {
-            ProcessBuilder pb = new ProcessBuilder("gemini", "--model", model, "--approval-mode", "yolo");
+            ProcessBuilder pb = new ProcessBuilder("gemini", "--model", model, "--approval-mode", "yolo", "--extensions", "none");
             pb.redirectErrorStream(true);
             Process process = pb.start();
 

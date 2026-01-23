@@ -32,10 +32,6 @@ subprojects {
     }
     
     java {
-        // 🔒 FACTUAL LOCK: Force Java 21 Toolchain across all modules
-        toolchain {
-            languageVersion = JavaLanguageVersion.of(21)
-        }
     }
     
     test {

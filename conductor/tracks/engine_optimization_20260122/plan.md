@@ -31,9 +31,12 @@
     - [x] Implement stdin-based prompt passing to avoid argument length limits.
     - [x] Add execution timeout (10 mins) to prevent hanging.
     - [x] Add `--approval-mode yolo` for non-interactive execution.
+    - [x] **Fixed:** Removed broken `--sandbox` flag; used `--extensions none` for security.
+    - [x] **Fixed:** Implemented smart Quota handling (wait & fallback) and abort-on-failure logic.
 - [x] **Task: Improve Repair Service Efficiency**
     - [x] Pass existing error logs to repair agent instead of redundant test execution.
     - [x] Preserve metadata (package/class name) during repair phase.
+    - [x] **Optimized:** Repair loop now aborts immediately if agent returns empty/failed code.
 
 ## Phase 3: Synthesis Logic and AST Refinement [checkpoint: 67c7269]
 
@@ -45,7 +48,9 @@
 - [x] **Task: Meaningful Assertion Generation Improvement (TDD)**
     - [x] Add specific assertion guidelines to GeneralExpert and VERIFY_CLERK.
 - [~] **Task: Verification with demo-app**
-    - [~] Re-generate tests for remaining complex classes in `demo-app` and confirm 100% compilability and quality. (Partially restored manually due to Quota)
+    - [x] `HelloController.java`: Verified (Passed with manual run).
+    - [ ] `BankClient.java`: Next in queue.
+    - [ ] Re-generate tests for remaining complex classes in `demo-app` and confirm 100% compilability and quality.
 - [x] **Task: Conductor - User Manual Verification 'Synthesis Refinement' (Protocol in workflow.md)**
 
 ## Phase 4: Final Validation and Regression Testing

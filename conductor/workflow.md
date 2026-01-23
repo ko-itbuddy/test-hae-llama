@@ -9,6 +9,16 @@
 5. **User Experience First:** Every decision should prioritize user experience
 6. **Non-Interactive & CI-Aware:** Prefer non-interactive commands. Use `CI=true` for watch-mode tools (tests, linters) to ensure single execution.
 
+## Git & Collaboration Strategy
+
+1. **Feature Branching:** All changes MUST be implemented on a dedicated feature branch. Never commit directly to `main`.
+2. **Pull Requests Only:** The `main` branch can ONLY be updated through Pull Requests.
+3. **Detailed PR Descriptions:** Every PR MUST include a clear explanation of *why* the changes were made and *what* was implemented.
+4. **Interactive Review:**
+   - If the user requests changes, the agent must either implement the fix or provide a technical justification to persuade the user.
+   - Respond to all user comments and questions within the PR.
+5. **Approval & Merge:** Merging into `main` can only occur after explicit user approval.
+
 ## Task Workflow
 
 All tasks follow a strict lifecycle:
