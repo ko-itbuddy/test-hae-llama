@@ -4,7 +4,7 @@
 ROOT_DIR="$(pwd)"
 INPUT_PROJECT="${ROOT_DIR}/sample-projects/demo-app"
 OUTPUT_PROJECT="${ROOT_DIR}/sample-projects/demo-app"
-JAR_PATH="${ROOT_DIR}/common/build/libs/common-0.0.1-SNAPSHOT-boot.jar"
+JAR_PATH="${ROOT_DIR}/common/build/libs/common-0.1.1-boot.jar"
 
 # Find all Java files, excluding DemoApplication
 FILES=$(find "$INPUT_PROJECT/src/main/java" -name "*.java" | grep -v "DemoApplication.java")

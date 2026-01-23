@@ -1,0 +1,503 @@
+<prompt>
+<system_instructions>
+<persona>
+      <role>REPAIR_AGENT Specialist</role>
+      <domain>SERVICE</domain>
+      <mission><![CDATA[
+  Execute specialized technical duties with artisan-level precision.
+      SPECIALIZED MISSION: MISSION: Analyze [ERROR_LOG] and fix the [BROKEN_TEST_CODE].
+      TECHNICAL RULES:
+      1. FIXED CLASS: Provide the complete, fixed Java class.
+      2. FIX TEST ONLY: You MUST ONLY modify the test file provided in [BROKEN_TEST_CODE]. NEVER modify source code entities (e.g., User.java, Product.java, OrderEvent.java).
+      3. TEST DATA SETUP: If ConstraintViolationException occurs, the problem is usually in test setup (@BeforeEach). Check if all required entity fields (marked with @NotBlank, @NotNull) are populated in the test data.
+      4. NEVER GIVE UP: Even if the code looks corrupted or contains XML tags, extract the Java parts and fix them. ALWAYS provide a valid Java class in <java_class>.
+      5. IGNORE XML TAGS: If you see <response>, <thought>, <status>, or <java_class> tags in the input code, ignore them and extract only the actual Java code.
+      6. SPRING CONTEXT: If 'NoSuchBeanDefinitionException' for JPAQueryFactory occurs, add @Import(com.example.demo.config.QueryDslConfig.class).
+      7. MOCKITO MATCHERS: Never mix matchers (any(), eq()) with raw values. Use eq() for all raw values if matchers are present.
+      8. STATIC IMPORTS: Ensure static imports for Mockito ArgumentMatchers are present (any, eq, etc.).
+      9. NO HALLUCINATION: Fix only the provided test. Do not invent files or dependencies that don't exist in the context.
+      ]]></mission>
+      <domain_strategy><![CDATA[
+  Global Strategy: Artisan BDD Testing
+      - Infrastructure: Latest stable libraries (Java 21, JUnit 5.11, Mockito 5.14, AssertJ 3.26).
+      - Structure: Strictly follow @Nested Describe_{MethodName} organization.
+      - Pattern: Use // given, // when, // then as mandatory structural anchors.
+      - Logic Anchoring: Reuse actual business logic and naming from the provided context tags to ensure context-aware generation.
+      - Verification: Ensure 100% logic coverage with meaningful Korean @DisplayName.
+      DOMAIN STRATEGY: Strategy: Error-Driven Refactoring
+      - Analyze: Read the Compiler Error or Assertion Failure carefully.
+      - Fix: Apply minimal, surgical fixes. Do not rewrite logic unless broken.
+      - Check Imports: Ensure missing imports are added.
+      - Check Annotations: Ensure necessary Spring annotations (@DataJpaTest, @WebMvcTest) are present and configured.
+      ]]></domain_strategy>
+      <critical_policy><![CDATA[
+  1. Path Discovery: Map every logical decision point.
+      2. Boundary Hunt: Target Null, Empty, Max/Min, and Invalid formats.
+      3. Error Precision: Capture the exact exception type and the specific error message text.
+      4. State Consistency: Verify the final state of all objects after execution.
+      PLANNING GUIDANCE: Identify the root cause (Syntax, Import, Context Loading, Assertion). Plan the fix.
+      1. BDD Style: Write clean given/when/then sections.
+      2. Fluent Assertions: Use AssertJ for readable and robust verification.
+      3. Meaningful Assertions:
+         - Avoid 'isNotNull()' or 'isTrue()' as primary verification.
+         - Verify every field of the response object.
+         - For collections, use 'containsExactly()' or 'hasSize()' + 'allMatch()'.
+         - For exceptions, verify both the Type AND the exact Message text.
+      4. No Filler: Output raw content (code or text) only inside the designated XML tags.
+      - Smart Assertions: Use [FIXME] or [TODO] comments for Suspect implementation flaws identified during decomposition.
+      - Precision: Reuse names and logic directly from the source code.
+      GENERATION TOOLKIT: Preserve existing setup unless it is the cause of the failure.
+      Preserve existing mocks.
+      Preserve execution flow.
+      Adjust assertions only if they are incorrect relative to the source code.
+      MANDATORY RULE: If a method accepts multiple input variations, you MUST use @ParameterizedTest with @CsvSource, @ValueSource, or @EnumSource to ensure exhaustive coverage without redundancy.
+      SPECIFIC RULE: Keep existing tests.
+      ]]></critical_policy>
+      <repair_protocol><![CDATA[
+  Repair using strict SERVICE standards and valid Java syntax.
+      ]]></repair_protocol>
+  </persona>
+  <format_standard><![CDATA[
+Strict XML Response Protocol (NO Markdown, NO backticks):
+    1. Use ONLY the tags listed below.
+    2. DO NOT use plural tags (e.g., use <thought>, not <thoughts>).
+    3. DO NOT use unauthorized tags like <actions>, <plan>, <scenario>, <given>, <when>, or <then>.
+    4. If using <code>, provide ONLY PURE JAVA CODE using CDATA for safety. No Markdown inside.
+    
+    STRUCTURE:
+    <response>
+      <status>...</status>
+      <thought>...</thought>
+      <code>...</code>
+    </response>
+  ]]></format_standard>
+</system_instructions>
+
+<request>
+    <task>
+Fix the compilation or runtime errors in the Test Code. Return the COMPLETE fixed Java class.
+    </task>
+    <lib>
+No library info provided.
+    </lib>
+    <package><![CDATA[
+
+    ]]></package>
+    <imports><![CDATA[
+
+    ]]></imports>
+    <references>
+<reference>
+            <name>BROKEN_TEST_CODE_AND_ERROR_LOG</name>
+            <ref_class_structure><![CDATA[
+        
+            ]]></ref_class_structure>
+            <ref_methods><![CDATA[
+        BROKEN_TEST_CODE:
+                package com.example.demo;
+                
+                import org.junit.jupiter.api.BeforeEach;
+                import org.junit.jupiter.api.DisplayName;
+                import org.junit.jupiter.api.extension.ExtendWith;
+                import org.mockito.InjectMocks;
+                import org.mockito.junit.jupiter.MockitoExtension;
+                import org.junit.jupiter.params.provider.ValueSource;
+                import org.junit.jupiter.params.provider.CsvSource;
+                import static org.assertj.core.api.Assertions.assertThatThrownBy;
+                import static org.mockito.Mockito.verify;
+                import static org.mockito.ArgumentMatchers.eq;
+                import org.mockito.Mock;
+                import org.junit.jupiter.api.Nested;
+                import org.junit.jupiter.api.Test;
+                import static org.assertj.core.api.Assertions.assertThat;
+                import static org.mockito.ArgumentMatchers.any;
+                import org.junit.jupiter.params.ParameterizedTest;
+                import org.junit.jupiter.params.provider.NullSource;
+                import static org.mockito.BDDMockito.given;
+                
+                /**
+                 * HelloService 기능 검증을 위한 유닛 테스트 클래스
+                 */
+                @ExtendWith(MockitoExtension.class)
+                @DisplayName("HelloService 유닛 테스트")
+                class HelloServiceTest {
+                
+                    @InjectMocks
+                    private HelloService helloService;
+                
+                    @BeforeEach
+                    void setUp() {
+                        // 테스트 시나리오 실행 전 필요한 공통 환경 및 DTO 초기화 로직을 수행합니다.
+                    }
+                
+                
+                
+                
+                package com.example.demo;
+                
+                import org.junit.jupiter.api.BeforeEach;
+                import org.junit.jupiter.api.DisplayName;
+                import org.junit.jupiter.api.extension.ExtendWith;
+                import org.mockito.InjectMocks;
+                import org.mockito.junit.jupiter.MockitoExtension;
+                import org.junit.jupiter.params.provider.ValueSource;
+                import org.junit.jupiter.params.provider.CsvSource;
+                import static org.assertj.core.api.Assertions.assertThatThrownBy;
+                import static org.mockito.Mockito.verify;
+                import static org.mockito.ArgumentMatchers.eq;
+                import org.mockito.Mock;
+                import org.junit.jupiter.api.Nested;
+                import org.junit.jupiter.api.Test;
+                import static org.assertj.core.api.Assertions.assertThat;
+                import static org.mockito.ArgumentMatchers.any;
+                import org.junit.jupiter.params.ParameterizedTest;
+                import org.junit.jupiter.params.provider.NullSource;
+                import static org.mockito.BDDMockito.given;
+                
+                /**
+                 * HelloService 기능 검증을 위한 유닛 테스트 클래스
+                 */
+                @ExtendWith(MockitoExtension.class)
+                @DisplayName("HelloService 유닛 테스트")
+                class HelloServiceTest {
+                
+                    @InjectMocks
+                    private HelloService helloService;
+                
+                    @BeforeEach
+                    void setUp() {
+                        // 테스트 시나리오 실행 전 필요한 공통 환경 및 DTO 초기화 로직을 수행합니다.
+                    }
+                
+                    @Nested
+                    @DisplayName("greet 메서드는")
+                    class Describe_greet {
+                
+                        @Test
+                        @DisplayName("유효한 이름이 주어지면 환영 인사를 반환한다")
+                        void it_returns_greeting_message_when_name_is_valid() {
+                            // given
+                            String name = "Llama";
+                            // when
+                            String result = helloService.greet(name);
+                            // then
+                            assertThat(result).isEqualTo("Hello, Llama!");
+                        }
+                
+                        @ParameterizedTest
+                        @NullSource
+                        @ValueSource(strings = { "", " ", "   " })
+                        @DisplayName("이름이 비어있거나 공백이면 IllegalArgumentException이 발생한다")
+                        void it_throws_exception_when_name_is_invalid(String invalidName) {
+                            // given (parameterized)
+                            // when & then
+                            assertThatThrownBy(() -> helloService.greet(invalidName)).isInstanceOf(IllegalArgumentException.class).hasMessage("Name cannot be empty");
+                        }
+                
+                        @Test
+                        @DisplayName("이름이 50자를 초과하면 IllegalArgumentException이 발생한다")
+                        void it_throws_exception_when_name_is_too_long() {
+                            // given
+                            String longName = "a".repeat(51);
+                            // when & then
+                            assertThatThrownBy(() -> helloService.greet(longName)).isInstanceOf(IllegalArgumentException.class).hasMessage("Name is too long");
+                        }
+                    }
+                
+                    @Nested
+                    @DisplayName("calculateAge 메서드는")
+                    class Describe_calculateAge {
+                
+                        @ParameterizedTest(name = "출생년도 {0}, 현재년도 {1}일 때 나이는 {2}이어야 한다")
+                        @CsvSource({ "2000, 2023, 23", "1990, 2023, 33", "2023, 2023, 0", "1900, 2023, 123" })
+                        @DisplayName("유효한 출생년도와 현재년도가 주어지면 정확한 나이를 반환한다")
+                        void it_calculates_age_correctly(int birthYear, int currentYear, int expectedAge) {
+                            // given (parameterized)
+                            // when
+                            int actualAge = helloService.calculateAge(birthYear, currentYear);
+                            // then
+                            assertThat(actualAge).isEqualTo(expectedAge);
+                        }
+                
+                        @ParameterizedTest(name = "출생년도 {0}이 현재년도 {1}보다 미래일 경우 IllegalArgumentException이 발생한다")
+                        @CsvSource({ "2024, 2023", "3000, 2023" })
+                        @DisplayName("출생년도가 현재년도보다 미래일 경우 IllegalArgumentException을 발생시킨다")
+                        void it_throws_exception_when_birthYear_is_in_the_future(int birthYear, int currentYear) {
+                            // given (parameterized)
+                            // when & then
+                            assertThatThrownBy(() -> helloService.calculateAge(birthYear, currentYear)).isInstanceOf(IllegalArgumentException.class).hasMessage("Birth year cannot be in the future");
+                        }
+                    }
+                }
+                
+                }
+                
+                ERROR_LOG:
+                > Task :compileJava NO-SOURCE
+                > Task :processResources NO-SOURCE
+                > Task :classes UP-TO-DATE
+                
+                > Task :compileTestJava FAILED
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:40: error: illegal start of type
+                package com.example.demo;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:40: error: <identifier> expected
+                package com.example.demo;
+                                        ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:42: error: illegal start of type
+                import org.junit.jupiter.api.BeforeEach;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:42: error: <identifier> expected
+                import org.junit.jupiter.api.BeforeEach;
+                                                       ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:43: error: illegal start of type
+                import org.junit.jupiter.api.DisplayName;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:43: error: <identifier> expected
+                import org.junit.jupiter.api.DisplayName;
+                                                        ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:44: error: illegal start of type
+                import org.junit.jupiter.api.extension.ExtendWith;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:44: error: <identifier> expected
+                import org.junit.jupiter.api.extension.ExtendWith;
+                                                                 ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:45: error: illegal start of type
+                import org.mockito.InjectMocks;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:45: error: <identifier> expected
+                import org.mockito.InjectMocks;
+                                              ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:46: error: illegal start of type
+                import org.mockito.junit.jupiter.MockitoExtension;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:46: error: <identifier> expected
+                import org.mockito.junit.jupiter.MockitoExtension;
+                                                                 ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:47: error: illegal start of type
+                import org.junit.jupiter.params.provider.ValueSource;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:47: error: <identifier> expected
+                import org.junit.jupiter.params.provider.ValueSource;
+                                                                    ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:48: error: illegal start of type
+                import org.junit.jupiter.params.provider.CsvSource;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:48: error: <identifier> expected
+                import org.junit.jupiter.params.provider.CsvSource;
+                                                                  ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:49: error: illegal start of type
+                import static org.assertj.core.api.Assertions.assertThatThrownBy;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:49: error: <identifier> expected
+                import static org.assertj.core.api.Assertions.assertThatThrownBy;
+                                                                                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:50: error: illegal start of type
+                import static org.mockito.Mockito.verify;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:50: error: <identifier> expected
+                import static org.mockito.Mockito.verify;
+                                                        ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:51: error: illegal start of type
+                import static org.mockito.ArgumentMatchers.eq;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:51: error: <identifier> expected
+                import static org.mockito.ArgumentMatchers.eq;
+                                                             ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:52: error: illegal start of type
+                import org.mockito.Mock;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:52: error: <identifier> expected
+                import org.mockito.Mock;
+                                       ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:53: error: illegal start of type
+                import org.junit.jupiter.api.Nested;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:53: error: <identifier> expected
+                import org.junit.jupiter.api.Nested;
+                                                   ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:54: error: illegal start of type
+                import org.junit.jupiter.api.Test;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:54: error: <identifier> expected
+                import org.junit.jupiter.api.Test;
+                                                 ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:55: error: illegal start of type
+                import static org.assertj.core.api.Assertions.assertThat;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:55: error: <identifier> expected
+                import static org.assertj.core.api.Assertions.assertThat;
+                                                                        ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:56: error: illegal start of type
+                import static org.mockito.ArgumentMatchers.any;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:56: error: <identifier> expected
+                import static org.mockito.ArgumentMatchers.any;
+                                                              ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:57: error: illegal start of type
+                import org.junit.jupiter.params.ParameterizedTest;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:57: error: <identifier> expected
+                import org.junit.jupiter.params.ParameterizedTest;
+                                                                 ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:58: error: illegal start of type
+                import org.junit.jupiter.params.provider.NullSource;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:58: error: <identifier> expected
+                import org.junit.jupiter.params.provider.NullSource;
+                                                                   ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:59: error: illegal start of type
+                import static org.mockito.BDDMockito.given;
+                ^
+                /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:59: error: <identifier> expected
+                import static org.mockito.BDDMockito.given;
+                                                          ^
+                38 errors
+                
+                [Incubating] Problems report is available at: file:///root/test-hae-llama/build/reports/problems/problems-report.html
+                
+                FAILURE: Build failed with an exception.
+                
+                * What went wrong:
+                Execution failed for task ':compileTestJava'.
+                > Compilation failed; see the compiler output below.
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:40: error: illegal start of type
+                  package com.example.demo;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:42: error: illegal start of type
+                  import org.junit.jupiter.api.BeforeEach;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:43: error: illegal start of type
+                  import org.junit.jupiter.api.DisplayName;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:44: error: illegal start of type
+                  import org.junit.jupiter.api.extension.ExtendWith;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:45: error: illegal start of type
+                  import org.mockito.InjectMocks;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:46: error: illegal start of type
+                  import org.mockito.junit.jupiter.MockitoExtension;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:47: error: illegal start of type
+                  import org.junit.jupiter.params.provider.ValueSource;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:48: error: illegal start of type
+                  import org.junit.jupiter.params.provider.CsvSource;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:49: error: illegal start of type
+                  import static org.assertj.core.api.Assertions.assertThatThrownBy;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:50: error: illegal start of type
+                  import static org.mockito.Mockito.verify;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:51: error: illegal start of type
+                  import static org.mockito.ArgumentMatchers.eq;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:52: error: illegal start of type
+                  import org.mockito.Mock;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:53: error: illegal start of type
+                  import org.junit.jupiter.api.Nested;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:54: error: illegal start of type
+                  import org.junit.jupiter.api.Test;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:55: error: illegal start of type
+                  import static org.assertj.core.api.Assertions.assertThat;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:56: error: illegal start of type
+                  import static org.mockito.ArgumentMatchers.any;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:57: error: illegal start of type
+                  import org.junit.jupiter.params.ParameterizedTest;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:58: error: illegal start of type
+                  import org.junit.jupiter.params.provider.NullSource;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:59: error: illegal start of type
+                  import static org.mockito.BDDMockito.given;
+                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:40: error: <identifier> expected
+                  package com.example.demo;
+                                          ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:42: error: <identifier> expected
+                  import org.junit.jupiter.api.BeforeEach;
+                                                         ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:43: error: <identifier> expected
+                  import org.junit.jupiter.api.DisplayName;
+                                                          ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:44: error: <identifier> expected
+                  import org.junit.jupiter.api.extension.ExtendWith;
+                                                                   ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:45: error: <identifier> expected
+                  import org.mockito.InjectMocks;
+                                                ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:46: error: <identifier> expected
+                  import org.mockito.junit.jupiter.MockitoExtension;
+                                                                   ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:47: error: <identifier> expected
+                  import org.junit.jupiter.params.provider.ValueSource;
+                                                                      ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:48: error: <identifier> expected
+                  import org.junit.jupiter.params.provider.CsvSource;
+                                                                    ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:49: error: <identifier> expected
+                  import static org.assertj.core.api.Assertions.assertThatThrownBy;
+                                                                                  ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:50: error: <identifier> expected
+                  import static org.mockito.Mockito.verify;
+                                                          ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:51: error: <identifier> expected
+                  import static org.mockito.ArgumentMatchers.eq;
+                                                               ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:52: error: <identifier> expected
+                  import org.mockito.Mock;
+                                         ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:53: error: <identifier> expected
+                  import org.junit.jupiter.api.Nested;
+                                                     ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:54: error: <identifier> expected
+                  import org.junit.jupiter.api.Test;
+                                                   ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:55: error: <identifier> expected
+                  import static org.assertj.core.api.Assertions.assertThat;
+                                                                          ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:56: error: <identifier> expected
+                  import static org.mockito.ArgumentMatchers.any;
+                                                                ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:57: error: <identifier> expected
+                  import org.junit.jupiter.params.ParameterizedTest;
+                                                                   ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:58: error: <identifier> expected
+                  import org.junit.jupiter.params.provider.NullSource;
+                                                                     ^
+                  /root/test-hae-llama/src/test/java/com/example/demo/HelloServiceTest.java:59: error: <identifier> expected
+                  import static org.mockito.BDDMockito.given;
+                                                            ^
+                  38 errors
+                
+                * Try:
+                > Check your code and dependencies to fix the compilation error(s)
+                > Run with --scan to generate a Build Scan (powered by Develocity).
+                
+                Deprecated Gradle features were used in this build, making it incompatible with Gradle 10.
+                
+                You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+                
+                For more on this, please refer to https://docs.gradle.org/9.2.1/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+                
+                BUILD FAILED in 12s
+                1 actionable task: 1 executed
+            ]]></ref_methods>
+        </reference>
+    </references>
+    <class_structure><![CDATA[
+
+    ]]></class_structure>
+    <target_method><![CDATA[
+
+    ]]></target_method>
+
+</request>
+</prompt>

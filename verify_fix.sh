@@ -2,8 +2,7 @@
 
 # Configuration
 ROOT_DIR="$(pwd)"
-OUTPUT_PROJECT="${ROOT_DIR}/sample-projects/demo-app"
-JAR_PATH="${ROOT_DIR}/common/build/libs/common-0.0.1-SNAPSHOT-boot.jar"
+JAR_PATH="${ROOT_DIR}/common/build/libs/common-0.1.1-boot.jar"
 
 FILES=(
     "${ROOT_DIR}/sample-projects/demo-app/src/main/java/com/example/demo/HelloService.java"
