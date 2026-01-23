@@ -35,7 +35,7 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
         if (rawOutput == null || rawOutput.isBlank())
             return new GeneratedCode(new java.util.HashSet<>(), "");
 
-        if (rawOutput.contains("<status>FAILED</status>") || rawOutput.contains("TerminalQuotaError")) {
+        if (rawOutput.contains("<status>FAILED</status>") || rawOutput.contains("TerminalQuotaError") || rawOutput.contains("RetryableQuotaError")) {
             log.warn("LLM response marked as FAILED or Quota Error detected. Aborting extraction.");
             return new GeneratedCode(new java.util.HashSet<>(), "");
         }

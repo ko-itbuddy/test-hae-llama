@@ -9,3 +9,4 @@ rootProject.name = 'local-test-code-llm'
 
 include 'common'
 include 'intellij-plugin'
+include 'sample-projects:demo-app'

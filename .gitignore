@@ -49,3 +49,7 @@ batch_logs/
 **/node_modules/
 npm-debug.log
 yarn-error.log
+
+opencode_response.xml
+package.json
+yarn.lock

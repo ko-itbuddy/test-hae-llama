@@ -26,6 +26,7 @@ public class GeneralExpert implements DomainExpert {
     public String getDomainStrategy() {
         return """
                 Global Strategy: Artisan BDD Testing
+                - Language: 모든 설명, 주석, @DisplayName은 반드시 한국어로만 작성하라. (영문 금지)
                 - Infrastructure: Latest stable libraries (Java 21, JUnit 5.11, Mockito 5.14, AssertJ 3.26).
                 - Structure: Strictly follow @Nested Describe_{MethodName} organization.
                 - Pattern: Use // given, // when, // then as mandatory structural anchors.
@@ -36,24 +37,26 @@ public class GeneralExpert implements DomainExpert {
     @Override
     public String getPlanningDirective() {
         return """
-                1. Path Discovery: Map every logical decision point.
-                2. Boundary Hunt: Target Null, Empty, Max/Min, and Invalid formats.
-                3. Error Precision: Capture the exact exception type and the specific error message text.
-                4. State Consistency: Verify the final state of all objects after execution.""";
+                1. 한국어 계획: 모든 시나리오와 설명을 한국어로 기술하라.
+                2. Path Discovery: Map every logical decision point.
+                3. Boundary Hunt: Target Null, Empty, Max/Min, and Invalid formats.
+                4. Error Precision: Capture the exact exception type and the specific error message text.
+                5. State Consistency: Verify the final state of all objects after execution.""";
     }
 
     @Override
     public String getGenerationDirective() {
         return """
-                1. BDD Style: Write clean given/when/then sections.
-                2. Fluent Assertions: Use AssertJ for readable and robust verification.
-                3. Meaningful Assertions: 
+                1. 한국어 전용: 모든 @DisplayName 및 코드 내 주석은 한국어로 작성하라.
+                2. BDD Style: Write clean given/when/then sections.
+                3. Fluent Assertions: Use AssertJ for readable and robust verification.
+                4. Meaningful Assertions: 
                    - Avoid 'isNotNull()' or 'isTrue()' as primary verification.
                    - Verify every field of the response object.
                    - For collections, use 'containsExactly()' or 'hasSize()' + 'allMatch()'.
                    - For exceptions, verify both the Type AND the exact Message text.
-                4. No Filler: Output raw content (code or text) only inside the designated XML tags.
-                - Smart Assertions: Use [FIXME] or [TODO] comments for Suspect implementation flaws identified during decomposition.
+                5. No Filler: Output raw content (code or text) only inside the designated XML tags.
+                - Smart Assertions: Use [FIXME] 또는 [TODO] 주석을 한국어로 남겨 구현상의 결함을 지적하라.
                 - Precision: Reuse names and logic directly from the source code.""";
     }
 

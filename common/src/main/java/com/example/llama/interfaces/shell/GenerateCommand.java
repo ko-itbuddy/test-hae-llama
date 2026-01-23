@@ -86,26 +86,8 @@ public class GenerateCommand {
 
                 // Detect empty REPAIR response
                 if (result.body() == null || result.body().isBlank()) {
-                    log.warn("⚠️ REPAIR_AGENT returned empty code on attempt {}/{}. Using original code.", i + 1,
-                            maxRetries);
-
-                    if (i < maxRetries - 1) {
-                        log.info("🔄 Retrying with original generated code...");
-                        currentCode = originalGeneratedCode; // Reset to original
-                        result = new GeneratedCode(
-                                result.packageName(),
-                                expectedClassName,
-                                result.imports(),
-                                originalGeneratedCode);
-                        continue;
-                    } else {
-                        log.error("💥 All repair attempts exhausted. Saving original generated code as final attempt.");
-                        result = new GeneratedCode(
-                                result.packageName(),
-                                expectedClassName,
-                                result.imports(),
-                                originalGeneratedCode);
-                    }
+                    log.error("💥 Repair Agent returned empty code. Aborting repair loop (Quota/Error likely).");
+                    break;
                 }
 
                 // Validate that REPAIR didn't change the package (e.g., trying to fix User.java

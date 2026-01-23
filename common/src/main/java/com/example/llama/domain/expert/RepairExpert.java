@@ -38,11 +38,13 @@ public class RepairExpert implements DomainExpert {
 
     @Override
     public String getDomainStrategy() {
-        return "Strategy: Error-Driven Refactoring\n" +
-                "- Analyze: Read the Compiler Error or Assertion Failure carefully.\n" +
-                "- Fix: Apply minimal, surgical fixes. Do not rewrite logic unless broken.\n" +
-                "- Check Imports: Ensure missing imports are added.\n" +
-                "- Check Annotations: Ensure necessary Spring annotations (@DataJpaTest, @WebMvcTest) are present and configured.";
+        return """
+                Strategy: Error-Driven Refactoring
+                - Language: 모든 주석 및 @DisplayName은 반드시 한국어로만 작성하라.
+                - Analyze: Read the Compiler Error or Assertion Failure carefully.
+                - Fix: Apply minimal, surgical fixes. Do not rewrite logic unless broken.
+                - Check Imports: Ensure missing imports are added.
+                - Check Annotations: Ensure necessary Spring annotations (@DataJpaTest, @WebMvcTest) are present and configured.""";
     }
 
     @Override
