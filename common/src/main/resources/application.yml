@@ -14,6 +14,12 @@ spring:
           model: nomic-embed-text:latest
       keep-alive: -1
 
+llama:
+  provider: gemini
+  ollama:
+    base-url: http://localhost:11434
+    model: llama3
+
 # 🕵️‍♂️ FULL TRACE LOGGING: No more hidden failures
 logging:
   level:

@@ -8,10 +8,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import org.springframework.stereotype.Component;
+import org.springframework.beans.factory.annotation.Value;
 import java.util.List;
 import java.util.Map;
 
 @Slf4j
+@Component("ollamaLlmClient")
 public class CloudOllamaLlmClient implements LlmClient {
 
     private final WebClient webClient;
@@ -20,7 +23,10 @@ public class CloudOllamaLlmClient implements LlmClient {
     private final String model;
     private final ObjectMapper objectMapper;
 
-    public CloudOllamaLlmClient(WebClient webClient, InteractionLogger logger, String baseUrl, String model) {
+    public CloudOllamaLlmClient(WebClient webClient, 
+                                InteractionLogger logger, 
+                                @Value("${llama.ollama.base-url:http://localhost:11434}") String baseUrl, 
+                                @Value("${llama.ollama.model:llama3}") String model) {
         this.webClient = webClient;
         this.logger = logger;
         this.baseUrl = baseUrl;

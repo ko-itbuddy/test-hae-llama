@@ -16,8 +16,7 @@ import java.nio.charset.StandardCharsets;
  * Uses 'gemini --prompt' for non-interactive mode.
  */
 @Slf4j
-@Component
-@Primary
+@Component("geminiLlmClient")
 @RequiredArgsConstructor
 public class GeminiLlmClient implements LlmClient {
 
