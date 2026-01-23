@@ -1,12 +1,14 @@
 package com.example.llama.domain.model.prompt;
 
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NonNull;
 
 /**
  * Represents the System Directive part of the LLM Standard.
  * Encapsulates Persona (P) and Format (F).
  */
+@Getter
 @Builder
 public class LlmSystemDirective {
 
