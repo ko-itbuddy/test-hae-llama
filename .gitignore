@@ -40,6 +40,7 @@ ollama_*.log
 # Local AI Test Generator Data
 # Test-Hae-Llama Data
 .test-hea-llama/
+batch_logs/
 
 # Test-Hae-Llama Data
 .test-hea-llama/
