@@ -33,9 +33,16 @@ public class GenerateCommand {
     @ShellMethod(key = "generate", value = "Generate tests for a specific source file.")
     public void generate(
             @ShellOption(value = "--input") String input,
-            @ShellOption(value = "--output-project", defaultValue = ".") String outputProject) {
+            @ShellOption(value = "--output-project", defaultValue = "AUTO_DETECT") String outputProject) {
         Path sourcePath = Paths.get(input).toAbsolutePath().normalize();
-        Path projectRoot = Paths.get(outputProject).toAbsolutePath().normalize();
+        Path projectRoot;
+
+        if ("AUTO_DETECT".equals(outputProject)) {
+            projectRoot = findProjectRoot(sourcePath);
+            log.info("🔍 Auto-detected project root: {}", projectRoot);
+        } else {
+            projectRoot = Paths.get(outputProject).toAbsolutePath().normalize();
+        }
 
         try {
             String sourceCode = Files.readString(sourcePath);
@@ -131,5 +138,17 @@ public class GenerateCommand {
         } catch (IOException e) {
             log.error("💥 Error reading source file", e);
         }
+    }
+
+    private Path findProjectRoot(Path sourcePath) {
+        Path current = sourcePath;
+        while (current != null) {
+            if (java.nio.file.Files.exists(current.resolve("build.gradle")) ||
+                    java.nio.file.Files.exists(current.resolve("build.gradle.kts"))) {
+                return current;
+            }
+            current = current.getParent();
+        }
+        return Paths.get(".").toAbsolutePath().normalize(); // Fallback
     }
 }

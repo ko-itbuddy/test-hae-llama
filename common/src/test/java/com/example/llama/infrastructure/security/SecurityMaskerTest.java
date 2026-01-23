@@ -99,4 +99,60 @@ class SecurityMaskerTest {
 
         assertThat(result).contains("System.out.println(\"Hello\")");
     }
+
+    @Test
+    @DisplayName("Should mask SSL keys and secret algorithms in real-world scenario")
+    void shouldMaskSensitiveRealWorldInfo() {
+        String source = """
+                public class RealService {
+                    // SEC:VAL
+                    private String sslKey = "-----BEGIN PRIVATE KEY-----\\nMIIEvQ...";
+                    
+                    // SEC:BODY
+                    public double secretAlgorithm(double input) {
+                        double secretFactor = 0.987654321;
+                        return input * secretFactor;
+                    }
+                }
+                """;
+
+        String result = masker.mask(source);
+
+        // 1. SSL Key가 노출되지 않아야 함
+        assertThat(result).doesNotContain("BEGIN PRIVATE KEY");
+        assertThat(result).contains("sslKey = \"[SECURED_VALUE]\"");
+
+        // 2. 핵심 알고리즘 수식이 노출되지 않아야 함
+        assertThat(result).doesNotContain("0.987654321");
+        assertThat(result).contains("return 0;"); // double 기본 리턴값 0
+        assertThat(result).contains("[SECURED: LOGIC REDACTED]");
+    }
+
+    @Test
+    @DisplayName("Should automatically mask sensitive strings even without SEC tags (Heuristics)")
+    void shouldAutoMaskWithoutTags() {
+        String source = """
+                public class UntaggedSecrets {
+                    // No SEC:VAL tag here!
+                    private String missedKey = "sk-abc123def456ghi789jkl012mno345";
+                    private String dbUrl = "postgres://admin:password123@localhost:5432/db";
+                    private String normalString = "This is safe";
+                }
+                """;
+
+        String result = masker.mask(source);
+
+        // 1. Tag가 없어도 API 키는 가려져야 함
+        assertThat(result).doesNotContain("sk-abc123def456");
+        assertThat(result).contains("missedKey");
+        assertThat(result).contains("[AUTO_SECURED]");
+
+        // 2. URL 내의 비밀번호가 포함된 부분은 가려져야 함
+        assertThat(result).doesNotContain("password123");
+        assertThat(result).contains("dbUrl");
+        
+        // 3. 일반적인 문자열은 유지되어야 함
+        assertThat(result).contains("normalString");
+        assertThat(result).contains("This is safe");
+    }
 }

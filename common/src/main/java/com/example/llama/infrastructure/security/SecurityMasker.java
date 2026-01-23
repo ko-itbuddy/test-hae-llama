@@ -50,7 +50,44 @@ public class SecurityMasker {
         // 3. Process SEC:BODY (Hide implementation)
         processBodies(cu);
 
+        // 4. Automated Heuristic Masking (Safety Net for missing tags)
+        processHeuristics(cu);
+
         return cu.toString();
+    }
+
+    private void processHeuristics(CompilationUnit cu) {
+        // Scan all string literals for sensitive patterns
+        cu.findAll(StringLiteralExpr.class).forEach(str -> {
+            String val = str.getValue();
+            if (isSensitive(val)) {
+                str.setValue("[AUTO_SECURED]");
+            }
+        });
+    }
+
+    private boolean isSensitive(String value) {
+        if (value == null || value.length() < 8) return false;
+        
+        String lower = value.toLowerCase();
+
+        // 1. URL with credentials (Improved pattern)
+        if (value.matches(".*[a-zA-Z0-9]+://[^:]+:[^@]+@.*")) return true;
+        
+        // 2. Suspicious API Key patterns (e.g., sk-..., key-..., etc.)
+        if (lower.contains("sk-") || 
+            lower.contains("key-") ||
+            lower.contains("token-") ||
+            lower.contains("api_key") ||
+            lower.contains("secret")) return true;
+            
+        // 3. High entropy strings (likely secrets/keys) - length > 20 and alphanumeric
+        if (value.length() > 20 && value.matches("^[a-zA-Z0-9_\\-]+$")) {
+            // Avoid marking package names or common paths as sensitive
+            if (!value.contains(".") && !value.contains("/")) return true;
+        }
+        
+        return false;
     }
 
     private void processDrops(CompilationUnit cu) {

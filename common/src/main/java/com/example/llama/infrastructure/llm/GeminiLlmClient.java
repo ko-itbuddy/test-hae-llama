@@ -26,10 +26,10 @@ public class GeminiLlmClient implements LlmClient {
 
     // List of models to try in order of preference
     private final java.util.List<String> modelFallbacks = java.util.List.of(
-            "gemini-3-pro-preview",
-            "gemini-2.5-pro",
             "gemini-2.5-flash",
-            "auto"
+            "auto",
+            "gemini-3-pro-preview",
+            "gemini-2.5-pro"
     );
 
     @Override

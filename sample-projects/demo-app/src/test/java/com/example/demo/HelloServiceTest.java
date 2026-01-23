@@ -89,19 +89,21 @@ class Describe_calculateAge {
     @ParameterizedTest(name = "출생년도 {0}, 현재년도 {1}일 때 나이는 {2}이어야 한다")
     @CsvSource({ "2000, 2023, 23", "1990, 2023, 33", "2023, 2023, 0", "1900, 2023, 123" })
     @DisplayName("유효한 출생년도와 현재년도가 주어지면 정확한 나이를 반환한다")
-    void it_calculates_age_correctly(int birthYear, int currentYear, int expectedAge) {
-        // given (parameterized)
+    void it_returns_correct_age_for_valid_inputs(int birthYear, int currentYear, int expectedAge) {
+        // given
+        // Valid inputs provided by CsvSource
         // when
-        int actualAge = helloService.calculateAge(birthYear, currentYear);
+        int result = helloService.calculateAge(birthYear, currentYear);
         // then
-        assertThat(actualAge).isEqualTo(expectedAge);
+        assertThat(result).isEqualTo(expectedAge);
     }
 
-    @ParameterizedTest(name = "출생년도 {0}이 현재년도 {1}보다 미래일 경우 예외가 발생한다")
+    @ParameterizedTest(name = "출생년도 {0}이 현재년도 {1}보다 미래일 경우")
     @CsvSource({ "2024, 2023", "3000, 2023" })
-    @DisplayName("출생년도가 현재년도보다 미래일 경우 IllegalArgumentException을 던진다")
-    void it_throws_exception_when_birthYear_is_in_the_future(int birthYear, int currentYear) {
-        // given (parameterized)
+    @DisplayName("출생년도가 현재년도보다 미래일 경우 예외를 던진다")
+    void it_throws_exception_when_birth_year_is_in_future(int birthYear, int currentYear) {
+        // given
+        // Invalid inputs provided by CsvSource
         // when & then
         assertThatThrownBy(() -> helloService.calculateAge(birthYear, currentYear)).isInstanceOf(IllegalArgumentException.class).hasMessage("Birth year cannot be in the future");
     }
