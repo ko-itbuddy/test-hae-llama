@@ -22,67 +22,71 @@ import java.nio.charset.StandardCharsets;
 public class GeminiLlmClient implements LlmClient {
 
     private final InteractionLogger logger;
+    private String lastUsedModel = "unknown";
+
+    // List of models to try in order of preference
+    private final java.util.List<String> modelFallbacks = java.util.List.of(
+            "gemini-3-pro-preview",
+            "gemini-2.5-pro",
+            "gemini-2.5-flash",
+            "auto"
+    );
 
     @Override
     public String generate(LlmPrompt prompt) {
         String fullPrompt = prompt.toXml();
-
-        log.info(
-                "======================================== [EXECUTING GEMINI CLI] ========================================");
-        log.info("TOTAL PROMPT SIZE: {} chars", fullPrompt.length());
-        log.info(
-                "====================================================================================================");
-
-        try {
-            // [DEBUG] Save full prompt for user inspection
-            java.nio.file.Path debugPath = java.nio.file.Paths.get("debug_gemini_prompt.xml");
-            java.nio.file.Files.writeString(debugPath, fullPrompt);
-            log.info("💾 Saved debug prompt to: {}", debugPath.toAbsolutePath());
-        } catch (Exception e) {
-            log.error("Failed to save debug prompt: {}", e.getMessage());
+        
+        for (String model : modelFallbacks) {
+            log.info("🚀 Attempting generation with model: {}", model);
+            String response = executeCli(fullPrompt, model);
+            
+            if (!response.contains("TerminalQuotaError") && !response.contains("<status>FAILED</status>")) {
+                this.lastUsedModel = model;
+                // Inject model info into response for downstream consumption
+                return response + "\n<!-- MODEL_USED: " + model + " -->";
+            }
+            
+            log.warn("⚠️ Model {} failed (Quota or Error). Trying next fallback...", model);
         }
 
+        return "<response><status>FAILED</status><thought>All models exhausted.</thought><code>// Error: All models failed</code></response>";
+    }
+
+    private String executeCli(String fullPrompt, String model) {
         try {
-            // gemini - Using stdin for prompt and yolo mode to avoid interactive prompts
-            ProcessBuilder pb = new ProcessBuilder("gemini", "--approval-mode", "yolo");
+            ProcessBuilder pb = new ProcessBuilder("gemini", "--model", model, "--approval-mode", "yolo");
             pb.redirectErrorStream(true);
             Process process = pb.start();
 
-            // Write prompt to stdin
             try (java.io.OutputStream os = process.getOutputStream()) {
                 os.write(fullPrompt.getBytes(StandardCharsets.UTF_8));
                 os.flush();
             }
 
-            // Read output
             String output;
             try (InputStream is = process.getInputStream()) {
                 output = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             }
 
-            // Wait for process to complete with a 10-minute timeout
             boolean finished = process.waitFor(10, java.util.concurrent.TimeUnit.MINUTES);
             if (!finished) {
                 process.destroyForcibly();
-                log.error("❌ Gemini CLI Timed out after 10 minutes.");
-                return "<response><status>FAILED</status><thought>Gemini CLI timed out.</thought><code>// Error: Timeout</code></response>";
+                return "<response><status>FAILED</status></response>";
             }
 
-            int exitCode = process.exitValue();
-            if (exitCode != 0) {
-                log.error("❌ Gemini CLI Failed (Exit: {}): {}", exitCode, output);
-                return "<response><status>FAILED</status><thought>Gemini CLI execution failed.</thought><code>// Error: "
-                        + output + "</code></response>";
+            if (process.exitValue() != 0) {
+                return "<response><status>FAILED</status><code>" + output + "</code></response>";
             }
 
-            // Log interaction
-            logger.logInteraction("GeminiCLI", fullPrompt, output);
+            logger.logInteraction("GeminiCLI:" + model, fullPrompt, output);
             return output;
         } catch (Exception e) {
-            log.error("💥 Gemini Execution Error", e);
-            return "<response><status>FAILED</status><thought>Execution error.</thought><code>// Exception: "
-                    + e.getMessage() + "</code></response>";
+            return "<response><status>FAILED</status></response>";
         }
+    }
+
+    public String getLastUsedModel() {
+        return lastUsedModel;
     }
 
     @Override

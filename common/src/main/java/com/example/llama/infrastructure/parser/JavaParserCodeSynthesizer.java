@@ -2,7 +2,6 @@ package com.example.llama.infrastructure.parser;
 
 import com.example.llama.domain.model.GeneratedCode;
 import com.example.llama.domain.model.Intelligence;
-import com.example.llama.domain.model.prompt.LlmResponseTag;
 import com.example.llama.domain.service.CodeSynthesizer;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParseResult;
@@ -18,13 +17,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.HashSet;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
-/**
- * Enhanced High-Precision Synthesizer.
- * Handles messy LLM outputs including nested Markdown/XML.
- */
 @Slf4j
 @Component
 public class JavaParserCodeSynthesizer implements CodeSynthesizer {
@@ -42,53 +35,54 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
         if (rawOutput == null || rawOutput.isBlank())
             return new GeneratedCode(new java.util.HashSet<>(), "");
 
-        // 1. Unified Extraction (Prioritize Content/Code tags)
+        if (rawOutput.contains("<status>FAILED</status>") || rawOutput.contains("TerminalQuotaError")) {
+            log.warn("LLM response marked as FAILED or Quota Error detected. Aborting extraction.");
+            return new GeneratedCode(new java.util.HashSet<>(), "");
+        }
+
         String clean = rawOutput;
         String[] tags = { "code", "content", "java_class", "java_code", "java_members", "java_header" };
         boolean tagFound = false;
 
         for (String tag : tags) {
-            // Pattern 1: <tag><![CDATA[...]]></tag>
-            java.util.regex.Pattern cdataPattern = java.util.regex.Pattern.compile(
-                    "<" + tag + ">\\s*<!\\[CDATA\\[\\s*(.*?)\\s*\\]\\]>\\s*</" + tag + ">",
-                    java.util.regex.Pattern.DOTALL);
-            java.util.regex.Matcher cdataMatcher = cdataPattern.matcher(rawOutput);
-            if (cdataMatcher.find()) {
-                clean = cdataMatcher.group(1).trim();
-                log.debug("Extracted from <{}> with CDATA: {} chars", tag, clean.length());
-                tagFound = true;
-                break;
-            }
+            String openTag = "<" + tag + ">";
+            String closeTag = "</" + tag + ">";
+            int start = rawOutput.indexOf(openTag);
+            int end = rawOutput.indexOf(closeTag);
 
-            // Pattern 2: <tag>...</tag> (without CDATA)
-            java.util.regex.Pattern p = java.util.regex.Pattern.compile("<" + tag + ">\\s*(.*?)\\s*</" + tag + ">",
-                    java.util.regex.Pattern.DOTALL);
-            java.util.regex.Matcher m = p.matcher(rawOutput);
-            if (m.find()) {
-                clean = m.group(1).trim();
-                log.debug("Extracted from <{}>: {} chars", tag, clean.length());
+            if (start != -1 && end != -1 && start < end) {
+                clean = rawOutput.substring(start + openTag.length(), end).trim();
+                // CDATA 처리
+                if (clean.contains("<![CDATA[")) {
+                    int cdataStart = clean.indexOf("<![CDATA[");
+                    int cdataEnd = clean.lastIndexOf("]]>");
+                    if (cdataStart != -1 && cdataEnd != -1 && cdataStart < cdataEnd) {
+                        clean = clean.substring(cdataStart + 9, cdataEnd).trim();
+                    }
+                }
                 tagFound = true;
                 break;
             }
         }
 
-        // 1.5 Markdown Block Extraction (if no XML tags found)
-        if (!tagFound) {
-            java.util.regex.Pattern mdPattern = java.util.regex.Pattern.compile("```(?:java|xml)?\\s*(.*?)\\s*```",
-                    java.util.regex.Pattern.DOTALL);
-            java.util.regex.Matcher mdMatcher = mdPattern.matcher(rawOutput);
-            if (mdMatcher.find()) {
-                clean = mdMatcher.group(1).trim();
-                log.debug("Extracted from Markdown block: {} chars", clean.length());
+        // Markdown fallback
+        if (!tagFound && rawOutput.contains("```")) {
+            int start = rawOutput.indexOf("```");
+            int end = rawOutput.lastIndexOf("```");
+            if (start != -1 && end != -1 && start < end) {
+                String fragment = rawOutput.substring(start + 3, end).trim();
+                if (fragment.startsWith("java")) fragment = fragment.substring(4).trim();
+                else if (fragment.startsWith("xml")) fragment = fragment.substring(3).trim();
+                clean = fragment;
                 tagFound = true;
             }
         }
 
-        // 1.8 Forced backtick removal from cleaned content
-        clean = clean.replaceAll("(?s)```(?:java|xml)?\\s*", "").replaceAll("```", "").trim();
-
-        // 2. Final Deep Cleaning
         clean = cleanArtifacts(clean);
+
+        if (tagFound && (clean.contains("TerminalQuotaError") || clean.contains("MaxListenersExceededWarning"))) {
+            return new GeneratedCode(new java.util.HashSet<>(), "");
+        }
 
         java.util.Set<String> extractedImports = new java.util.HashSet<>();
         StringBuilder codeOnly = new StringBuilder();
@@ -104,7 +98,6 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
                 cu.getImports().forEach(imp -> extractedImports.add(imp.getNameAsString()));
                 codeOnly.append(cu.toString());
             } else {
-                // Try parsing as a fragment wrapped in a class
                 String wrapped = "class DummyFragment { " + clean + " }";
                 ParseResult<CompilationUnit> fragmentResult = parser.parse(wrapped);
                 if (fragmentResult.isSuccessful() && fragmentResult.getResult().isPresent()) {
@@ -113,72 +106,35 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
                         c.getMembers().forEach(member -> codeOnly.append(member.toString()).append("\n"));
                     });
                     cu.getImports().forEach(imp -> extractedImports.add(imp.getNameAsString()));
-                } else if (tagFound) {
-                    // If tag was found but JavaParser still fails, we trust the tag content 
-                    // but filter out obvious non-Java lines to avoid garbage.
-                    clean.lines().forEach(line -> {
-                        if (!line.trim().startsWith("Loaded cached credentials") && 
-                            !line.trim().startsWith("Loading extension") &&
-                            !line.trim().startsWith("Server 'exa'")) {
-                            codeOnly.append(line).append("\n");
-                        }
-                    });
-                } else {
-                    // FALLBACK: Draconian line-by-line filtering
-                    java.util.concurrent.atomic.AtomicBoolean inClass = new java.util.concurrent.atomic.AtomicBoolean(
-                            false);
-                    clean.lines().forEach(line -> {
-                        String cleanLine = line.replaceAll("<[^>]+>", "").trim();
-
-                        if (cleanLine.matches("^(public\\s+|private\\s+|protected\\s+)?(class|interface|enum|record)\\b.*")) {
-                            inClass.set(true);
-                        }
-
-                        if (cleanLine.matches("^(import|package|@|public|private|protected|static|class|interface|enum|record|void)\\b.*")
-                                || cleanLine.startsWith("@") // Fix for annotations
-                                || cleanLine.equals("}") || cleanLine.equals("{") ||
-                                (inClass.get() && (cleanLine.matches("^\\w+\\s+\\w+\\s*=.*") || cleanLine.contains(";"))) ||
-                                (cleanLine.startsWith("//") && !cleanLine.contains(" ")) ||
-                                cleanLine.startsWith("/*")) {
-
-                            String lower = cleanLine.toLowerCase();
-                            if (lower.startsWith("the ") || lower.startsWith("i ") || lower.startsWith("based ")
-                                    || lower.startsWith("here ") || lower.startsWith("certainly")) {
-                                return;
-                            }
-
-                            if (cleanLine.startsWith("import ")) {
-                                extractedImports.add(cleanLine.replace("import ", "").replace(";", "").trim());
-                            } else if (!cleanLine.isEmpty() && !cleanLine.startsWith("package ")) {
-                                codeOnly.append(cleanLine).append("\n");
-                            }
-                        }
-                    });
+                } else if (tagFound && validateSyntax(clean)) {
+                    codeOnly.append(clean).append("\n");
                 }
             }
         } catch (Exception e) {
-            codeOnly.append(clean.replaceAll("<[^>]+>", ""));
+            // Silence
         }
 
-        if (packageName.isEmpty()) {
-            java.util.regex.Matcher pkgMatcher = java.util.regex.Pattern.compile("package\\s+([a-zA-Z0-9_\\.]+);")
-                    .matcher(clean.replaceAll("<[^>]+>", ""));
-            if (pkgMatcher.find())
-                packageName = pkgMatcher.group(1);
+        // Package name secondary detection
+        if (packageName.isEmpty() && clean.contains("package ")) {
+            int pkgStart = clean.indexOf("package ");
+            int pkgEnd = clean.indexOf(";", pkgStart);
+            if (pkgStart != -1 && pkgEnd != -1) {
+                packageName = clean.substring(pkgStart + 8, pkgEnd).trim();
+            }
         }
 
-        return new GeneratedCode(packageName, className, extractedImports, codeOnly.toString().trim());
-    }
+        // 3. Metadata Injection (Model Traceability)
+        String finalCode = codeOnly.toString().trim();
+        if (rawOutput.contains("<!-- MODEL_USED:")) {
+            int start = rawOutput.indexOf("<!-- MODEL_USED:");
+            int end = rawOutput.indexOf(" -->", start);
+            if (start != -1 && end != -1) {
+                String model = rawOutput.substring(start + 16, end).trim();
+                finalCode = "/**\n * Generated by Test-Hae-Llama\n * Tool: Gemini CLI\n * Model: " + model + "\n */\n" + finalCode;
+            }
+        }
 
-    private String cleanArtifacts(String raw) {
-        return raw.replaceAll("(?s)```(?:java|xml)?\\s*", "")
-                .replaceAll("```", "")
-                .replaceAll("(?i)<!\\[CDATA\\[", "")
-                .replaceAll("(?i)\\]\\]>", "")
-                .replace("&lt;", "<")
-                .replace("&gt;", ">")
-                .replace("&amp;", "&")
-                .trim();
+        return new GeneratedCode(packageName, className, extractedImports, finalCode);
     }
 
     @Override
@@ -186,27 +142,22 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
         if (code == null || code.isBlank())
             return false;
         try {
-            // Try parsing as BodyDeclaration (method/field) first
             ParseResult<BodyDeclaration<?>> result = parser.parseBodyDeclaration(code);
             if (result.isSuccessful())
                 return true;
 
-            // Try parsing as CompilationUnit (full class)
             ParseResult<CompilationUnit> cuResult = parser.parse(code);
             if (cuResult.isSuccessful())
                 return true;
 
-            // Try parsing as Statement (single, needs semicolon)
             ParseResult<com.github.javaparser.ast.stmt.Statement> stmtResult = parser.parseStatement(code);
             if (stmtResult.isSuccessful())
                 return true;
 
-            // Try parsing as Expression (single, NO semicolon)
             ParseResult<com.github.javaparser.ast.expr.Expression> exprResult = parser.parseExpression(code);
             if (exprResult.isSuccessful())
                 return true;
 
-            // Try parsing as Block (multiple statements)
             ParseResult<com.github.javaparser.ast.stmt.BlockStmt> blockResult = parser.parseBlock("{" + code + "}");
             return blockResult.isSuccessful();
         } catch (Exception e) {
@@ -341,5 +292,16 @@ public class JavaParserCodeSynthesizer implements CodeSynthesizer {
     @Override
     public String assembleTestClass(String pkg, String cls, GeneratedCode... snp) {
         return "";
+    }
+
+    private String cleanArtifacts(String raw) {
+        return raw.replaceAll("(?s)```(?:java|xml)?\\s*", "")
+                .replaceAll("```", "")
+                .replace("<![CDATA[", "")
+                .replace("]]>", "")
+                .replace("&lt;", "<")
+                .replace("&gt;", ">")
+                .replace("&amp;", "&")
+                .trim();
     }
 }

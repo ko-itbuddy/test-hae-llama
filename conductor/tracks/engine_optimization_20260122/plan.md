@@ -21,8 +21,8 @@
     - [x] Write failing unit tests in `common` for missing or incorrect context extraction.
     - [x] Improve `ContextAnalyzer` and `Intelligence` extraction logic to capture necessary dependency/method metadata (Class Hierarchy).
     - [x] Verify tests pass in `common`.
-- [ ] **Task: Verification with demo-app**
-    - [ ] Re-generate tests for identified failure cases in `demo-app` and confirm quality improvement. (Blocked by Quota)
+- [~] **Task: Verification with demo-app**
+    - [~] Re-generate tests for identified failure cases in `demo-app` and confirm quality improvement. (Partially restored manually due to Quota)
 - [x] **Task: Conductor - User Manual Verification 'Prompt and Context Optimization' (Protocol in workflow.md)**
 
 ## Phase 2.5: Infrastructure Stability and Error Handling (Additional) [checkpoint: 67c7269]
@@ -44,8 +44,8 @@
     - [x] Enhanced automated import injection.
 - [x] **Task: Meaningful Assertion Generation Improvement (TDD)**
     - [x] Add specific assertion guidelines to GeneralExpert and VERIFY_CLERK.
-- [ ] **Task: Verification with demo-app**
-    - [ ] Re-generate tests for remaining complex classes in `demo-app` and confirm 100% compilability and quality. (Blocked by Quota)
+- [~] **Task: Verification with demo-app**
+    - [~] Re-generate tests for remaining complex classes in `demo-app` and confirm 100% compilability and quality. (Partially restored manually due to Quota)
 - [x] **Task: Conductor - User Manual Verification 'Synthesis Refinement' (Protocol in workflow.md)**
 
 ## Phase 4: Final Validation and Regression Testing
