@@ -8,7 +8,7 @@ This phase focuses on refactoring the existing LLM client architecture to suppor
 - [x] Task: Refactor `LlmClient` interface to be provider-agnostic. [25a229d]
     - [ ] Update `common` module's `LlmClient` interface if necessary.
     - [ ] Ensure existing `GeminiLlmClient` adheres to the refactored interface.
-- [ ] Task: Implement `CloudOllamaLlmClient`.
+- [x] Task: Implement `CloudOllamaLlmClient`. [d447ac3]
     - [ ] Write unit tests for `CloudOllamaLlmClient` mocking external API calls.
     - [ ] Implement client logic using the Ollama Java client or REST API.
     - [ ] Ensure it supports remote/cloud endpoints specifically.
