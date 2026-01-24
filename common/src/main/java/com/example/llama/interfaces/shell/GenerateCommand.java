@@ -1,10 +1,8 @@
 package com.example.llama.interfaces.shell;
 
-import com.example.llama.application.ScenarioProcessingPipeline;
 import com.example.llama.domain.model.GeneratedCode;
 import com.example.llama.domain.service.CodeWriter;
 import com.example.llama.domain.service.DocWriter;
-import com.example.llama.infrastructure.io.InteractionLogger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.shell.standard.ShellComponent;
@@ -33,18 +31,25 @@ public class GenerateCommand {
     @ShellMethod(key = "generate", value = "Generate tests for a specific source file.")
     public void generate(
             @ShellOption(value = "--input") String input,
-            @ShellOption(value = "--output-project", defaultValue = "AUTO_DETECT") String outputProject) {
-        Path sourcePath = Paths.get(input).toAbsolutePath().normalize();
-        Path projectRoot;
-
-        if ("AUTO_DETECT".equals(outputProject)) {
-            projectRoot = findProjectRoot(sourcePath);
-            log.info("🔍 Auto-detected project root: {}", projectRoot);
-        } else {
-            projectRoot = Paths.get(outputProject).toAbsolutePath().normalize();
+            @ShellOption(value = "--output-project", defaultValue = "AUTO_DETECT") String outputProject,
+            @ShellOption(value = "--provider", defaultValue = ShellOption.NULL) String provider) {
+        
+        if (provider != null) {
+            com.example.llama.infrastructure.llm.LlmContextHolder.setProvider(provider);
+            log.info("🎯 LLM Provider override: {}", provider);
         }
 
         try {
+            Path sourcePath = Paths.get(input).toAbsolutePath().normalize();
+            Path projectRoot;
+
+            if ("AUTO_DETECT".equals(outputProject)) {
+                projectRoot = findProjectRoot(sourcePath);
+                log.info("🔍 Auto-detected project root: {}", projectRoot);
+            } else {
+                projectRoot = Paths.get(outputProject).toAbsolutePath().normalize();
+            }
+
             String sourceCode = Files.readString(sourcePath);
             com.example.llama.domain.model.Intelligence.ComponentType domain = com.example.llama.domain.model.Intelligence.ComponentType.SERVICE;
             String fileName = sourcePath.getFileName().toString();
@@ -60,9 +65,8 @@ public class GenerateCommand {
             GeneratedCode result = orchestrator.orchestrate(sourceCode, sourcePath, domain);
             codeWriter.save(result, projectRoot, result.packageName(), result.className());
 
-            // Track original generated code in memory (never re-read from disk)
+            // Track original generated code in memory
             String originalGeneratedCode = result.body();
-            String currentCode = originalGeneratedCode;
 
             // 2. Self-Healing Loop
             String expectedClassName = fileName.replace(".java", "Test");
@@ -81,44 +85,26 @@ public class GenerateCommand {
                 log.warn("Error Sample: {}",
                         testResult.output().lines().limit(5).collect(java.util.stream.Collectors.joining("\n")));
 
-                // Use in-memory code (not re-reading from disk to avoid XML contamination)
                 result = orchestrator.repair(result, testResult.output(), sourceCode, sourcePath, domain);
 
-                // Detect empty REPAIR response
                 if (result.body() == null || result.body().isBlank()) {
-                    log.error("💥 Repair Agent returned empty code. Aborting repair loop (Quota/Error likely).");
+                    log.error("💥 Repair Agent returned empty code. Aborting repair loop.");
                     break;
                 }
 
-                // Validate that REPAIR didn't change the package (e.g., trying to fix User.java
-                // instead of UserRepositoryTest.java)
-                String expectedPackage = result.packageName(); // Package from initial generation
-                if (result.packageName() != null && !result.packageName().equals(expectedPackage)) {
-                    log.warn(
-                            "⚠️ REPAIR_AGENT changed package from {} to {}. This indicates it's trying to fix the wrong file. Rejecting repair and using original code.",
-                            expectedPackage, result.packageName());
-                    result = new GeneratedCode(
-                            expectedPackage,
-                            expectedClassName,
-                            result.imports(),
-                            originalGeneratedCode);
-                }
-
-                if (result.className() == null || result.className().isBlank()) {
-                    log.warn("⚠️ Repair produced blank class name. Using expected class name: {}", expectedClassName);
-                }
-
+                String expectedPackage = result.packageName();
                 String finalClassName = (result.className() != null && !result.className().isBlank())
                         ? result.className()
                         : expectedClassName;
 
-                currentCode = result.body(); // Update current code for next iteration
                 codeWriter.save(result, projectRoot, result.packageName(), finalClassName);
             }
 
             log.info("🏁 Test generation process complete for {}", sourcePath.getFileName());
         } catch (IOException e) {
             log.error("💥 Error reading source file", e);
+        } finally {
+            com.example.llama.infrastructure.llm.LlmContextHolder.clear();
         }
     }
 

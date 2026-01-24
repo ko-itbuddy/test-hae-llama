@@ -4,14 +4,11 @@ spring:
     lazy-initialization: true # ⚡ Speed up startup by creating beans only when needed
   ai:
     ollama:
-      base-url: http://127.0.0.1:11434
+      base-url: ${LLAMA_OLLAMA_BASE_URL:https://api.ollama.cloud} # Placeholder for a cloud endpoint
       chat:
         options:
-          model: qwen2.5-coder:14b
-          temperature: 0.3
-      embedding:
-        options:
-          model: nomic-embed-text:latest
+          model: ${LLAMA_OLLAMA_MODEL:qwen3-coder:480b-cloud}
+          temperature: 0.0
       keep-alive: -1
 
 llama:
@@ -20,12 +17,12 @@ llama:
     - name: gemini
       type: gemini
       settings:
-        fallbacks: "gemini-2.5-flash,auto,gemini-3-pro-preview"
+        fallbacks: "gemini-2.0-flash,gemini-1.5-pro"
     - name: ollama
       type: ollama
       settings:
-        base-url: "http://localhost:11434"
-        model: "llama3"
+        base-url: ${LLAMA_OLLAMA_BASE_URL:https://api.ollama.cloud}
+        model: ${LLAMA_OLLAMA_MODEL:qwen3-coder:480b-cloud}
     - name: codex
       type: codex
       settings:
