@@ -64,7 +64,7 @@ class CloudOllamaLlmClientTest {
 
         // Then
         assertThat(result).isEqualTo("<response>Success</response>");
-        verify(logger).logInteraction(eq("Ollama:llama3"), anyString(), contains("<response>Success</response>"));
+        verify(logger).logInteraction(eq("Ollama:qwen2.5-coder:7b"), anyString(), contains("<response>Success</response>"));
     }
 
     @Test
