@@ -55,15 +55,15 @@ class CloudOllamaLlmClientTest {
                         .build())
                 .build();
 
-        given(chatModel.call(any(Prompt.class))).willReturn(chatResponse);
+        given(chatModel.stream(any(Prompt.class))).willReturn(reactor.core.publisher.Flux.just(chatResponse));
         given(chatResponse.getResult()).willReturn(generation);
         given(generation.getOutput()).willReturn(new org.springframework.ai.chat.messages.AssistantMessage("<response>Success</response>"));
 
         // When
-        String result = client.generate(prompt);
+        com.example.llama.domain.model.LlmResponse result = client.generate(prompt);
 
         // Then
-        assertThat(result).isEqualTo("<response>Success</response>");
+        assertThat(result.content()).isEqualTo("<response>Success</response>");
         verify(logger).logInteraction(eq("Ollama:qwen3-coder:480b-cloud"), anyString(), contains("<response>Success</response>"));
     }
 
@@ -81,13 +81,13 @@ class CloudOllamaLlmClientTest {
                         .build())
                 .build();
 
-        given(chatModel.call(any(Prompt.class))).willThrow(new RuntimeException("API Error"));
+        given(chatModel.stream(any(Prompt.class))).willThrow(new RuntimeException("API Error"));
 
         // When
-        String result = client.generate(prompt);
+        com.example.llama.domain.model.LlmResponse result = client.generate(prompt);
 
         // Then
-        assertThat(result).contains("<status>FAILED</status>");
-        assertThat(result).contains("API Error");
+        assertThat(result.content()).contains("<status>FAILED</status>");
+        assertThat(result.content()).contains("API Error");
     }
 }

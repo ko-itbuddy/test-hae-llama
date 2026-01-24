@@ -1,4 +1,4 @@
-# Track cloud_ollama_optimization_20260123 Context
+# Track ollama_cloud_verification_20260124 Context
 
 - [Specification](./spec.md)
 - [Implementation Plan](./plan.md)

@@ -63,7 +63,7 @@ class BureaucraticAgentTest {
                 .build();
 
         // Use any(LlmPrompt.class) because the agent constructs the full prompt
-        given(llmClient.generate(any(LlmPrompt.class))).willReturn("Result");
+        given(llmClient.generate(any(LlmPrompt.class))).willReturn(com.example.llama.domain.model.LlmResponse.builder().content("Result").build());
 
         // when
         String result = agent.act(userRequest);

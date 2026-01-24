@@ -39,8 +39,9 @@ public class GeminiLlmClient implements LlmClient, ConfigurableLlmClient {
     }
 
     @Override
-    public String generate(LlmPrompt prompt) {
+    public com.example.llama.domain.model.LlmResponse generate(com.example.llama.domain.model.prompt.LlmPrompt prompt) {
         String fullPrompt = prompt.toXml();
+        long startTime = System.currentTimeMillis();
         
         for (String model : modelFallbacks) {
             log.info("🚀 Attempting generation with model: {}", model);
@@ -54,14 +55,19 @@ public class GeminiLlmClient implements LlmClient, ConfigurableLlmClient {
 
             if (!response.contains("TerminalQuotaError") && !response.contains("<status>FAILED</status>")) {
                 this.lastUsedModel = model;
-                // Inject model info into response for downstream consumption
-                return response + "\n<!-- MODEL_USED: " + model + " -->";
+                String content = response + "\n<!-- MODEL_USED: " + model + " -->";
+                
+                return com.example.llama.domain.model.LlmResponse.builder()
+                        .content(content)
+                        .totalTimeMs(System.currentTimeMillis() - startTime)
+                        .metadata(java.util.Map.of("model", model))
+                        .build();
             }
             
             log.warn("⚠️ Model {} failed (Quota or Error). Trying next fallback...", model);
         }
 
-        return "<response><status>FAILED</status><thought>All models exhausted.</thought><code>// Error: All models failed</code></response>";
+        return com.example.llama.domain.model.LlmResponse.failed("All models exhausted.");
     }
 
     private String executeCli(String fullPrompt, String model) {

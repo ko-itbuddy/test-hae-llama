@@ -1,8 +1,0 @@
-{
-  "track_id": "cloud_ollama_optimization_20260123",
-  "type": "feature",
-  "status": "new",
-  "created_at": "2026-01-23T16:15:00Z",
-  "updated_at": "2026-01-23T16:15:00Z",
-  "description": "ollama 의 cloud로 서비스가 가능한 모델들 목록을 가져와서 파라미터 크기별로 테스트 하고 가장 알맞는 모델 파라미터 크기 찾기"
-}

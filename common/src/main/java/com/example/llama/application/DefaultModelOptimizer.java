@@ -64,6 +64,7 @@ public class DefaultModelOptimizer implements ModelOptimizer {
         log.info("  🧪 Scenario: {}", scenario.name());
         long startTime = System.currentTimeMillis();
         LlmContextHolder.setProvider(provider);
+        com.example.llama.utils.MetricCollector.start();
         
         try {
             // Try absolute path or relative to project root
@@ -84,12 +85,17 @@ public class DefaultModelOptimizer implements ModelOptimizer {
             long genEndTime = System.currentTimeMillis();
             long totalTime = genEndTime - genStartTime;
 
+            // Retrieve collected metrics
+            List<com.example.llama.domain.model.LlmResponse> metrics = com.example.llama.utils.MetricCollector.stop();
+            
             boolean formatSuccess = result.body() != null && !result.body().isBlank();
             boolean compileSuccess = formatSuccess && !result.body().contains("<status>FAILED</status>");
 
-            int inTokens = sourceCode.length() / 4;
-            int outTokens = result.body() != null ? result.body().length() / 4 : 0;
-            double tps = totalTime > 0 ? (double) outTokens / (totalTime / 1000.0) : 0;
+            // Aggregate metrics from all agent calls in this scenario
+            long avgTtft = metrics.stream().mapToLong(com.example.llama.domain.model.LlmResponse::ttftMs).filter(t -> t > 0).findFirst().orElse(0);
+            int totalInTokens = metrics.stream().mapToInt(com.example.llama.domain.model.LlmResponse::inputTokens).sum();
+            int totalOutTokens = metrics.stream().mapToInt(com.example.llama.domain.model.LlmResponse::outputTokens).sum();
+            double avgTps = totalTime > 0 ? (double) totalOutTokens / (totalTime / 1000.0) : 0;
 
             return BenchmarkResult.builder()
                     .provider(provider)
@@ -100,15 +106,16 @@ public class DefaultModelOptimizer implements ModelOptimizer {
                     .logicSuccess(compileSuccess) 
                     .lineCoverage(0.0) 
                     .totalGenerationTimeMs(totalTime)
-                    .ttftMs(totalTime / 10) 
-                    .tps(tps)
-                    .inputTokens(inTokens)
-                    .outputTokens(outTokens)
+                    .ttftMs(avgTtft) 
+                    .tps(avgTps)
+                    .inputTokens(totalInTokens)
+                    .outputTokens(totalOutTokens)
                     .repairCount(0)
                     .build();
 
         } catch (Exception e) {
             log.error("❌ Scenario {} failed for {}/{}", scenario.name(), provider, model, e);
+            com.example.llama.utils.MetricCollector.stop(); // Clean up
             return BenchmarkResult.builder()
                     .provider(provider)
                     .modelName(model + " [" + scenario.name() + "]")
