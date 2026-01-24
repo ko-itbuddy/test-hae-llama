@@ -30,11 +30,6 @@ public class OllamaConfig {
     }
 
     @Bean
-    public WebClient webClient(WebClient.Builder webClientBuilder) {
-        return webClientBuilder.build();
-    }
-
-    @Bean
     public WebClientCustomizer webClientCustomizer() {
         return webClientBuilder -> {
             HttpClient httpClient = HttpClient.create()

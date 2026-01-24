@@ -7,10 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.model.Generation;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.ollama.OllamaChatModel;
 
-import java.util.function.Function;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -21,30 +23,19 @@ import static org.mockito.Mockito.*;
 class CloudOllamaLlmClientTest {
 
     @Mock
-    private WebClient webClient;
-    @Mock
-    private WebClient.RequestBodyUriSpec requestBodyUriSpec;
-    @Mock
-    private WebClient.RequestBodySpec requestBodySpec;
-    @Mock
-    private WebClient.RequestHeadersSpec requestHeadersSpec;
-    @Mock
-    private WebClient.ResponseSpec responseSpec;
+    private OllamaChatModel chatModel;
     @Mock
     private InteractionLogger logger;
+    @Mock
+    private ChatResponse chatResponse;
+    @Mock
+    private Generation generation;
 
     private CloudOllamaLlmClient client;
 
     @BeforeEach
     void setUp() {
-        // Mocking WebClient chain
-        lenient().when(webClient.post()).thenReturn(requestBodyUriSpec);
-        lenient().when(requestBodyUriSpec.uri(any(String.class))).thenReturn(requestBodySpec);
-        lenient().when(requestBodySpec.bodyValue(any())).thenReturn(requestHeadersSpec);
-        lenient().when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
-        
-        // Default configuration
-        client = new CloudOllamaLlmClient(webClient, logger, "http://localhost:11434", "llama3");
+        client = new CloudOllamaLlmClient(chatModel, logger, "llama3");
     }
 
     @Test
@@ -61,19 +52,9 @@ class CloudOllamaLlmClientTest {
                         .build())
                 .build();
 
-        String expectedResponseJson = """
-                {
-                    "model": "llama3",
-                    "created_at": "2023-08-04T08:52:19.3854026Z",
-                    "message": {
-                        "role": "assistant",
-                        "content": "<response>Success</response>"
-                    },
-                    "done": true
-                }
-                """;
-
-        given(responseSpec.bodyToMono(String.class)).willReturn(Mono.just(expectedResponseJson));
+        given(chatModel.call(any(Prompt.class))).willReturn(chatResponse);
+        given(chatResponse.getResult()).willReturn(generation);
+        given(generation.getOutput()).willReturn(new org.springframework.ai.chat.messages.AssistantMessage("<response>Success</response>"));
 
         // When
         String result = client.generate(prompt);
@@ -97,7 +78,7 @@ class CloudOllamaLlmClientTest {
                         .build())
                 .build();
 
-        given(responseSpec.bodyToMono(String.class)).willThrow(new RuntimeException("API Error"));
+        given(chatModel.call(any(Prompt.class))).willThrow(new RuntimeException("API Error"));
 
         // When
         String result = client.generate(prompt);

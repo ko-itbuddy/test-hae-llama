@@ -4,91 +4,54 @@ import com.example.llama.domain.model.prompt.LlmPrompt;
 import com.example.llama.domain.service.LlmClient;
 import com.example.llama.infrastructure.io.InteractionLogger;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.reactive.function.client.WebClient;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import org.springframework.stereotype.Component;
+import org.springframework.ai.chat.messages.SystemMessage;
+import org.springframework.ai.chat.messages.UserMessage;
+import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.Prompt;
+import org.springframework.ai.ollama.OllamaChatModel;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import java.util.List;
-import java.util.Map;
 
 @Slf4j
 @Component("ollamaLlmClient")
 public class CloudOllamaLlmClient implements LlmClient {
 
-    private final WebClient webClient;
+    private final OllamaChatModel chatModel;
     private final InteractionLogger logger;
-    private final String baseUrl;
     private final String model;
-    private final ObjectMapper objectMapper;
 
-    public CloudOllamaLlmClient(WebClient webClient, 
+    public CloudOllamaLlmClient(OllamaChatModel chatModel, 
                                 InteractionLogger logger, 
-                                @Value("${llama.ollama.base-url:http://localhost:11434}") String baseUrl, 
                                 @Value("${llama.ollama.model:llama3}") String model) {
-        this.webClient = webClient;
+        this.chatModel = chatModel;
         this.logger = logger;
-        this.baseUrl = baseUrl;
         this.model = model;
-        this.objectMapper = new ObjectMapper();
     }
 
     @Override
     public String generate(LlmPrompt prompt) {
-        log.info("🚀 Generating with Cloud Ollama model: {}", model);
+        log.info("🚀 Generating with Cloud Ollama (Spring AI) model: {}", model);
 
-        // Construct the chat payload
-        // System Directive -> System Message
-        // User Request -> User Message
-        // But wait, LlmPrompt.toXml() merges them into one prompt in Gemini. 
-        // For Ollama Chat, we should split them if possible.
-        // Or we can just send the XML as the user message if we want the model to process XML.
-        // Given the prompt engineering relies on XML tags (<prompt>, <system_instructions>, etc.),
-        // sending the *entire* XML structure as a single USER message might be safer to preserve the prompt structure
-        // unless we want to map "system_instructions" to "system" role.
-        
-        // Let's try mapping System Directive to System role.
-        // But LlmSystemDirective.toXml() includes <system_instructions> tags.
-        // If we want to be "Provider Agnostic" in terms of "Prompt Format", we might want to strip tags?
-        // No, the prompt engineering *is* the tags. The model is trained/instructed to respect them.
-        // So we should send the XML content.
-        
-        // Strategy: Send the `systemDirective.toXml()` as system message, and `userRequest.toXml()` as user message.
-        
         String systemContent = prompt.getSystemDirective().toXml();
         String userContent = prompt.getUserRequest().toXml();
 
-        Map<String, Object> payload = Map.of(
-                "model", model,
-                "messages", List.of(
-                        Map.of("role", "system", "content", systemContent),
-                        Map.of("role", "user", "content", userContent)
-                ),
-                "stream", false,
-                "options", Map.of(
-                        "temperature", 0.0 // Deterministic
-                )
-        );
-
         try {
-            String responseJson = webClient.post()
-                    .uri(baseUrl + "/api/chat")
-                    .bodyValue(payload)
-                    .retrieve()
-                    .bodyToMono(String.class)
-                    .block();
+            SystemMessage systemMessage = new SystemMessage(systemContent);
+            UserMessage userMessage = new UserMessage(userContent);
+            
+            Prompt ollamaPrompt = new Prompt(List.of(systemMessage, userMessage));
+            ChatResponse response = chatModel.call(ollamaPrompt);
 
-            // Parse response
-            JsonNode root = objectMapper.readTree(responseJson);
-            String content = root.path("message").path("content").asText();
+            String content = response.getResult().getOutput().getText();
 
-            logger.logInteraction("Ollama:" + model, systemContent + "\n---" + userContent, content);
+            logger.logInteraction("Ollama:" + model, systemContent + "\n---\n" + userContent, content);
             
             return content;
 
         } catch (Exception e) {
-            log.error("Failed to generate with Ollama", e);
+            log.error("Failed to generate with Spring AI Ollama", e);
             return "<response><status>FAILED</status><code>" + e.getMessage() + "</code></response>";
         }
     }
