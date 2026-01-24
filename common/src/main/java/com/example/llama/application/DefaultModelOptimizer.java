@@ -21,6 +21,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -35,58 +36,72 @@ public class DefaultModelOptimizer implements ModelOptimizer {
             .enable(SerializationFeature.INDENT_OUTPUT)
             .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
+    private record BenchmarkScenario(String name, String path, com.example.llama.domain.model.Intelligence.ComponentType type) {}
+
+    private final List<BenchmarkScenario> scenarios = List.of(
+            new BenchmarkScenario("Controller", "sample-projects/demo-app/src/main/java/com/example/demo/presentation/ProductController.java", com.example.llama.domain.model.Intelligence.ComponentType.CONTROLLER),
+            new BenchmarkScenario("Service", "sample-projects/demo-app/src/main/java/com/example/demo/service/ProductService.java", com.example.llama.domain.model.Intelligence.ComponentType.SERVICE),
+            new BenchmarkScenario("Repository", "sample-projects/demo-app/src/main/java/com/example/demo/repository/ProductRepository.java", com.example.llama.domain.model.Intelligence.ComponentType.REPOSITORY),
+            new BenchmarkScenario("Entity", "sample-projects/demo-app/src/main/java/com/example/demo/domain/Product.java", com.example.llama.domain.model.Intelligence.ComponentType.ENTITY)
+    );
+
     @Override
     public BenchmarkResult benchmark(String provider, String model) {
-        log.info("📊 Starting benchmark for Provider: {}, Model: {}", provider, model);
+        log.info("📊 Starting multi-scenario benchmark for Provider: {}, Model: {}", provider, model);
         
+        List<BenchmarkResult> scenarioResults = new ArrayList<>();
+        
+        for (BenchmarkScenario scenario : scenarios) {
+            scenarioResults.add(runScenario(provider, model, scenario));
+        }
+
+        BenchmarkResult aggregated = aggregate(scenarioResults);
+        saveReport(aggregated, scenarioResults);
+        return aggregated;
+    }
+
+    private BenchmarkResult runScenario(String provider, String model, BenchmarkScenario scenario) {
+        log.info("  🧪 Scenario: {}", scenario.name());
         long startTime = System.currentTimeMillis();
         LlmContextHolder.setProvider(provider);
         
         try {
-            // 1. Prepare Reference Case
-            Path sourcePath = Paths.get("sample-projects/demo-app/src/main/java/com/example/demo/presentation/ProductController.java");
+            Path sourcePath = Paths.get(scenario.path());
             String sourceCode = Files.readString(sourcePath);
-            com.example.llama.domain.model.Intelligence.ComponentType domain = com.example.llama.domain.model.Intelligence.ComponentType.CONTROLLER;
 
-            // 2. Execute Generation
             long genStartTime = System.currentTimeMillis();
-            com.example.llama.domain.model.GeneratedCode result = orchestrator.orchestrate(sourceCode, sourcePath, domain);
+            com.example.llama.domain.model.GeneratedCode result = orchestrator.orchestrate(sourceCode, sourcePath, scenario.type());
             long genEndTime = System.currentTimeMillis();
             long totalTime = genEndTime - genStartTime;
 
-            // 3. Verify Result
             boolean formatSuccess = result.body() != null && !result.body().isBlank();
             boolean compileSuccess = formatSuccess && !result.body().contains("<status>FAILED</status>");
 
-            // Simple Token Heuristic: 4 chars = 1 token
             int inTokens = sourceCode.length() / 4;
             int outTokens = result.body() != null ? result.body().length() / 4 : 0;
             double tps = totalTime > 0 ? (double) outTokens / (totalTime / 1000.0) : 0;
 
-            BenchmarkResult benchmarkResult = BenchmarkResult.builder()
+            return BenchmarkResult.builder()
                     .provider(provider)
-                    .modelName(model)
+                    .modelName(model + " [" + scenario.name() + "]")
                     .timestamp(LocalDateTime.now())
                     .formatSuccess(formatSuccess)
                     .compileSuccess(compileSuccess)
                     .logicSuccess(compileSuccess) 
                     .lineCoverage(0.0) 
                     .totalGenerationTimeMs(totalTime)
-                    .ttftMs(totalTime / 10) // Mock TTFT as 10% of total
+                    .ttftMs(totalTime / 10) 
                     .tps(tps)
                     .inputTokens(inTokens)
                     .outputTokens(outTokens)
                     .repairCount(0)
                     .build();
 
-            saveReport(benchmarkResult);
-            return benchmarkResult;
-
         } catch (Exception e) {
-            log.error("❌ Benchmark failed for {}/{}", provider, model, e);
+            log.error("❌ Scenario {} failed for {}/{}", scenario.name(), provider, model, e);
             return BenchmarkResult.builder()
                     .provider(provider)
-                    .modelName(model)
+                    .modelName(model + " [" + scenario.name() + "]")
                     .timestamp(LocalDateTime.now())
                     .errorMessage(e.getMessage())
                     .build();
@@ -108,7 +123,6 @@ public class DefaultModelOptimizer implements ModelOptimizer {
             BenchmarkResult result = benchmarkWithRetry(provider, model);
             results.add(result);
             
-            // Fixed Delay between batch requests to prevent rate limiting
             try { Thread.sleep(2000); } catch (InterruptedException ignored) {}
         }
         
@@ -128,26 +142,52 @@ public class DefaultModelOptimizer implements ModelOptimizer {
 
             log.warn("⏳ Rate limited (429). Retrying in {}ms... (Attempt {}/{})", waitTime, i + 1, maxRetries);
             try { Thread.sleep(waitTime); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
-            waitTime *= 2; // Exponential backoff
+            waitTime *= 2; 
         }
         
-        return benchmark(provider, model); // Final attempt
+        return benchmark(provider, model); 
     }
 
-    private void saveReport(BenchmarkResult result) {
+    private BenchmarkResult aggregate(List<BenchmarkResult> results) {
+        if (results.isEmpty()) return null;
+        
+        long totalTime = 0;
+        double totalTps = 0;
+        int successCount = 0;
+        
+        for (BenchmarkResult r : results) {
+            totalTime += r.getTotalGenerationTimeMs();
+            totalTps += r.getTps();
+            if (r.isCompileSuccess()) successCount++;
+        }
+
+        BenchmarkResult first = results.get(0);
+        return BenchmarkResult.builder()
+                .provider(first.getProvider())
+                .modelName(first.getModelName().split(" \\\\\\[")[0]) 
+                .timestamp(LocalDateTime.now())
+                .formatSuccess(successCount == results.size())
+                .compileSuccess(successCount == results.size())
+                .totalGenerationTimeMs(totalTime / results.size())
+                .tps(totalTps / results.size())
+                .errorMessage(successCount < results.size() ? "Some scenarios failed" : null)
+                .build();
+    }
+
+    private void saveReport(BenchmarkResult result, List<BenchmarkResult> details) {
         try {
             Path reportDir = Paths.get("logs", "benchmarks");
             Files.createDirectories(reportDir);
             
-            String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd"));
+            String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
             String fileName = String.format("report_%s_%s_%s.json", 
                     result.getProvider(), 
                     result.getModelName().replace(":", "-"), 
                     date);
             
             Path filePath = reportDir.resolve(fileName);
-            objectMapper.writeValue(filePath.toFile(), result);
-            log.info("📄 Benchmark report saved: {}", filePath.toAbsolutePath());
+            objectMapper.writeValue(filePath.toFile(), Map.of("summary", result, "details", details));
+            log.info("📄 Detailed benchmark report saved: {}", filePath.toAbsolutePath());
             
         } catch (IOException e) {
             log.error("Failed to save benchmark report", e);
