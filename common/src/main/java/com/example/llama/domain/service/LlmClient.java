@@ -1,5 +1,6 @@
 package com.example.llama.domain.service;
 
+import com.example.llama.domain.model.LlmResponse;
 import com.example.llama.domain.model.prompt.LlmPrompt;
 
 /**
@@ -11,9 +12,9 @@ public interface LlmClient {
      * Generates a response from the LLM.
      * 
      * @param prompt The aggregate prompt context containing system and user parts.
-     * @return The LLM's response text
+     * @return The LLM's response object containing content and metrics.
      */
-    String generate(LlmPrompt prompt);
+    LlmResponse generate(LlmPrompt prompt);
 
     /**
      * Backward compatibility method.

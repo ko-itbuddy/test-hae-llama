@@ -5,12 +5,12 @@
 - Kotlin
 
 ## Frameworks
-- Spring Boot 3.4.1 (Spring Shell)
+- Spring Boot 3.5.10 (Spring Shell 3.4.1)
 
 ## Key Libraries & Tools
-- **AI Engine**: Gemini CLI
-- **Analysis**: JavaParser 3.27.1, ANTLR 4.13.1
-- **Testing**: JUnit 5, AssertJ, Mockito
+- **AI Engine**: Gemini CLI, Spring AI 1.1.2 (Ollama integration)
+- **Analysis**: JavaParser 3.27.1, ANTLR 4.13.2
+- **Testing**: JUnit 5.11, AssertJ 3.26, Mockito 5.14
 
 ## Architecture
 - Monorepo structure with:

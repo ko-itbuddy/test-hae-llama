@@ -28,7 +28,7 @@ public class BureaucraticAgent implements Agent {
     public String act(LlmUserRequest request) {
         log.info("[Agent: {}] Acting on instruction (XML Prompt)...", role);
 
-        LlmPrompt fullPrompt = LlmPrompt.builder()
+        com.example.llama.domain.model.prompt.LlmPrompt fullPrompt = com.example.llama.domain.model.prompt.LlmPrompt.builder()
                 .systemDirective(systemDirective)
                 .userRequest(request)
                 .build();
@@ -36,12 +36,15 @@ public class BureaucraticAgent implements Agent {
         // [LOG] Record the exact prompt being sent
         com.example.llama.utils.AgentLogger.logInteraction(role, "PROMPT", fullPrompt.toXml());
 
-        String response = llmClient.generate(fullPrompt);
+        com.example.llama.domain.model.LlmResponse response = llmClient.generate(fullPrompt);
+        
+        // [METRICS] Record response for benchmarking if active
+        com.example.llama.utils.MetricCollector.record(response);
 
         // [LOG] Record the raw response
-        com.example.llama.utils.AgentLogger.logInteraction(role, "RESPONSE", response);
+        com.example.llama.utils.AgentLogger.logInteraction(role, "RESPONSE", response.content());
 
-        return response;
+        return response.content();
     }
 
     @Override

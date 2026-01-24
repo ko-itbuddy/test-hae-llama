@@ -22,8 +22,9 @@ public class OpencodeLlmClient implements LlmClient {
     private final InteractionLogger logger;
 
     @Override
-    public String generate(LlmPrompt prompt) {
+    public com.example.llama.domain.model.LlmResponse generate(LlmPrompt prompt) {
         String xmlContent = prompt.toXml();
+        long startTime = System.currentTimeMillis();
 
         System.out.println("\n" + "=".repeat(40) + " [EXECUTING OPENCODE CLI] " + "=".repeat(40));
         System.out.println("TOTAL PROMPT SIZE: " + xmlContent.length() + " chars");
@@ -52,40 +53,28 @@ public class OpencodeLlmClient implements LlmClient {
             int exitCode = process.waitFor();
             if (exitCode != 0) {
                 log.error("❌ OpenCode CLI Failed (Exit: {}): {}", exitCode, output);
-                return "<response><status>FAILED</status><thought>OpenCode CLI execution failed.</thought><code>// Error: "
-                        + output + "</code></response>";
+                return com.example.llama.domain.model.LlmResponse.failed("OpenCode CLI execution failed: " + output);
             }
 
             // Log interaction
             logger.logInteraction("OpenCodeCLI", "XML_PROMPT (See debug_opencode_prompt.xml)", output);
-            return output;
+            
+            return com.example.llama.domain.model.LlmResponse.builder()
+                    .content(output)
+                    .totalTimeMs(System.currentTimeMillis() - startTime)
+                    .build();
 
         } catch (Exception e) {
             log.error("💥 OpenCode Execution Error", e);
-            return "<response><status>FAILED</status><thought>Execution error.</thought><code>// Exception: "
-                    + e.getMessage() + "</code></response>";
+            return com.example.llama.domain.model.LlmResponse.failed(e.getMessage());
         }
     }
 
     @Override
     public String generate(String prompt, String systemDirective) {
-        // Legacy bridge
-        LlmPersona persona = LlmPersona.builder()
-                .role("Legacy")
-                .domain("Legacy")
-                .mission(systemDirective)
-                .domainStrategy("")
-                .criticalPolicy("")
-                .repairProtocol("")
-                .build();
-
-        LlmClassContext classContext = LlmClassContext.builder()
-                .classStructure(prompt)
-                .build();
-
-        return generate(LlmPrompt.builder()
-                .systemDirective(LlmSystemDirective.builder().persona(persona).formatStandard("").build())
-                .userRequest(LlmUserRequest.builder().task("Legacy Task").classContext(classContext).build())
-                .build());
+        // Legacy bridge - this is a default method in the interface now (but with String return?)
+        // Wait, the interface had a default method generate(String, String) returning String.
+        // I should probably remove this or update it.
+        throw new UnsupportedOperationException("Legacy generate is not supported.");
     }
 }

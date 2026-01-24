@@ -16,7 +16,7 @@ public class RoutingLlmClient implements LlmClient {
     private final LlmProviderFactory providerFactory;
 
     @Override
-    public String generate(LlmPrompt prompt) {
+    public com.example.llama.domain.model.LlmResponse generate(com.example.llama.domain.model.prompt.LlmPrompt prompt) {
         String provider = LlmContextHolder.getProvider();
         LlmClient delegate = providerFactory.getClient(provider);
         return delegate.generate(prompt);
