@@ -7,7 +7,7 @@ spring:
       base-url: ${LLAMA_OLLAMA_BASE_URL:https://api.ollama.cloud} # Placeholder for a cloud endpoint
       chat:
         options:
-          model: ${LLAMA_OLLAMA_MODEL:qwen2.5-coder:7b}
+          model: ${LLAMA_OLLAMA_MODEL:qwen2.5-coder:14b}
           temperature: 0.0
       keep-alive: -1
 
@@ -22,7 +22,7 @@ llama:
       type: ollama
       settings:
         base-url: ${LLAMA_OLLAMA_BASE_URL:https://api.ollama.cloud}
-        model: ${LLAMA_OLLAMA_MODEL:qwen2.5-coder:7b}
+        model: ${LLAMA_OLLAMA_MODEL:qwen2.5-coder:14b}
     - name: codex
       type: codex
       settings:
