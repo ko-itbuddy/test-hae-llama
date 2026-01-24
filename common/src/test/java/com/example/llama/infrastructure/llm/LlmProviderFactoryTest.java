@@ -14,6 +14,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class LlmProviderFactoryTest {
@@ -65,4 +66,26 @@ class LlmProviderFactoryTest {
         
         assertThat(client).isEqualTo(ollamaClient);
     }
+
+    @Test
+    void shouldConfigureClientIfItIsConfigurable() {
+        // Given
+        ConfigurableMockClient mockClient = mock(ConfigurableMockClient.class);
+        LlmProviderProperties.ProviderConfig config = new LlmProviderProperties.ProviderConfig();
+        config.setName("custom");
+        config.setType("custom");
+        Map<String, String> settings = Map.of("key", "value");
+        config.setSettings(settings);
+        
+        properties.setProviders(List.of(config));
+        given(applicationContext.getBean("customLlmClient", LlmClient.class)).willReturn(mockClient);
+
+        // When
+        factory.getClient("custom");
+
+        // Then
+        verify(mockClient).configure(settings);
+    }
+
+    private interface ConfigurableMockClient extends LlmClient, ConfigurableLlmClient {}
 }
