@@ -11,6 +11,7 @@ An autonomous, industrial-grade test generation suite that produces robust, comp
 - **Self-Healing Verification Loop:** Automated test generation, verification, and repair.
 - **Multi-Provider Strategy:** Dynamic routing and fallback across multiple LLM providers (Gemini, Ollama, etc.).
 - **Automated Benchmarking Suite:** Data-driven model optimization through rigorous performance and quality metrics.
+- **Universal Component Support:** Extended orchestration support for Entity, DTO, and VO layers via generalized fallback pipelines.
 - **Structural AST Synthesis (JavaParser):** Utilizes JavaParser for intelligent AST manipulation and merging.
 - **Llama Security Protocol (LSP):** Ensures sensitive information never leaves the machine through masking and sandboxing.
 
