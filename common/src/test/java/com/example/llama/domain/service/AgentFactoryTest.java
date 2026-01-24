@@ -57,6 +57,6 @@ class AgentFactoryTest {
         String instruction = agent.getTechnicalDirective();
 
         assertThat(instruction).contains("Smart Assertions");
-        assertThat(instruction).contains("Suspect implementation flaws");
+        assertThat(instruction).contains("구현상의 결함을 지적하라");
     }
 }

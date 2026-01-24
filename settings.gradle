@@ -1,7 +1,15 @@
 pluginManagement {
     repositories {
         mavenCentral()
-        gradlePluginPortal() // Generally good practice to include this for plugins
+        gradlePluginPortal()
+    }
+}
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.PREFER_PROJECT)
+    repositories {
+        mavenCentral()
+        maven { url 'https://repo.spring.io/milestone' }
     }
 }
 

@@ -1,14 +1,13 @@
 plugins {
     id 'java'
-    id 'org.jetbrains.kotlin.jvm'
-    id 'org.jetbrains.intellij.platform'
+    id 'org.jetbrains.kotlin.jvm' version '2.1.0'
+    id 'org.jetbrains.intellij.platform' version '2.2.1'
 }
 
 group = 'com.example'
 version = '0.1.1'
 
 repositories {
-    mavenCentral()
     intellijPlatform {
         defaultRepositories()
     }
