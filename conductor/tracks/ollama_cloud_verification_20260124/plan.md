@@ -9,11 +9,11 @@
 - [x] Task: Update `DefaultModelOptimizer` to record real metrics. [ae63ae3]
 - [x] Task: Conductor - User Manual Verification 'Phase 1: Metric Refinement' (Protocol in workflow.md) [ae63ae3]
 
-## Phase 2: Baseline Establishment (기준점 수립)
+## Phase 2: Baseline Establishment (기준점 수립) [checkpoint: 1027bad]
 설치된 `ollama` npm 패키지를 사용하여 Java 엔진의 결과와 대조할 기준 데이터를 확보합니다.
 
-- [ ] Task: Create Baseline Verification Script.
-- [ ] Task: Conductor - User Manual Verification 'Phase 2: Baseline Establishment' (Protocol in workflow.md)
+- [x] Task: Create Baseline Verification Script. [1027bad]
+- [x] Task: Conductor - User Manual Verification 'Phase 2: Baseline Establishment' (Protocol in workflow.md) [1027bad]
 
 ## Phase 3: Final Live Verification (라이브 최종 검증)
 실제 클라우드 환경에서 전체 파이프라인을 가동하고 결과물의 정합성을 확인합니다.
