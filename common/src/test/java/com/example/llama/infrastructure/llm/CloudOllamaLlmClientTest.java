@@ -23,6 +23,8 @@ import static org.mockito.Mockito.*;
 class CloudOllamaLlmClientTest {
 
     @Mock
+    private org.springframework.beans.factory.ObjectProvider<OllamaChatModel> chatModelProvider;
+    @Mock
     private OllamaChatModel chatModel;
     @Mock
     private InteractionLogger logger;
@@ -35,7 +37,8 @@ class CloudOllamaLlmClientTest {
 
     @BeforeEach
     void setUp() {
-        client = new CloudOllamaLlmClient(chatModel, logger, "llama3");
+        given(chatModelProvider.getIfAvailable()).willReturn(chatModel);
+        client = new CloudOllamaLlmClient(chatModelProvider, logger);
     }
 
     @Test

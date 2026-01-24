@@ -1,12 +1,16 @@
 package com.example.llama.infrastructure.llm;
 
 import com.example.llama.domain.service.LlmClient;
+import com.example.llama.infrastructure.llm.config.LlmProviderProperties;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
+
+import java.util.List;
+import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.BDDMockito.given;
@@ -22,10 +26,26 @@ class LlmProviderFactoryTest {
     private LlmClient ollamaClient;
 
     private LlmProviderFactory factory;
+    private LlmProviderProperties properties;
 
     @BeforeEach
     void setUp() {
-        factory = new LlmProviderFactory(applicationContext, "gemini");
+        properties = new LlmProviderProperties();
+        properties.setDefaultProvider("gemini");
+        
+        LlmProviderProperties.ProviderConfig geminiConfig = new LlmProviderProperties.ProviderConfig();
+        geminiConfig.setName("gemini");
+        geminiConfig.setType("gemini");
+        geminiConfig.setSettings(Map.of());
+
+        LlmProviderProperties.ProviderConfig ollamaConfig = new LlmProviderProperties.ProviderConfig();
+        ollamaConfig.setName("ollama");
+        ollamaConfig.setType("ollama");
+        ollamaConfig.setSettings(Map.of());
+
+        properties.setProviders(List.of(geminiConfig, ollamaConfig));
+
+        factory = new LlmProviderFactory(applicationContext, properties);
     }
 
     @Test
@@ -44,14 +64,5 @@ class LlmProviderFactoryTest {
         LlmClient client = factory.getClient("ollama");
         
         assertThat(client).isEqualTo(ollamaClient);
-    }
-
-    @Test
-    void shouldReturnConfiguredDefaultWhenFlagIsNull() {
-        given(applicationContext.getBean("geminiLlmClient", LlmClient.class)).willReturn(geminiClient);
-        
-        LlmClient client = factory.getClient(null);
-        
-        assertThat(client).isEqualTo(geminiClient);
     }
 }

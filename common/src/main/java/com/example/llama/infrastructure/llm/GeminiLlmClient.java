@@ -18,18 +18,25 @@ import java.nio.charset.StandardCharsets;
 @Slf4j
 @Component("geminiLlmClient")
 @RequiredArgsConstructor
-public class GeminiLlmClient implements LlmClient {
+public class GeminiLlmClient implements LlmClient, ConfigurableLlmClient {
 
     private final InteractionLogger logger;
     private String lastUsedModel = "unknown";
 
     // List of models to try in order of preference
-    private final java.util.List<String> modelFallbacks = java.util.List.of(
+    private java.util.List<String> modelFallbacks = new java.util.ArrayList<>(java.util.List.of(
             "gemini-2.5-flash",
             "auto",
             "gemini-3-pro-preview",
             "gemini-2.5-pro"
-    );
+    ));
+
+    @Override
+    public void configure(java.util.Map<String, String> settings) {
+        if (settings.containsKey("fallbacks")) {
+            this.modelFallbacks = java.util.Arrays.asList(settings.get("fallbacks").split(","));
+        }
+    }
 
     @Override
     public String generate(LlmPrompt prompt) {

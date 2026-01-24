@@ -15,10 +15,25 @@ spring:
       keep-alive: -1
 
 llama:
-  provider: gemini
-  ollama:
-    base-url: http://localhost:11434
-    model: llama3
+  default-provider: gemini
+  providers:
+    - name: gemini
+      type: gemini
+      settings:
+        fallbacks: "gemini-2.5-flash,auto,gemini-3-pro-preview"
+    - name: ollama
+      type: ollama
+      settings:
+        base-url: "http://localhost:11434"
+        model: "llama3"
+    - name: codex
+      type: codex
+      settings:
+        command: "codex-cli"
+    - name: opencode
+      type: opencode
+      settings:
+        endpoint: "http://opencode-ai.local"
 
 # 🕵️‍♂️ FULL TRACE LOGGING: No more hidden failures
 logging:

@@ -9,29 +9,36 @@ import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.ollama.OllamaChatModel;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
 @Slf4j
 @Component("ollamaLlmClient")
-public class CloudOllamaLlmClient implements LlmClient {
+public class CloudOllamaLlmClient implements LlmClient, ConfigurableLlmClient {
 
     private final OllamaChatModel chatModel;
     private final InteractionLogger logger;
-    private final String model;
+    private String model = "llama3"; // Default
 
-    public CloudOllamaLlmClient(OllamaChatModel chatModel, 
-                                InteractionLogger logger, 
-                                @Value("${llama.ollama.model:llama3}") String model) {
-        this.chatModel = chatModel;
+    public CloudOllamaLlmClient(org.springframework.beans.factory.ObjectProvider<OllamaChatModel> chatModelProvider, 
+                                InteractionLogger logger) {
+        this.chatModel = chatModelProvider.getIfAvailable();
         this.logger = logger;
-        this.model = model;
+    }
+
+    @Override
+    public void configure(java.util.Map<String, String> settings) {
+        if (settings.containsKey("model")) {
+            this.model = settings.get("model");
+        }
     }
 
     @Override
     public String generate(LlmPrompt prompt) {
+        if (chatModel == null) {
+            return "<response><status>FAILED</status><code>OllamaChatModel not available. Check your configuration.</code></response>";
+        }
         log.info("🚀 Generating with Cloud Ollama (Spring AI) model: {}", model);
 
         String systemContent = prompt.getSystemDirective().toXml();
