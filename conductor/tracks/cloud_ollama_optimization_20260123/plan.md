@@ -2,20 +2,9 @@
 
 This plan details the implementation of Cloud Ollama provider support and an automated model optimization routine to find the best parameter size based on success rate and performance metrics.
 
-## Phase 1: Infrastructure & Provider Refactoring
-This phase focuses on refactoring the existing LLM client architecture to support multiple providers (Gemini and Ollama) and implementing the Cloud Ollama client.
-
-- [x] Task: Refactor `LlmClient` interface to be provider-agnostic. [25a229d]
-    - [ ] Update `common` module's `LlmClient` interface if necessary.
-    - [ ] Ensure existing `GeminiLlmClient` adheres to the refactored interface.
-- [x] Task: Implement `CloudOllamaLlmClient`. [d447ac3]
-    - [ ] Write unit tests for `CloudOllamaLlmClient` mocking external API calls.
-    - [ ] Implement client logic using the Ollama Java client or REST API.
-    - [ ] Ensure it supports remote/cloud endpoints specifically.
-- [x] Task: Implement Provider Strategy/Factory. [5cce05e]
-    - [ ] Create an `LlmProviderFactory` to resolve the client based on configuration or CLI flags.
-    - [ ] Update configuration properties to support `llama.provider` (gemini/ollama).
-- [ ] Task: Conductor - User Manual Verification 'Phase 1: Infrastructure & Provider Refactoring' (Protocol in workflow.md)
+## Phase 1: Infrastructure & Provider Refactoring [checkpoint: b6b8a78]
+...
+- [x] Task: Conductor - User Manual Verification 'Phase 1: Infrastructure & Provider Refactoring' (Protocol in workflow.md) [b6b8a78]
 
 ## Phase 2: CLI Integration & Configuration
 This phase integrates the new provider selection into the CLI and ensures CLI flags override configuration.
