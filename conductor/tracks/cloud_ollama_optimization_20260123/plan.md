@@ -21,7 +21,7 @@ This plan details the implementation of Cloud Ollama provider support and an aut
     - [ ] 성공 단계(Format, Compile, Logic, Coverage) 및 성능 지표(TTFT, TPS, Time, Tokens, Repair Count) 필드 추가.
 - [ ] Task: Implement Benchmarking Logic with detailed reporting.
     - [ ] 설정된 `providers` 리스트를 순회하며 벤치마크를 수행하는 루프 구현.
-    - [ ] 각 실행 결과를 `logs/benchmarks/report_YYYYMMDD.json` 및 CSV 형태로 저장하는 로직 구현.
+    - [ ] 각 실행 결과를 `logs/benchmarks/report_{provider}_{model}_{YYYYMMDD}.json` 및 CSV 형태로 저장하는 로직 구현. (파일명에 공급자와 모델명 명시)
 - [ ] Task: Implement `benchmark` (or `optimize-ollama`) Command.
     - [ ] 특정 모델 혹은 전체 모델에 대한 벤치마크를 수행하는 CLI 명령어 추가.
     - [ ] 실행 완료 후 대조표(Comparison Table)를 CLI에 출력.
