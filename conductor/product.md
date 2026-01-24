@@ -9,6 +9,8 @@ An autonomous, industrial-grade test generation suite that produces robust, comp
 ## Key Innovations
 - **Matrix Bureaucracy:** A tiered multi-agent system for test generation.
 - **Self-Healing Verification Loop:** Automated test generation, verification, and repair.
+- **Multi-Provider Strategy:** Dynamic routing and fallback across multiple LLM providers (Gemini, Ollama, etc.).
+- **Automated Benchmarking Suite:** Data-driven model optimization through rigorous performance and quality metrics.
 - **Structural AST Synthesis (JavaParser):** Utilizes JavaParser for intelligent AST manipulation and merging.
 - **Llama Security Protocol (LSP):** Ensures sensitive information never leaves the machine through masking and sandboxing.
 
@@ -17,7 +19,7 @@ Monorepo structure with a core `common` library, an `intellij-plugin`, a `vscode
 
 ## Current Tech Stack
 - **Language**: Java 21, Kotlin
-- **Framework**: Spring Boot 3.4.1 (Spring Shell)
-- **AI Engine**: Gemini CLI
+- **Framework**: Spring Boot 3.5.10 (Spring Shell 3.4.1)
+- **AI Engine**: Gemini CLI, Spring AI (Ollama Cloud)
 - **Analysis**: JavaParser 3.27.1, ANTLR 4.13.1
-- **Testing**: JUnit 5, AssertJ, Mockito
+- **Testing**: JUnit 5.11, AssertJ 3.26, Mockito 5.14
