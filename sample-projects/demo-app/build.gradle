@@ -26,6 +26,10 @@ configurations {
     }
 }
 
+repositories {
+    mavenCentral()
+}
+
 ext {
     set('snippetsDir', file("build/generated-snippets"))
     querydslVersion = "5.0.0" // Define QueryDSL version

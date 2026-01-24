@@ -32,7 +32,8 @@ public class BureaucracyOrchestrator {
 
     public GeneratedCode orchestrate(String sourceCode, Path sourcePath, Intelligence.ComponentType domain) {
         if (domain == Intelligence.ComponentType.SERVICE || domain == Intelligence.ComponentType.COMPONENT
-                || domain == Intelligence.ComponentType.LISTENER) {
+                || domain == Intelligence.ComponentType.LISTENER || domain == Intelligence.ComponentType.ENTITY
+                || domain == Intelligence.ComponentType.DTO || domain == Intelligence.ComponentType.VO) {
             return serviceOrchestrator.orchestrate(sourceCode, sourcePath);
         } else if (domain == Intelligence.ComponentType.CONTROLLER) {
             return controllerOrchestrator.orchestrate(sourceCode, sourcePath);
@@ -45,7 +46,8 @@ public class BureaucracyOrchestrator {
     public GeneratedCode repair(GeneratedCode brokenCode, String errorLog, String sourceCode, Path sourcePath,
             Intelligence.ComponentType domain) {
         if (domain == Intelligence.ComponentType.SERVICE || domain == Intelligence.ComponentType.COMPONENT
-                || domain == Intelligence.ComponentType.LISTENER) {
+                || domain == Intelligence.ComponentType.LISTENER || domain == Intelligence.ComponentType.ENTITY
+                || domain == Intelligence.ComponentType.DTO || domain == Intelligence.ComponentType.VO) {
             return serviceOrchestrator.repair(brokenCode, errorLog, sourceCode, sourcePath);
         } else if (domain == Intelligence.ComponentType.CONTROLLER) {
             return controllerOrchestrator.repair(brokenCode, errorLog, sourceCode, sourcePath);
