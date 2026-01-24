@@ -66,7 +66,17 @@ public class DefaultModelOptimizer implements ModelOptimizer {
         LlmContextHolder.setProvider(provider);
         
         try {
+            // Try absolute path or relative to project root
             Path sourcePath = Paths.get(scenario.path());
+            if (!Files.exists(sourcePath)) {
+                // If running from 'common' subproject directory, go up one level
+                sourcePath = Paths.get("..").resolve(scenario.path());
+            }
+            
+            if (!Files.exists(sourcePath)) {
+                throw new IOException("Benchmark scenario file not found: " + scenario.path());
+            }
+
             String sourceCode = Files.readString(sourcePath);
 
             long genStartTime = System.currentTimeMillis();
