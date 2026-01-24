@@ -32,6 +32,6 @@ class LlmConfigurationLoadTest {
                 .orElseThrow();
         
         assertThat(ollama.getType()).isEqualTo("ollama");
-        assertThat(ollama.getSettings().get("model")).contains("qwen2.5-coder");
+        assertThat(ollama.getSettings().get("model")).contains("-cloud");
     }
 }

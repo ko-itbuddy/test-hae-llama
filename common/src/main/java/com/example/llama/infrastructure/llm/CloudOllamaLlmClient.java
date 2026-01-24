@@ -19,7 +19,7 @@ public class CloudOllamaLlmClient implements LlmClient, ConfigurableLlmClient {
 
     private final OllamaChatModel chatModel;
     private final InteractionLogger logger;
-    private String model = "qwen2.5-coder:14b"; // Default for cloud usage
+    private String model = "qwen3-coder:480b-cloud"; // Explicit cloud model default
 
     public CloudOllamaLlmClient(org.springframework.beans.factory.ObjectProvider<OllamaChatModel> chatModelProvider, 
                                 InteractionLogger logger) {
