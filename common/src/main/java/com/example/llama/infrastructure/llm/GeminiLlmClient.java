@@ -25,10 +25,9 @@ public class GeminiLlmClient implements LlmClient, ConfigurableLlmClient {
 
     // List of models to try in order of preference
     private java.util.List<String> modelFallbacks = new java.util.ArrayList<>(java.util.List.of(
-            "gemini-2.5-flash",
-            "auto",
-            "gemini-3-pro-preview",
-            "gemini-2.5-pro"
+            "gemini-2.0-flash",
+            "gemini-1.5-pro",
+            "auto"
     ));
 
     @Override
