@@ -9,6 +9,8 @@ An autonomous, industrial-grade test generation suite that produces robust, comp
 ## Key Innovations
 - **Matrix Bureaucracy:** A tiered multi-agent system for test generation.
 - **Self-Healing Verification Loop:** Automated test generation, verification, and repair.
+- **Dual-Format Prompt System:** Supports both XML and TOON prompt formats for flexible model interaction.
+- **Dynamic Model Fallback System:** Smart routing and quota-aware fallback across model versions (e.g., Gemini 2.0/1.5).
 - **Multi-Provider Strategy:** Dynamic routing and fallback across multiple LLM providers (Gemini, Ollama, etc.).
 - **Automated Benchmarking Suite:** Data-driven model optimization through rigorous performance and quality metrics.
 - **Universal Component Support:** Extended orchestration support for Entity, DTO, and VO layers via generalized fallback pipelines.
