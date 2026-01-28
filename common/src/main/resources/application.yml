@@ -26,7 +26,7 @@ llama:
     - name: codex
       type: codex
       settings:
-        command: "codex-cli"
+        command: "exitcodex"
     - name: opencode
       type: opencode
       settings:

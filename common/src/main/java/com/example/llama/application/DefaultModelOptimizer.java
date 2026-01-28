@@ -97,9 +97,16 @@ public class DefaultModelOptimizer implements ModelOptimizer {
             int totalOutTokens = metrics.stream().mapToInt(com.example.llama.domain.model.LlmResponse::outputTokens).sum();
             double avgTps = totalTime > 0 ? (double) totalOutTokens / (totalTime / 1000.0) : 0;
 
+            // Extract actual model used from metadata
+            String actualModel = metrics.stream()
+                    .map(m -> (String) m.metadata().getOrDefault("model", null))
+                    .filter(java.util.Objects::nonNull)
+                    .findFirst()
+                    .orElse(model);
+
             return BenchmarkResult.builder()
                     .provider(provider)
-                    .modelName(model + " [" + scenario.name() + "]")
+                    .modelName(actualModel + " [" + scenario.name() + "]")
                     .timestamp(LocalDateTime.now())
                     .formatSuccess(formatSuccess)
                     .compileSuccess(compileSuccess)
@@ -197,9 +204,12 @@ public class DefaultModelOptimizer implements ModelOptimizer {
             Files.createDirectories(reportDir);
             
             String date = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss"));
+            String safeModelName = result.getModelName()
+                    .replace(":", "-")
+                    .replaceAll("[^a-zA-Z0-9.-]", "_");
             String fileName = String.format("report_%s_%s_%s.json", 
                     result.getProvider(), 
-                    result.getModelName().replace(":", "-"), 
+                    safeModelName, 
                     date);
             
             Path filePath = reportDir.resolve(fileName);

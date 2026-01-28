@@ -16,7 +16,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Base implementation of the Standard Test Generation Pipeline.
@@ -35,31 +37,38 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
     protected final com.example.llama.domain.service.RepairService repairService;
 
     protected abstract AgentType getAnalystRole();
-
     protected abstract AgentType getStrategistRole();
-
     protected abstract AgentType getCoderRole();
-
     protected abstract Intelligence.ComponentType getDomain();
 
     @Override
     public GeneratedCode orchestrate(String sourceCode, Path sourcePath) {
         log.info("🎼 Orchestrator [{}] conducting: {}", this.getClass().getSimpleName(), sourcePath.getFileName());
 
-        // 1. Analysis Phase (Global Context)
-        log.info("🔍 [Phase 1] Analyzing Source Code Metadata...");
-        String maskedSourceCode = securityMasker.mask(sourceCode); // 🛡️ LSP Enforcement
+        // 1. Analysis Phase
+        String maskedSourceCode = securityMasker.mask(sourceCode);
         Intelligence intelligence = codeAnalyzer.extractIntelligence(maskedSourceCode, sourcePath.toString());
-
-        // 1.1 Dependency Analysis
         Path projectRoot = findProjectRoot(sourcePath);
-        java.util.List<String> deps = dependencyAnalyzer.analyze(projectRoot);
-        String libInfo = String.join("\n", deps);
-
-        // 1.2 Related Context Retrieval (DTOs, Models)
+        String libInfo = analyzeDependencies(projectRoot);
         List<LlmCollaborator> collaborators = fetchRelatedContext(intelligence, projectRoot);
 
-        // 2. Global Setup Phase (Class Skeleton & Mocks)
+        // 2. Setup Phase
+        GeneratedCode setupCode = generateSetup(intelligence, maskedSourceCode, collaborators, libInfo);
+
+        // 3. Method Phase
+        String methodTests = generateMethodTests(intelligence, maskedSourceCode, collaborators, libInfo);
+
+        // 4. Assembly Phase
+        return assembleFinalCode(intelligence, setupCode, methodTests, sourcePath);
+    }
+
+    private String analyzeDependencies(Path projectRoot) {
+        List<String> deps = dependencyAnalyzer.analyze(projectRoot);
+        return String.join("\n", deps);
+    }
+
+    private GeneratedCode generateSetup(Intelligence intelligence, String maskedSourceCode, 
+                                      List<LlmCollaborator> collaborators, String libInfo) {
         log.info("🏗️ [Phase 2] Generating Global Test Setup...");
         Agent setupAgent = agentFactory.create(getCoderRole(), getDomain());
 
@@ -80,32 +89,26 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
 
         String rawSetupCode = setupAgent.act(setupReq);
         GeneratedCode sanitizedSetup = codeSynthesizer.sanitizeAndExtract(rawSetupCode);
-        String setupCode = sanitizedSetup.toFullSource();
-        log.info("--> Setup Complete:\n{}", setupCode);
+        log.info("--> Setup Complete:\n{}", sanitizedSetup.toFullSource());
+        return sanitizedSetup;
+    }
 
-        // 3. Method Iteration Phase
+    private String generateMethodTests(Intelligence intelligence, String maskedSourceCode, 
+                                     List<LlmCollaborator> collaborators, String libInfo) {
         log.info("🔄 [Phase 3] Iterating Methods...");
         StringBuilder allTestsMethods = new StringBuilder();
         Agent methodCoder = agentFactory.create(getCoderRole(), getDomain());
 
         for (String methodSignature : intelligence.methods()) {
-            if (methodSignature.contains("toString()") || methodSignature.contains("hashCode()"))
-                continue;
+            if (isExcludedMethod(methodSignature)) continue;
 
             String methodName = extractNameFromSignature(methodSignature);
             log.info("   -> Generating tests for method: [{}]", methodName);
 
             JavaSourceSplitter.SplitResult methodSplit = javaSourceSplitter.split(maskedSourceCode, methodName);
-            log.info("      Extracted Source Size: {} characters", methodSplit.targetMethodSource().length());
-
-            // Add existing setup summary (optimized for token efficiency)
+            
             List<LlmCollaborator> fullContext = new ArrayList<>(collaborators);
-            String setupSummary = String.format("\n                    Test class setup already configured:\n                    - @ExtendWith(MockitoExtension.class)\n                    - @InjectMocks: %s\n                    - @Mock dependencies detected from constructor\n                    - Do NOT repeat class-level setup\n                    ", intelligence.className());
-
-            fullContext.add(LlmCollaborator.builder()
-                    .name("EXISTING_SETUP")
-                    .methods(setupSummary)
-                    .build());
+            fullContext.add(createSetupSummary(intelligence));
 
             LlmClassContext methodClassContext = LlmClassContext.builder()
                     .packageName(methodSplit.packageName())
@@ -125,91 +128,89 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
 
             String rawTestMethods = methodCoder.act(methodReq);
             GeneratedCode methodSnippet = codeSynthesizer.sanitizeAndExtract(rawTestMethods);
+            
             if (rawTestMethods.contains("<status>FAILED</status>")) {
-                log.warn("Method generation FAILED for [{}]. Skipping this method.", methodName);
+                log.warn("Method generation FAILED for [{}]. Skipping.", methodName);
                 continue;
             }
             allTestsMethods.append("\n").append(methodSnippet.body()).append("\n");
         }
+        return allTestsMethods.toString();
+    }
 
-        // 4. Assembly Phase
+    private boolean isExcludedMethod(String signature) {
+        return signature.contains("toString()") || signature.contains("hashCode()") || signature.contains("equals(");
+    }
+
+    private LlmCollaborator createSetupSummary(Intelligence intelligence) {
+        String setupSummary = String.format(
+                "\n                    Test class setup already configured:\n                    - @ExtendWith(MockitoExtension.class)\n                    - @InjectMocks: %s\n                    - @Mock dependencies detected from constructor\n                    - Do NOT repeat class-level setup\n                    ",
+                intelligence.className());
+        return LlmCollaborator.builder()
+                .name("EXISTING_SETUP")
+                .methods(setupSummary)
+                .build();
+    }
+
+    private GeneratedCode assembleFinalCode(Intelligence intelligence, GeneratedCode setupCode, 
+                                          String testMethods, Path sourcePath) {
         log.info("🧩 [Phase 4] Assembling Code...");
         
-        // 4.1 Automated Import Injection
-        java.util.Set<String> newImports = new java.util.HashSet<>(sanitizedSetup.imports());
-        String sourceFqn = intelligence.packageName() + "." + intelligence.className();
-        newImports.add(sourceFqn);
-        newImports.add("org.junit.jupiter.api.Test");
-        newImports.add("org.junit.jupiter.api.DisplayName");
-        newImports.add("org.junit.jupiter.api.Nested");
-        newImports.add("org.junit.jupiter.api.BeforeEach");
-        newImports.add("org.junit.jupiter.api.extension.ExtendWith");
-        newImports.add("org.junit.jupiter.params.ParameterizedTest");
-        newImports.add("org.junit.jupiter.params.provider.ValueSource");
-        newImports.add("org.junit.jupiter.params.provider.CsvSource");
-        newImports.add("org.junit.jupiter.params.provider.NullSource");
-        newImports.add("org.mockito.Mock");
-        newImports.add("org.mockito.InjectMocks");
-        newImports.add("org.mockito.junit.jupiter.MockitoExtension");
-        newImports.add("static org.assertj.core.api.Assertions.assertThat");
-        newImports.add("static org.assertj.core.api.Assertions.assertThatThrownBy");
-        newImports.add("static org.mockito.BDDMockito.given");
-        newImports.add("static org.mockito.Mockito.verify");
-        newImports.add("static org.mockito.ArgumentMatchers.any");
-        newImports.add("static org.mockito.ArgumentMatchers.eq");
+        Set<String> newImports = new HashSet<>(setupCode.imports());
+        newImports.add(intelligence.packageName() + "." + intelligence.className());
+        addStandardTestImports(newImports);
 
-        String finalCode = mergeSetupAndTests(setupCode, allTestsMethods.toString(), newImports);
+        String finalCode = mergeSetupAndTests(setupCode.toFullSource(), testMethods, newImports);
 
-        // 5. Wrapping
         String className = sourcePath.getFileName().toString().replace(".java", "Test");
-        String packageName = intelligence.packageName();
-        
-        // Ensure imports from newImports are actually in the returned GeneratedCode
-        java.util.Set<String> combinedImports = new java.util.HashSet<>(newImports);
+        return new GeneratedCode(intelligence.packageName(), className, newImports, finalCode);
+    }
 
-        return new GeneratedCode(packageName, className, combinedImports, finalCode);
+    private void addStandardTestImports(Set<String> imports) {
+        imports.add("org.junit.jupiter.api.Test");
+        imports.add("org.junit.jupiter.api.DisplayName");
+        imports.add("org.junit.jupiter.api.Nested");
+        imports.add("org.junit.jupiter.api.BeforeEach");
+        imports.add("org.junit.jupiter.api.extension.ExtendWith");
+        imports.add("org.junit.jupiter.params.ParameterizedTest");
+        imports.add("org.junit.jupiter.params.provider.ValueSource");
+        imports.add("org.junit.jupiter.params.provider.CsvSource");
+        imports.add("org.junit.jupiter.params.provider.NullSource");
+        imports.add("org.mockito.Mock");
+        imports.add("org.mockito.InjectMocks");
+        imports.add("org.mockito.junit.jupiter.MockitoExtension");
+        imports.add("static org.assertj.core.api.Assertions.assertThat");
+        imports.add("static org.assertj.core.api.Assertions.assertThatThrownBy");
+        imports.add("static org.mockito.BDDMockito.given");
+        imports.add("static org.mockito.Mockito.verify");
+        imports.add("static org.mockito.ArgumentMatchers.any");
+        imports.add("static org.mockito.ArgumentMatchers.eq");
     }
 
     private String extractNameFromSignature(String signature) {
-        // Simple heuristic: "public void methodName(Args...)" -> "methodName"
-        // JavaParser signature usually looks like "methodName(String a, int b)"
         int parenIndex = signature.indexOf('(');
-        if (parenIndex == -1)
-            return signature.trim(); // Fallback
-
+        if (parenIndex == -1) return signature.trim();
         String beforeParen = signature.substring(0, parenIndex).trim();
-        // The last word before paren is the name
         String[] parts = beforeParen.split(" ");
         return parts[parts.length - 1];
     }
 
-    private String mergeSetupAndTests(String setupCode, String testMethods, java.util.Set<String> extraImports) {
+    private String mergeSetupAndTests(String setupCode, String testMethods, Set<String> extraImports) {
         try {
-            // 1. Parse skeleton using JavaParser for reliable manipulation
             com.github.javaparser.ast.CompilationUnit setupCu = com.github.javaparser.StaticJavaParser.parse(setupCode);
             
-            // 2. Identify the primary test class
             com.github.javaparser.ast.body.ClassOrInterfaceDeclaration testClass = setupCu.getTypes().stream()
                     .filter(t -> t instanceof com.github.javaparser.ast.body.ClassOrInterfaceDeclaration)
                     .map(t -> (com.github.javaparser.ast.body.ClassOrInterfaceDeclaration) t)
                     .findFirst()
-                    .orElseThrow(() -> new RuntimeException("No test class found in setup code"));
+                    .orElseThrow(() -> new RuntimeException("No test class found"));
 
-            // 3. Remove all placeholder nested classes (starting with Describe_)
-            java.util.List<com.github.javaparser.ast.body.ClassOrInterfaceDeclaration> toRemove = new java.util.ArrayList<>();
-            testClass.getMembers().forEach(m -> {
-                if (m instanceof com.github.javaparser.ast.body.ClassOrInterfaceDeclaration c) {
-                    if (c.getNameAsString().startsWith("Describe_")) {
-                        toRemove.add(c);
-                    }
-                }
-            });
-            
-            for (com.github.javaparser.ast.body.ClassOrInterfaceDeclaration c : toRemove) {
-                c.remove();
-            }
+            // Remove placeholders
+            testClass.getMembers().removeIf(m -> 
+                m instanceof com.github.javaparser.ast.body.ClassOrInterfaceDeclaration c && 
+                c.getNameAsString().startsWith("Describe_"));
 
-            // 4. Inject all required imports
+            // Inject imports
             for (String imp : extraImports) {
                 if (imp.startsWith("static ")) {
                     setupCu.addImport(imp.substring(7), true, false);
@@ -218,7 +219,6 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
                 }
             }
 
-            // 5. Convert back to string and perform final insertion of test methods
             String cleanedSkeleton = setupCu.toString();
             int lastBraceIndex = cleanedSkeleton.lastIndexOf('}');
             
@@ -227,13 +227,12 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
             }
             return cleanedSkeleton + "\n" + testMethods;
         } catch (Exception e) {
-            log.error("Structural merge failed, falling back to naive: {}", e.getMessage());
+            log.error("Structural merge failed: {}", e.getMessage());
             return setupCode + "\n" + testMethods;
         }
     }
 
     private Path findProjectRoot(Path sourcePath) {
-        // Walk up until we find build.gradle
         Path current = sourcePath;
         while (current != null) {
             if (java.nio.file.Files.exists(current.resolve("build.gradle")) ||
@@ -242,19 +241,17 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
             }
             current = current.getParent();
         }
-        return sourcePath; // Fallback
+        return sourcePath;
     }
 
     private List<LlmCollaborator> fetchRelatedContext(Intelligence intelligence, Path projectRoot) {
         List<LlmCollaborator> collaborators = new ArrayList<>();
         int count = 0;
         for (String imp : intelligence.imports()) {
-            if (count > 10)
-                break;
+            if (count > 10) break;
             String cleanImp = imp.replace("import ", "").replace(";", "").trim();
-            if (cleanImp.startsWith("java.") || cleanImp.startsWith("javax.") || cleanImp.startsWith("jakarta.")
-                    || cleanImp.startsWith("org.springframework."))
-                continue;
+            if (cleanImp.startsWith("java.") || cleanImp.startsWith("javax.") || 
+                cleanImp.startsWith("jakarta.") || cleanImp.startsWith("org.springframework.")) continue;
 
             String relativePath = "src/main/java/" + cleanImp.replace(".", "/") + ".java";
             Path candidate = projectRoot.resolve(relativePath);
@@ -263,7 +260,6 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
                 try {
                     String content = java.nio.file.Files.readString(candidate);
                     String masked = securityMasker.mask(content);
-
                     JavaSourceSplitter.SplitResult refSplit = javaSourceSplitter.createReferenceContext(masked);
                     String shortName = cleanImp.substring(cleanImp.lastIndexOf('.') + 1);
 
@@ -272,7 +268,6 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
                             .structure(refSplit.classStructure())
                             .methods(refSplit.targetMethodSource())
                             .build());
-
                     count++;
                 } catch (Exception e) {
                     log.warn("Failed to read related file: {}", candidate);
@@ -285,11 +280,8 @@ public abstract class AbstractPipelineOrchestrator implements Orchestrator {
     @Override
     public GeneratedCode repair(GeneratedCode brokenCode, String errorLog, String sourceCode, Path sourcePath) {
         log.info("🚑 [Phase 5] Auto-Repairing: {}", sourcePath.getFileName());
-        
-        // Delegate to the RepairService for a single repair attempt
         GeneratedCode result = repairService.repair(brokenCode, errorLog, getDomain());
         
-        // Preserve package and class name if they are missing in the repaired code
         String packageName = (result.getPackageName() == null || result.getPackageName().isEmpty()) 
                 ? brokenCode.getPackageName() : result.getPackageName();
         String className = (result.getClassName() == null || result.getClassName().isEmpty()) 
