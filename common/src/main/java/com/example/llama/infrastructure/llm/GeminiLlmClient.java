@@ -5,11 +5,16 @@ import com.example.llama.domain.service.LlmClient;
 import com.example.llama.infrastructure.io.InteractionLogger;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * LLM Client implementation using Gemini CLI.
@@ -20,26 +25,39 @@ import java.nio.charset.StandardCharsets;
 @RequiredArgsConstructor
 public class GeminiLlmClient implements LlmClient, ConfigurableLlmClient {
 
+    private static final String CMD_GEMINI = "gemini";
+    private static final String FLAG_MODEL = "--model";
+    private static final String FLAG_APPROVAL = "--approval-mode";
+    private static final String VALUE_YOLO = "yolo";
+    private static final String FLAG_EXTENSIONS = "--extensions";
+    private static final String VALUE_NONE = "none";
+    
+    private static final String ERROR_QUOTA_RETRY = "RetryableQuotaError";
+    private static final String ERROR_QUOTA_TERMINAL = "TerminalQuotaError";
+    private static final String STATUS_FAILED = "<status>FAILED</status>";
+    
+    private static final long TIMEOUT_MINUTES = 10;
+    private static final long RETRY_DELAY_MS = 5000;
+
     private final InteractionLogger logger;
     private String lastUsedModel = "unknown";
 
     // List of models to try in order of preference
-    private java.util.List<String> modelFallbacks = new java.util.ArrayList<>(java.util.List.of(
-            "gemini-2.5-flash",
-            "auto",
-            "gemini-3-pro-preview",
-            "gemini-2.5-pro"
+    private List<String> modelFallbacks = new ArrayList<>(List.of(
+            "gemini-2.0-flash",
+            "gemini-1.5-pro",
+            "auto"
     ));
 
     @Override
-    public void configure(java.util.Map<String, String> settings) {
+    public void configure(Map<String, String> settings) {
         if (settings.containsKey("fallbacks")) {
-            this.modelFallbacks = java.util.Arrays.asList(settings.get("fallbacks").split(","));
+            this.modelFallbacks = Arrays.asList(settings.get("fallbacks").split(","));
         }
     }
 
     @Override
-    public com.example.llama.domain.model.LlmResponse generate(com.example.llama.domain.model.prompt.LlmPrompt prompt) {
+    public com.example.llama.domain.model.LlmResponse generate(LlmPrompt prompt) {
         String fullPrompt = prompt.toXml();
         long startTime = System.currentTimeMillis();
         
@@ -47,20 +65,24 @@ public class GeminiLlmClient implements LlmClient, ConfigurableLlmClient {
             log.info("🚀 Attempting generation with model: {}", model);
             String response = executeCli(fullPrompt, model);
             
-            if (response.contains("RetryableQuotaError")) {
-                log.warn("⏳ Quota exhausted for model: {}. Waiting 5s before fallback...", model);
-                try { Thread.sleep(5000); } catch (InterruptedException e) { Thread.currentThread().interrupt(); }
+            if (response.contains(ERROR_QUOTA_RETRY)) {
+                log.warn("⏳ Quota exhausted for model: {}. Waiting {}ms before fallback...", model, RETRY_DELAY_MS);
+                try { 
+                    Thread.sleep(RETRY_DELAY_MS); 
+                } catch (InterruptedException e) { 
+                    Thread.currentThread().interrupt(); 
+                } 
                 continue; // Force fallback
             }
 
-            if (!response.contains("TerminalQuotaError") && !response.contains("<status>FAILED</status>")) {
+            if (!response.contains(ERROR_QUOTA_TERMINAL) && !response.contains(STATUS_FAILED)) {
                 this.lastUsedModel = model;
                 String content = response + "\n<!-- MODEL_USED: " + model + " -->";
                 
                 return com.example.llama.domain.model.LlmResponse.builder()
                         .content(content)
                         .totalTimeMs(System.currentTimeMillis() - startTime)
-                        .metadata(java.util.Map.of("model", model))
+                        .metadata(Map.of("model", model))
                         .build();
             }
             
@@ -72,11 +94,11 @@ public class GeminiLlmClient implements LlmClient, ConfigurableLlmClient {
 
     private String executeCli(String fullPrompt, String model) {
         try {
-            ProcessBuilder pb = new ProcessBuilder("gemini", "--model", model, "--approval-mode", "yolo", "--extensions", "none");
+            ProcessBuilder pb = new ProcessBuilder(CMD_GEMINI, FLAG_MODEL, model, FLAG_APPROVAL, VALUE_YOLO, FLAG_EXTENSIONS, VALUE_NONE);
             pb.redirectErrorStream(true);
             Process process = pb.start();
 
-            try (java.io.OutputStream os = process.getOutputStream()) {
+            try (OutputStream os = process.getOutputStream()) {
                 os.write(fullPrompt.getBytes(StandardCharsets.UTF_8));
                 os.flush();
             }
@@ -86,20 +108,21 @@ public class GeminiLlmClient implements LlmClient, ConfigurableLlmClient {
                 output = new String(is.readAllBytes(), StandardCharsets.UTF_8);
             }
 
-            boolean finished = process.waitFor(10, java.util.concurrent.TimeUnit.MINUTES);
+            boolean finished = process.waitFor(TIMEOUT_MINUTES, TimeUnit.MINUTES);
             if (!finished) {
                 process.destroyForcibly();
-                return "<response><status>FAILED</status></response>";
+                return STATUS_FAILED.replace("</status>", "</status><code>Timeout</code>");
             }
 
             if (process.exitValue() != 0) {
-                return "<response><status>FAILED</status><code>" + output + "</code></response>";
+                return STATUS_FAILED.replace("</status>", "</status><code>" + output + "</code>");
             }
 
             logger.logInteraction("GeminiCLI:" + model, fullPrompt, output);
             return output;
         } catch (Exception e) {
-            return "<response><status>FAILED</status></response>";
+            log.error("CLI Execution failed", e);
+            return STATUS_FAILED;
         }
     }
 
